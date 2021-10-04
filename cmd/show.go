@@ -29,6 +29,8 @@ func NewCmdShow() *cobra.Command {
 	showCmd.AddCommand(
 		NewCmdShowGateway(),
 		NewCmdShowComputeManager(),
+		NewCmdShowTransportNode(),
+		NewCmdShowTransportNodeProfile(),
 	)
 
 	return showCmd

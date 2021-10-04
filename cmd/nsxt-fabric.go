@@ -6,11 +6,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewCmdShowGateway() *cobra.Command {
-	gatewayCmd := &cobra.Command{
-		Use:     "gateway",
-		Aliases: []string{"gw"},
-		Short:   "show logical gateways",
+func NewCmdShowTransportNode() *cobra.Command {
+	tpnCmd := &cobra.Command{
+		Use:     "transport-node",
+		Aliases: []string{"tn"},
+		Short:   "show transport nodes",
 		Args:    cobra.MaximumNArgs(1),
 		PreRunE: func(c *cobra.Command, args []string) error {
 			site, err := conf.NsxT.GetCurrentSite()
@@ -25,18 +25,18 @@ func NewCmdShowGateway() *cobra.Command {
 			return nil
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			nsxtclient.GetT0()
+			nsxtclient.GetTransportNode()
 		},
 	}
 
-	return gatewayCmd
+	return tpnCmd
 }
 
-func NewCmdShowComputeManager() *cobra.Command {
-	computeManagerCmd := &cobra.Command{
-		Use:     "compute-manager",
-		Aliases: []string{"cm"},
-		Short:   "show compute managers",
+func NewCmdShowTransportNodeProfile() *cobra.Command {
+	tpnCmd := &cobra.Command{
+		Use:     "transport-node-profile",
+		Aliases: []string{"tnp"},
+		Short:   "show transport node profiles",
 		Args:    cobra.MaximumNArgs(1),
 		PreRunE: func(c *cobra.Command, args []string) error {
 			site, err := conf.NsxT.GetCurrentSite()
@@ -51,9 +51,9 @@ func NewCmdShowComputeManager() *cobra.Command {
 			return nil
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			nsxtclient.GetComputeManager()
+			nsxtclient.GetTransportNodeProfile()
 		},
 	}
 
-	return computeManagerCmd
+	return tpnCmd
 }
