@@ -26,24 +26,6 @@ func (c *NsxtClient) makeRequest(method string, path string) *http.Request {
 	return req
 }
 
-// functions for debugging
-
-func _dumpRequest(req *http.Request) {
-	dump, _ := httputil.DumpRequestOut(req, true)
-	fmt.Printf("%s\n\n", dump)
-}
-
-func _dumpResponse(res *http.Response) {
-	dump, _ := httputil.DumpResponse(res, true)
-	fmt.Printf("%s\n\n", dump)
-}
-
-func _dumpCookie(c *NsxtClient, target_url string) {
-	set_cookie_url, _ := url.Parse(target_url)
-	cookies := c.httpClient.Jar.Cookies(set_cookie_url)
-	fmt.Printf("%v\n\n", cookies)
-}
-
 func NewNsxtClient(basicAuth bool) *NsxtClient {
 	httpClient := newHttpClient()
 	nsxtClient := &NsxtClient{BasicAuth: false, Token: "", httpClient: httpClient}
@@ -78,4 +60,23 @@ func readResponseBody(res *http.Response) interface{} {
 	}
 
 	return data
+}
+
+/*
+ * functions for debugging
+ */
+func _dumpRequest(req *http.Request) {
+	dump, _ := httputil.DumpRequestOut(req, true)
+	fmt.Printf("%s\n\n", dump)
+}
+
+func _dumpResponse(res *http.Response) {
+	dump, _ := httputil.DumpResponse(res, true)
+	fmt.Printf("%s\n\n", dump)
+}
+
+func _dumpCookie(c *NsxtClient, target_url string) {
+	set_cookie_url, _ := url.Parse(target_url)
+	cookies := c.httpClient.Jar.Cookies(set_cookie_url)
+	fmt.Printf("%v\n\n", cookies)
 }

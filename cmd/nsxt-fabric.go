@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/spf13/cobra"
@@ -26,6 +27,7 @@ func NewCmdShowComputeManager() *cobra.Command {
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			nsxtclient.GetComputeManager()
+			fmt.Println(debug)
 		},
 	}
 

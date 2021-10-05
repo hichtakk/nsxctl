@@ -12,10 +12,10 @@ var (
 	nsxtclient *c.NsxtClient
 	conf       config.Config
 	configfile string
+	debug      bool
 )
 
 func newCmd() *cobra.Command {
-	var debug bool
 	rootCmd := &cobra.Command{
 		Use:   "nsxctl",
 		Short: "NSX-T command-line client",

@@ -23,6 +23,7 @@ func NewCmdConfig() *cobra.Command {
 	configCmd.AddCommand(
 		NewCmdConfigView(),
 		NewCmdConfigSetSite(),
+		NewCmdConfigUseSite(),
 	)
 
 	return configCmd
@@ -112,6 +113,44 @@ func NewCmdConfigSetSite() *cobra.Command {
 	setSiteCmd.MarkFlagRequired("password")
 
 	return setSiteCmd
+}
+
+func NewCmdConfigUseSite() *cobra.Command {
+	useSiteCmd := &cobra.Command{
+		Use:   "use-site ${SITE_NAME}",
+		Short: "add nsx-t/alb site configuration",
+		Args: func(cmd *cobra.Command, args []string) error {
+			if len(args) < 1 {
+				cmd.Help()
+				return fmt.Errorf("argument for site name is required")
+			}
+			return nil
+		},
+		Run: func(cmd *cobra.Command, args []string) {
+			name := args[0]
+			file, err := ioutil.ReadFile(configfile)
+			if err != nil {
+				log.Fatal(err)
+			}
+			json.Unmarshal(file, &conf)
+			siteExist := false
+			for _, s := range conf.NsxT.Sites {
+				if s.Name == name {
+					siteExist = true
+				}
+			}
+			if siteExist == false {
+				log.Fatalf("site '%s' not found", name)
+			}
+			conf.NsxT.CurrentSite = name
+			writeConfig()
+		},
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return nil
+		},
+	}
+
+	return useSiteCmd
 }
 
 func InitConfig(configPath string) {
