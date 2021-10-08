@@ -28,6 +28,7 @@ func NewCmdDelete() *cobra.Command {
 	}
 	deleteCmd.AddCommand(
 		NewCmdDeleteComputeManager(),
+		NewCmdDeleteTransportZone(),
 	)
 
 	return deleteCmd

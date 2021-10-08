@@ -127,6 +127,64 @@ func NewCmdShowTransportZone() *cobra.Command {
 	return transportZoneCmd
 }
 
+func NewCmdCreateTransportZone() *cobra.Command {
+	var transportType string
+	transportZoneCmd := &cobra.Command{
+		Use:     "transport-zone",
+		Aliases: []string{"tz"},
+		Short:   "create transport zone",
+		Args:    cobra.MaximumNArgs(1),
+		PreRunE: func(c *cobra.Command, args []string) error {
+			site, err := conf.NsxT.GetCurrentSite()
+			if err != nil {
+				log.Fatal(err)
+			}
+			nsxtclient.Login(site.GetCredential())
+			return nil
+		},
+		PostRunE: func(c *cobra.Command, args []string) error {
+			nsxtclient.Logout()
+			return nil
+		},
+		Run: func(cmd *cobra.Command, args []string) {
+			name := args[0]
+			nsxtclient.CreateTransportZone(name, transportType)
+		},
+	}
+	transportZoneCmd.Flags().StringVarP(&transportType, "type", "t", "", "transport zone type [vlan, overlay]")
+	transportZoneCmd.MarkFlagRequired("transportType")
+
+	return transportZoneCmd
+}
+
+func NewCmdDeleteTransportZone() *cobra.Command {
+	transportZoneCmd := &cobra.Command{
+		Use:     "transport-zone",
+		Aliases: []string{"tz"},
+		Short:   "delete transport zone",
+		Args:    cobra.MaximumNArgs(1),
+		PreRunE: func(c *cobra.Command, args []string) error {
+			site, err := conf.NsxT.GetCurrentSite()
+			if err != nil {
+				log.Fatal(err)
+			}
+			nsxtclient.Login(site.GetCredential())
+			return nil
+		},
+		PostRunE: func(c *cobra.Command, args []string) error {
+			nsxtclient.Logout()
+			return nil
+		},
+		Run: func(cmd *cobra.Command, args []string) {
+			tzId := args[0]
+			nsxtclient.DeleteTransportZone(tzId)
+			fmt.Println(debug)
+		},
+	}
+
+	return transportZoneCmd
+}
+
 func NewCmdShowTransportNode() *cobra.Command {
 	tpnCmd := &cobra.Command{
 		Use:     "transport-node",

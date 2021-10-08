@@ -112,6 +112,61 @@ func (c *NsxtClient) GetTransportZone() {
 	}
 }
 
+func (c *NsxtClient) CreateTransportZone(name string, transportType string) {
+	path := "/api/v1/transport-zones"
+	reqData := make(map[string]string)
+	reqData["display_name"] = name
+	reqData["transport_type"] = transportType
+	reqJson, _ := json.Marshal(reqData)
+	req, _ := http.NewRequest("POST", c.BaseUrl+path, bytes.NewBuffer(reqJson))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Xsrf-Token", c.Token)
+	res, err := c.httpClient.Do(req)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer res.Body.Close()
+	data := readResponseBody(res)
+	b, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		fmt.Println(err)
+		fmt.Println(b)
+	}
+	if res.StatusCode != 200 {
+		fmt.Printf("StatusCode=%d\n", res.StatusCode)
+		fmt.Println(res)
+		return
+	}
+	cms := data.(map[string]interface{})["results"]
+	for _, cm := range cms.([]interface{}) {
+		b, _ := json.MarshalIndent(cm, "", "  ")
+		fmt.Println(string(b))
+	}
+}
+
+func (c *NsxtClient) DeleteTransportZone(tzId string) {
+	path := "/api/v1/transport-zones"
+	req, _ := http.NewRequest("DELETE", c.BaseUrl+path+"/"+tzId, nil)
+	req.Header.Set("X-Xsrf-Token", c.Token)
+	res, err := c.httpClient.Do(req)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer res.Body.Close()
+	b, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		fmt.Println(err)
+		fmt.Println(b)
+	}
+	if res.StatusCode != 200 {
+		fmt.Printf("StatusCode=%d\n", res.StatusCode)
+		fmt.Println(res)
+		return
+	}
+	_dumpRequest(req)
+	_dumpResponse(res)
+}
+
 func (c *NsxtClient) PublishFQDN() {
 	path := "/api/v1/configs/management"
 	req, _ := http.NewRequest("GET", c.BaseUrl+path, nil)
