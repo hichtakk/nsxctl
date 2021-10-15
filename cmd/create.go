@@ -29,6 +29,7 @@ func NewCmdCreate() *cobra.Command {
 	showCmd.AddCommand(
 		NewCmdCreateComputeManager(),
 		NewCmdCreateTransportZone(),
+		NewCmdCreateIpPool(),
 	)
 
 	return showCmd

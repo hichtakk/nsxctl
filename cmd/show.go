@@ -32,6 +32,7 @@ func NewCmdShow() *cobra.Command {
 		NewCmdShowTransportZone(),
 		NewCmdShowTransportNode(),
 		NewCmdShowTransportNodeProfile(),
+		NewCmdShowIpPool(),
 	)
 
 	return showCmd
