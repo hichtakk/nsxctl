@@ -39,6 +39,7 @@ func NewCmdCreateComputeManager() *cobra.Command {
 	var thumbprint string
 	var user string
 	var password string
+	var trust bool
 	computeManagerCmd := &cobra.Command{
 		Use:     "compute-manager",
 		Aliases: []string{"cm"},
@@ -57,7 +58,7 @@ func NewCmdCreateComputeManager() *cobra.Command {
 			return nil
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			nsxtclient.CreateComputeManager(address, thumbprint, user, password)
+			nsxtclient.CreateComputeManager(address, thumbprint, user, password, trust)
 			fmt.Println(debug)
 		},
 	}
@@ -65,6 +66,7 @@ func NewCmdCreateComputeManager() *cobra.Command {
 	computeManagerCmd.Flags().StringVarP(&thumbprint, "thumbprint", "t", "", "thumbprint of target compute manager")
 	computeManagerCmd.Flags().StringVarP(&user, "user", "u", "", "user of target compute manager")
 	computeManagerCmd.Flags().StringVarP(&password, "password", "p", "", "password of target compute manager")
+	computeManagerCmd.Flags().BoolVarP(&trust, "enable-trust", "", false, "enable trust [default: false]")
 	computeManagerCmd.MarkFlagRequired("address")
 	computeManagerCmd.MarkFlagRequired("thumbprint")
 	computeManagerCmd.MarkFlagRequired("user")
