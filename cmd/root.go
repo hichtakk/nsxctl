@@ -34,11 +34,6 @@ func newCmd() *cobra.Command {
 	return rootCmd
 }
 
-func InitCmd(c *c.NsxtClient) *cobra.Command {
-	nsxtclient = c
-	return newCmd()
-}
-
 func GetCmdRoot() *cobra.Command {
 	return newCmd()
 }
