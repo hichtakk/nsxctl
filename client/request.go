@@ -18,6 +18,7 @@ type NsxtClient struct {
 	BasicAuth  bool
 	Token      string
 	httpClient *http.Client
+	Debug      bool
 }
 
 func (c *NsxtClient) makeRequest(method string, path string) *http.Request {
@@ -26,9 +27,9 @@ func (c *NsxtClient) makeRequest(method string, path string) *http.Request {
 	return req
 }
 
-func NewNsxtClient(basicAuth bool) *NsxtClient {
+func NewNsxtClient(basicAuth bool, debug bool) *NsxtClient {
 	httpClient := newHttpClient()
-	nsxtClient := &NsxtClient{BasicAuth: false, Token: "", httpClient: httpClient}
+	nsxtClient := &NsxtClient{BasicAuth: false, Token: "", httpClient: httpClient, Debug: debug}
 	if basicAuth != true {
 		jar, _ := cookiejar.New(nil)
 		nsxtClient.httpClient.Jar = jar

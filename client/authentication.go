@@ -14,22 +14,25 @@ func (c *NsxtClient) Login(cred url.Values) {
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	res, err := c.httpClient.Do(req)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
 	defer res.Body.Close()
 	if res.StatusCode != 200 {
-		fmt.Printf("StatusCode=%d\n", res.StatusCode)
+		log.Printf("StatusCode=%d\n", res.StatusCode)
 		return
 	}
-	log.Println("login successful")
 	c.Token = res.Header.Get("X-Xsrf-Token")
 	if c.Token == "" {
 		log.Fatal("token not found")
 	}
 	data := readResponseBody(res)
-	roles := data.(map[string]interface{})["roles"]
-	for _, v := range roles.([]interface{}) {
-		fmt.Printf("role: %s, permission: %s\n", v.(map[string]interface{})["role"], v.(map[string]interface{})["permissions"])
+	if c.Debug {
+		log.Println("login successful")
+		log.Println(res.Header)
+		roles := data.(map[string]interface{})["roles"]
+		for _, v := range roles.([]interface{}) {
+			fmt.Printf("role: %s, permission: %s\n", v.(map[string]interface{})["role"], v.(map[string]interface{})["permissions"])
+		}
 	}
 }
 
@@ -39,12 +42,15 @@ func (c *NsxtClient) Logout() {
 	req.Header.Set("X-Xsrf-Token", c.Token)
 	res, err := c.httpClient.Do(req)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
 	defer res.Body.Close()
 	if res.StatusCode != 200 {
-		fmt.Printf("StatusCode=%d\n", res.StatusCode)
+		log.Printf("StatusCode=%d\n", res.StatusCode)
 		return
 	}
-	log.Printf("logout successful\n")
+	if c.Debug {
+		log.Printf("logout successful\n")
+		log.Println(res.Header)
+	}
 }

@@ -17,7 +17,7 @@ func NewCmdShow() *cobra.Command {
 		PersistentPreRunE: func(c *cobra.Command, args []string) error {
 			file, _ := ioutil.ReadFile(configfile)
 			json.Unmarshal(file, &conf)
-			nsxtclient = client.NewNsxtClient(false)
+			nsxtclient = client.NewNsxtClient(false, debug)
 			site, err := conf.NsxT.GetCurrentSite()
 			if err != nil {
 				log.Fatal(err)
