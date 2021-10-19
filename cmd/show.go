@@ -33,6 +33,7 @@ func NewCmdShow() *cobra.Command {
 		NewCmdShowTransportNode(),
 		NewCmdShowTransportNodeProfile(),
 		NewCmdShowIpPool(),
+		NewCmdShowIpBlock(),
 	)
 
 	return showCmd
