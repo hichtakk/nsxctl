@@ -26,6 +26,7 @@ func newCmd() *cobra.Command {
 		NewCmdCreate(),
 		NewCmdDelete(),
 		NewCmdConfig(),
+		NewCmdClusterInfo(),
 	)
 	homedir := os.Getenv("HOME")
 	rootCmd.PersistentFlags().BoolVarP(&debug, "debug", "", false, "enable debug mode")
