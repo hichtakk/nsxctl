@@ -23,7 +23,6 @@ func (c *NsxtClient) GetIpPool() {
 	data := readResponseBody(res)
 	cms := data.(map[string]interface{})["results"]
 	for _, cm := range cms.([]interface{}) {
-		//fmt.Printf("role: %s, permission: %s\n", v.(map[string]interface{})["role"], v.(map[string]interface{})["permissions"])
 		b, _ := json.MarshalIndent(cm, "", "  ")
 		fmt.Println(string(b))
 	}
