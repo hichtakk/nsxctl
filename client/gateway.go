@@ -10,16 +10,15 @@ import (
 	"github.com/hichtakk/nsxctl/structs"
 )
 
-func (c *NsxtClient) GetGateway(tier int16, uuid string) {
+func (c *NsxtClient) GetGateway(tier int16, gwId string) {
 	var path string
 	if tier == 0 {
 		path = "/policy/api/v1/infra/tier-0s"
 	} else {
 		path = "/policy/api/v1/infra/tier-1s"
 	}
-	if uuid != "" {
-		path = path + "/" + uuid
-		path += "/locale-services"
+	if gwId != "" {
+		path = path + "/" + gwId
 	}
 	req := c.makeRequest("GET", path)
 	res, err := c.httpClient.Do(req)
