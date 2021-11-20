@@ -187,24 +187,18 @@ func runTop(gw structs.Tier0Gateway) {
 	s.Show()
 
 	// initial interface list
-	t := time.Now()
 	stats := nsxtclient.GetGatewayInterfaceStats(gw)
 	update(s, stats, nil)
 
 	// update stats loop
 	go func(g structs.Tier0Gateway, stats map[int]structs.RouterStats, interval int) {
 		last_stats := stats
-		for {
-			n := time.Now()
-			d := n.Sub(t)
-			if int(d.Seconds()) > interval {
-				t = n
-				new_stats := nsxtclient.GetGatewayInterfaceStats(g)
-				s.Clear()
-				displayHeader(s, g, interval)
-				update(s, new_stats, last_stats)
-				last_stats = new_stats
-			}
+		for range time.Tick(time.Duration(interval) * time.Second) {
+			new_stats := nsxtclient.GetGatewayInterfaceStats(g)
+			s.Clear()
+			displayHeader(s, g, interval)
+			update(s, new_stats, last_stats)
+			last_stats = new_stats
 		}
 	}(gw, stats, interval)
 
