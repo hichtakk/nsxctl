@@ -1,5 +1,7 @@
 package structs
 
+import "fmt"
+
 type PerNodeStatisticsRx struct {
 	TotalBytes                           uint64 `json:"total_bytes"`
 	TotalPackets                         uint64 `json:"total_packets"`
@@ -51,4 +53,24 @@ type PerNodeStatistics struct {
 type RouterStats struct {
 	PortId            string              `json:"logical_router_port_id"`
 	PerNodeStatistics []PerNodeStatistics `json:"per_node_statistics"`
+}
+
+type Tier0Gateway struct {
+	Id           string `json:"id"`
+	HaMode       string `json:"ha_mode"`
+	Name         string `json:"display_name"`
+	FailoverMode string `json:"failover_mode"`
+}
+
+type Tier0Gateways []Tier0Gateway
+
+func (gws Tier0Gateways) Print(output string) {
+	if output == "json" {
+	} else {
+		fmt.Printf("%-8s	%-8s	%-8s	%-8s\n", "ID", "Name", "HA Mode", "Failover Mode")
+		for _, gw := range gws {
+			fmt.Printf("%-8s	%8s	%8s	%8s\n", gw.Id, gw.Name, gw.HaMode, gw.FailoverMode)
+		}
+	}
+
 }

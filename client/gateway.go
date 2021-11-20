@@ -10,7 +10,7 @@ import (
 	"github.com/hichtakk/nsxctl/structs"
 )
 
-func (c *NsxtClient) GetGateway(tier int16, gwId string) {
+func (c *NsxtClient) GetGateway(tier int16, gwId string) structs.Tier0Gateways {
 	var path string
 	if tier == 0 {
 		path = "/policy/api/v1/infra/tier-0s"
@@ -28,17 +28,33 @@ func (c *NsxtClient) GetGateway(tier int16, gwId string) {
 	defer res.Body.Close()
 	if res.StatusCode != 200 {
 		fmt.Printf("StatusCode=%d\n", res.StatusCode)
-		return
+		return nil
 	}
 	data := readResponseBody(res)
-	gateways := data.(map[string]interface{})["results"]
-	for _, gateway := range gateways.([]interface{}) {
-		//fmt.Printf("role: %s, permission: %s\n", v.(map[string]interface{})["role"], v.(map[string]interface{})["permissions"])
-		b, _ := json.MarshalIndent(gateway, "", "  ")
-		fmt.Println(string(b))
+	var gateways interface{}
+	gws := structs.Tier0Gateways{}
+	if gwId != "" {
+		gateways = data
+		gw := structs.Tier0Gateway{}
+		jsonStr, err := json.Marshal(data)
+		if err != nil {
+			log.Println(err)
+		}
+		json.Unmarshal(jsonStr, &gw)
+		gws = append(gws, gw)
+	} else {
+		gateways = data.(map[string]interface{})["results"]
+		for _, gateway := range gateways.([]interface{}) {
+			gw := structs.Tier0Gateway{}
+			jsonStr, err := json.Marshal(gateway)
+			if err != nil {
+				log.Println(err)
+			}
+			json.Unmarshal(jsonStr, &gw)
+			gws = append(gws, gw)
+		}
 	}
-
-	//_dumpResponse(res)
+	return gws
 }
 
 func (c *NsxtClient) GetLocaleService(tier0_id string) []string {
@@ -141,9 +157,9 @@ func (c *NsxtClient) GetInterfaceStatistics(tier0_id string, locale_service_id s
 	return ifStats
 }
 
-func (c *NsxtClient) GetGatewayInterfaceStats(gw_id string) map[int]structs.RouterStats {
-	locale_service_id := c.GetLocaleService(gw_id)
-	interfaces := c.GetInterface(gw_id, locale_service_id[0])
+func (c *NsxtClient) GetGatewayInterfaceStats(gw structs.Tier0Gateway) map[int]structs.RouterStats {
+	locale_service_id := c.GetLocaleService(gw.Id)
+	interfaces := c.GetInterface(gw.Id, locale_service_id[0])
 	mutex := &sync.Mutex{}
 	result := make(map[int]structs.RouterStats)
 	var wg sync.WaitGroup
@@ -152,7 +168,7 @@ func (c *NsxtClient) GetGatewayInterfaceStats(gw_id string) map[int]structs.Rout
 		go func(idx int, i map[string]string) {
 			defer wg.Done()
 			mutex.Lock()
-			result[idx] = c.GetInterfaceStatistics(gw_id, locale_service_id[0], i)
+			result[idx] = c.GetInterfaceStatistics(gw.Id, locale_service_id[0], i)
 			mutex.Unlock()
 		}(idx, inf)
 	}

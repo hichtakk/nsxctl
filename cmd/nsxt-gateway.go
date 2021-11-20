@@ -17,6 +17,7 @@ import (
 
 func NewCmdShowGateway() *cobra.Command {
 	var tier int16
+	var output string
 	gatewayCmd := &cobra.Command{
 		Use:     "gateway",
 		Aliases: []string{"gw"},
@@ -38,11 +39,13 @@ func NewCmdShowGateway() *cobra.Command {
 			return nil
 		},
 		Run: func(cmd *cobra.Command, args []string) {
+			var gws structs.Tier0Gateways
 			if len(args) > 0 {
-				nsxtclient.GetGateway(tier, args[0])
+				gws = nsxtclient.GetGateway(tier, args[0])
 			} else {
-				nsxtclient.GetGateway(tier, "")
+				gws = nsxtclient.GetGateway(tier, "")
 			}
+			gws.Print(output)
 		},
 	}
 	gatewayCmd.Flags().Int16VarP(&tier, "tier", "t", -1, "gateway tier type (0 or 1)")
@@ -72,10 +75,15 @@ func NewCmdTopGateway() *cobra.Command {
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			if tier == 0 {
-				nsxtclient.GetGateway(tier, args[0])
-				//runTop(args[0])
+				gws := nsxtclient.GetGateway(tier, args[0])
+				if len(gws) < 1 {
+					log.Fatalln("Tier-0 gateway not found")
+				} else if len(gws) > 1 {
+					log.Fatalln("found multiple Tier-0 gateways")
+				}
+				runTop(gws[0])
 			} else if tier == 1 {
-
+				log.Fatalln("top tier-1 gateway is not implemented yet.")
 			} else {
 				os.Exit(-1)
 			}
@@ -101,58 +109,64 @@ func emitStr(s tcell.Screen, x, y int, style tcell.Style, str string) {
 	}
 }
 
-func displayHeader(s tcell.Screen) {
-	//w, h := s.Size()
+func displayHeader(s tcell.Screen, gw structs.Tier0Gateway, interval int) {
 	w, _ := s.Size()
-	//s.Clear()
-	//style := tcell.StyleDefault.Foreground(tcell.ColorCadetBlue.TrueColor()).Background(tcell.ColorWhite)
-	//emitStr(s, w/2-17, h/2, tcell.StyleDefault, "Hello, World!")
-	//emitStr(s, w/2-9, h/2+1, tcell.StyleDefault, "Press ESC to exit.")
-
-	emitStr(s, 0, 4, tcell.StyleDefault, "TX")
-	emitStr(s, 0, 5, tcell.StyleDefault, "Bytes")
-	emitStr(s, 10, 5, tcell.StyleDefault, "Pckts")
-	emitStr(s, 20, 5, tcell.StyleDefault, "Drops")
-	emitStr(s, 30, 4, tcell.StyleDefault, "RX")
-	emitStr(s, 30, 5, tcell.StyleDefault, "Bytes")
-	emitStr(s, 40, 5, tcell.StyleDefault, "Pckts")
-	emitStr(s, 50, 5, tcell.StyleDefault, "Drops")
-	for col := 0; col <= w; col++ {
-		s.SetContent(col, 6, tcell.RuneHLine, nil, tcell.StyleDefault)
-	}
+	int_msg := fmt.Sprintf("update interval: %ds", interval)
+	emitStr(s, 0, 0, tcell.StyleDefault, "[Press ESC to exit]")
+	emitStr(s, 0, 2, tcell.StyleDefault, fmt.Sprintf("ID: %s,", gw.Id))
+	emitStr(s, 6+len(gw.Name), 2, tcell.StyleDefault, fmt.Sprintf("Name: %s", gw.Name))
+	emitStr(s, 0, 3, tcell.StyleDefault, fmt.Sprintf("HA: %s,", gw.HaMode))
+	emitStr(s, 6+len(gw.HaMode), 3, tcell.StyleDefault, fmt.Sprintf("Preempt: %s", gw.FailoverMode))
+	emitStr(s, w-len(int_msg), 0, tcell.StyleDefault, int_msg)
 	s.Show()
 }
 
 func update(s tcell.Screen, stats map[int]structs.RouterStats, last_stats map[int]structs.RouterStats) {
-	//w, h := s.Size()
-	//w, _ := s.Size()
-	//style := tcell.StyleDefault.Foreground(tcell.ColorCadetBlue.TrueColor()).Background(tcell.ColorWhite)
-	//emitStr(s, w/2-17, h/2, tcell.StyleDefault, "Hello, World!")
-	//emitStr(s, w/2-9, h/2+1, tcell.StyleDefault, "Press ESC to exit.")
-	//s.Clear()
-	y := 10
-	for i, stat := range stats {
+	w, _ := s.Size()
+	max_ifname_len := 0
+	for _, stat := range stats {
 		port_id_slice := strings.Split(stat.PortId, "/")
-		if last_stats == nil {
-			emitStr(s, 0, y+i, tcell.StyleDefault, port_id_slice[len(port_id_slice)-1])
-			emitStr(s, 10, y+i, tcell.StyleDefault, strconv.Itoa(int(stat.PerNodeStatistics[0].LastUpdate)))
-			emitStr(s, 25, y+i, tcell.StyleDefault, "calcurating")
-			emitStr(s, 40, y+i, tcell.StyleDefault, "calcurating")
-		} else {
-			emitStr(s, 0, y+i, tcell.StyleDefault, port_id_slice[len(port_id_slice)-1])
-			emitStr(s, 10, y+i, tcell.StyleDefault, strconv.Itoa(int(stat.PerNodeStatistics[0].LastUpdate)-int(last_stats[i].PerNodeStatistics[0].LastUpdate)))
-			emitStr(s, 25, y+i, tcell.StyleDefault, strconv.Itoa(int(stat.PerNodeStatistics[0].Tx.TotalBytes)-int(last_stats[i].PerNodeStatistics[0].Tx.TotalBytes)))
-			emitStr(s, 40, y+i, tcell.StyleDefault, strconv.Itoa(int(stat.PerNodeStatistics[0].Rx.TotalBytes)-int(last_stats[i].PerNodeStatistics[0].Rx.TotalBytes)))
+		port_id := port_id_slice[len(port_id_slice)-1]
+		if len(port_id) > max_ifname_len {
+			max_ifname_len = len(port_id)
 		}
 	}
+	x_ifname := 0
+	x_time := max_ifname_len + 2
+	x_tx := max_ifname_len + 9
+	x_rx := max_ifname_len + 21
+	emitStr(s, 0, 5, tcell.StyleDefault, "IfName")
+	emitStr(s, x_time, 5, tcell.StyleDefault, "Time")
+	emitStr(s, x_tx, 5, tcell.StyleDefault, "TX")
+	emitStr(s, x_rx, 5, tcell.StyleDefault, "RX")
+	for col := 0; col <= w; col++ {
+		s.SetContent(col, 6, tcell.RuneHLine, nil, tcell.StyleDefault)
+	}
 
-	//for col := 0; col <= w; col++ {
-	//	s.SetContent(col, 6, tcell.RuneHLine, nil, tcell.StyleDefault)
-	//}
+	y := 7
+	for i, stat := range stats {
+		port_id_slice := strings.Split(stat.PortId, "/")
+		port_id := port_id_slice[len(port_id_slice)-1]
+		if last_stats == nil {
+			emitStr(s, x_ifname, y+i, tcell.StyleDefault, port_id)
+			emitStr(s, x_time, y+i, tcell.StyleDefault, "*")
+			emitStr(s, x_tx, y+i, tcell.StyleDefault, "*")
+			emitStr(s, x_rx, y+i, tcell.StyleDefault, "*")
+		} else {
+			timediff := stat.PerNodeStatistics[0].LastUpdate - last_stats[i].PerNodeStatistics[0].LastUpdate
+			tx_bytes := stat.PerNodeStatistics[0].Tx.TotalBytes - last_stats[i].PerNodeStatistics[0].Tx.TotalBytes
+			rx_bytes := stat.PerNodeStatistics[0].Rx.TotalBytes - last_stats[i].PerNodeStatistics[0].Rx.TotalBytes
+			emitStr(s, x_ifname, y+i, tcell.StyleDefault, port_id)
+			emitStr(s, x_time, y+i, tcell.StyleDefault, strconv.Itoa(int(timediff)))
+			emitStr(s, x_tx, y+i, tcell.StyleDefault, strconv.FormatFloat(float64(tx_bytes<<3)/float64(timediff), 'f', 2, 64))
+			emitStr(s, x_rx, y+i, tcell.StyleDefault, strconv.FormatFloat(float64(rx_bytes<<3)/float64(timediff), 'f', 2, 64))
+		}
+	}
 	s.Show()
 }
 
-func runTop(gwId string) {
+func runTop(gw structs.Tier0Gateway) {
+	interval := 5
 	encoding.Register()
 	s, e := tcell.NewScreen()
 	if e != nil {
@@ -163,37 +177,43 @@ func runTop(gwId string) {
 		fmt.Fprintf(os.Stderr, "%v\n", e)
 		os.Exit(1)
 	}
-	//defStyle := tcell.StyleDefault.Background(tcell.ColorBlack).Foreground(tcell.ColorWhite)
-	//s.SetStyle(defStyle)
+	defStyle := tcell.StyleDefault.Background(tcell.ColorWhite).Foreground(tcell.ColorBlack)
 
 	// draw initial contents headers
 	s.Clear()
-	displayHeader(s)
+	displayHeader(s, gw, interval)
+	w, h := s.Size()
+	drawBox(s, w/2-13, h/2-1, w/2+11, h/2+1, defStyle, " collecting statistics")
+	s.Show()
+
+	// initial interface list
+	t := time.Now()
+	stats := nsxtclient.GetGatewayInterfaceStats(gw)
+	update(s, stats, nil)
 
 	// update stats loop
-	t := time.Now()
-	go func(gwId string) {
-		var last_stats map[int]structs.RouterStats
+	go func(g structs.Tier0Gateway, stats map[int]structs.RouterStats, interval int) {
+		last_stats := stats
 		for {
 			n := time.Now()
 			d := n.Sub(t)
-			if d.Seconds() > 5 {
+			if int(d.Seconds()) > interval {
 				t = n
-				new_stats := nsxtclient.GetGatewayInterfaceStats(gwId)
+				new_stats := nsxtclient.GetGatewayInterfaceStats(g)
 				s.Clear()
-				displayHeader(s)
+				displayHeader(s, g, interval)
 				update(s, new_stats, last_stats)
 				last_stats = new_stats
 			}
 		}
-	}(gwId)
+	}(gw, stats, interval)
 
 	// event loop
 	for {
 		switch ev := s.PollEvent().(type) {
 		case *tcell.EventResize:
 			s.Sync()
-			displayHeader(s)
+			displayHeader(s, gw, interval)
 		case *tcell.EventKey:
 			if ev.Key() == tcell.KeyEscape {
 				s.Fini()
@@ -201,10 +221,8 @@ func runTop(gwId string) {
 			}
 		}
 	}
-
 }
 
-/*
 func drawText(s tcell.Screen, x1, y1, x2, y2 int, style tcell.Style, text string) {
 	row := y1
 	col := x1
@@ -257,6 +275,7 @@ func drawBox(s tcell.Screen, x1, y1, x2, y2 int, style tcell.Style, text string)
 	drawText(s, x1+1, y1+1, x2-1, y2-1, style, text)
 }
 
+/*
 func runTop2() {
 	defStyle := tcell.StyleDefault.Background(tcell.ColorReset).Foreground(tcell.ColorReset)
 	boxStyle := tcell.StyleDefault.Foreground(tcell.ColorWhite).Background(tcell.ColorPurple)
