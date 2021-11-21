@@ -15,6 +15,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var unit string
+
 func NewCmdShowGateway() *cobra.Command {
 	var tier int16
 	var output string
@@ -110,14 +112,19 @@ func emitStr(s tcell.Screen, x, y int, style tcell.Style, str string) {
 }
 
 func displayHeader(s tcell.Screen, gw structs.Tier0Gateway, interval int) {
-	w, _ := s.Size()
+	w, h := s.Size()
 	int_msg := fmt.Sprintf("update interval: %ds", interval)
-	emitStr(s, 0, 0, tcell.StyleDefault, "[Press ESC to exit]")
+	reverseStyle := tcell.StyleDefault.Reverse(true)
+	emitStr(s, 0, 0, tcell.StyleDefault, "[Press ESC or Ctrl-C to exit]")
 	emitStr(s, 0, 2, tcell.StyleDefault, fmt.Sprintf("ID: %s,", gw.Id))
 	emitStr(s, 6+len(gw.Name), 2, tcell.StyleDefault, fmt.Sprintf("Name: %s", gw.Name))
 	emitStr(s, 0, 3, tcell.StyleDefault, fmt.Sprintf("HA: %s,", gw.HaMode))
 	emitStr(s, 6+len(gw.HaMode), 3, tcell.StyleDefault, fmt.Sprintf("Preempt: %s", gw.FailoverMode))
 	emitStr(s, w-len(int_msg), 0, tcell.StyleDefault, int_msg)
+	for x := 0; x < w; x++ {
+		s.SetContent(x, h-1, ' ', nil, reverseStyle)
+	}
+	emitStr(s, 0, h-1, reverseStyle, "[keys] k: Kbps, m: Mbps, g: Gbps, 'space': toggle")
 	s.Show()
 }
 
@@ -137,8 +144,8 @@ func update(s tcell.Screen, stats map[int]structs.RouterStats, last_stats map[in
 	x_rx := max_ifname_len + 21
 	emitStr(s, 0, 5, tcell.StyleDefault, "IfName")
 	emitStr(s, x_time, 5, tcell.StyleDefault, "Time")
-	emitStr(s, x_tx, 5, tcell.StyleDefault, "TX")
-	emitStr(s, x_rx, 5, tcell.StyleDefault, "RX")
+	emitStr(s, x_tx, 5, tcell.StyleDefault, fmt.Sprintf("TX [%sbps]", unit))
+	emitStr(s, x_rx, 5, tcell.StyleDefault, fmt.Sprintf("RX [%sbps]", unit))
 	for col := 0; col <= w; col++ {
 		s.SetContent(col, 6, tcell.RuneHLine, nil, tcell.StyleDefault)
 	}
@@ -158,6 +165,16 @@ func update(s tcell.Screen, stats map[int]structs.RouterStats, last_stats map[in
 			rx_bytes := stat.PerNodeStatistics[0].Rx.TotalBytes - last_stats[i].PerNodeStatistics[0].Rx.TotalBytes
 			tx_bps := float64(tx_bytes<<3) / (float64(timediff) / 1000.0)
 			rx_bps := float64(rx_bytes<<3) / (float64(timediff) / 1000.0)
+			if unit == "K" {
+				tx_bps = tx_bps / 1000.0
+				rx_bps = rx_bps / 1000.0
+			} else if unit == "M" {
+				tx_bps = tx_bps / 1000000.0
+				rx_bps = rx_bps / 1000000.0
+			} else if unit == "G" {
+				tx_bps = tx_bps / 1000000000.0
+				rx_bps = rx_bps / 1000000000.0
+			}
 			emitStr(s, x_ifname, y+i, tcell.StyleDefault, port_id)
 			emitStr(s, x_time, y+i, tcell.StyleDefault, strconv.Itoa(int(timediff)))
 			emitStr(s, x_tx, y+i, tcell.StyleDefault, strconv.FormatFloat(tx_bps, 'f', 2, 64))
@@ -179,13 +196,13 @@ func runTop(gw structs.Tier0Gateway) {
 		fmt.Fprintf(os.Stderr, "%v\n", e)
 		os.Exit(1)
 	}
-	defStyle := tcell.StyleDefault.Background(tcell.ColorWhite).Foreground(tcell.ColorBlack)
 
 	// draw initial contents headers
 	s.Clear()
 	displayHeader(s, gw, interval)
 	w, h := s.Size()
-	drawBox(s, w/2-13, h/2-1, w/2+11, h/2+1, defStyle, " collecting statistics")
+	reverseStyle := tcell.StyleDefault.Reverse(true)
+	drawBox(s, w/2-13, h/2-1, w/2+11, h/2+1, reverseStyle, " collecting statistics")
 	s.Show()
 
 	// initial interface list
@@ -211,12 +228,45 @@ func runTop(gw structs.Tier0Gateway) {
 			s.Sync()
 			displayHeader(s, gw, interval)
 		case *tcell.EventKey:
-			if ev.Key() == tcell.KeyEscape {
+			if ev.Key() == tcell.KeyEscape || ev.Key() == tcell.KeyCtrlC {
 				s.Fini()
 				os.Exit(0)
+			} else {
+				switch ev.Rune() {
+				case 'k', 'm', 'g', ' ':
+					updateBpsUnit(s, ev.Rune())
+				}
 			}
 		}
 	}
+}
+
+func updateBpsUnit(s tcell.Screen, u rune) {
+	w, h := s.Size()
+	switch u {
+	case 'k':
+		unit = "K"
+	case 'm':
+		unit = "M"
+	case 'g':
+		unit = "G"
+	case ' ':
+		if unit == "K" {
+			unit = "M"
+		} else if unit == "M" {
+			unit = "G"
+		} else if unit == "G" {
+			unit = ""
+		} else {
+			unit = "K"
+		}
+	}
+	msg := fmt.Sprintf("unit has been changed to %sbps", unit)
+	for x := 0; x < w; x++ {
+		s.SetContent(x, h-2, ' ', nil, tcell.StyleDefault)
+	}
+	emitStr(s, 0, h-2, tcell.StyleDefault.Reverse(true), msg)
+	s.Show()
 }
 
 func drawText(s tcell.Screen, x1, y1, x2, y2 int, style tcell.Style, text string) {
