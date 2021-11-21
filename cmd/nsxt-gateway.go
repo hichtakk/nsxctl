@@ -156,10 +156,12 @@ func update(s tcell.Screen, stats map[int]structs.RouterStats, last_stats map[in
 			timediff := stat.PerNodeStatistics[0].LastUpdate - last_stats[i].PerNodeStatistics[0].LastUpdate
 			tx_bytes := stat.PerNodeStatistics[0].Tx.TotalBytes - last_stats[i].PerNodeStatistics[0].Tx.TotalBytes
 			rx_bytes := stat.PerNodeStatistics[0].Rx.TotalBytes - last_stats[i].PerNodeStatistics[0].Rx.TotalBytes
+			tx_bps := float64(tx_bytes<<3) / (float64(timediff) / 1000.0)
+			rx_bps := float64(rx_bytes<<3) / (float64(timediff) / 1000.0)
 			emitStr(s, x_ifname, y+i, tcell.StyleDefault, port_id)
 			emitStr(s, x_time, y+i, tcell.StyleDefault, strconv.Itoa(int(timediff)))
-			emitStr(s, x_tx, y+i, tcell.StyleDefault, strconv.FormatFloat(float64(tx_bytes<<3)/float64(timediff), 'f', 2, 64))
-			emitStr(s, x_rx, y+i, tcell.StyleDefault, strconv.FormatFloat(float64(rx_bytes<<3)/float64(timediff), 'f', 2, 64))
+			emitStr(s, x_tx, y+i, tcell.StyleDefault, strconv.FormatFloat(tx_bps, 'f', 2, 64))
+			emitStr(s, x_rx, y+i, tcell.StyleDefault, strconv.FormatFloat(rx_bps, 'f', 2, 64))
 		}
 	}
 	s.Show()
