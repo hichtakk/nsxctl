@@ -58,6 +58,7 @@ func NewCmdShowGateway() *cobra.Command {
 
 func NewCmdTopGateway() *cobra.Command {
 	var tier int16
+	var interval int
 	gatewayCmd := &cobra.Command{
 		Use:     "gateway",
 		Aliases: []string{"gw"},
@@ -83,7 +84,10 @@ func NewCmdTopGateway() *cobra.Command {
 				} else if len(gws) > 1 {
 					log.Fatalln("found multiple Tier-0 gateways")
 				}
-				runTop(gws[0])
+				if interval < 3 {
+					log.Fatalln("interval must be greater than 3 second")
+				}
+				runTop(gws[0], interval)
 			} else if tier == 1 {
 				log.Fatalln("top tier-1 gateway is not implemented yet.")
 			} else {
@@ -92,6 +96,7 @@ func NewCmdTopGateway() *cobra.Command {
 		},
 	}
 	gatewayCmd.Flags().Int16VarP(&tier, "tier", "t", -1, "gateway tier type (0 or 1)")
+	gatewayCmd.Flags().IntVarP(&interval, "interval", "i", 5, "update interval (minimum 3 sec)")
 	gatewayCmd.MarkFlagRequired("tier")
 
 	return gatewayCmd
@@ -112,19 +117,44 @@ func emitStr(s tcell.Screen, x, y int, style tcell.Style, str string) {
 }
 
 func displayHeader(s tcell.Screen, gw structs.Tier0Gateway, interval int) {
-	w, h := s.Size()
+	w, _ := s.Size()
 	int_msg := fmt.Sprintf("update interval: %ds", interval)
-	reverseStyle := tcell.StyleDefault.Reverse(true)
 	emitStr(s, 0, 0, tcell.StyleDefault, "[Press ESC or Ctrl-C to exit]")
 	emitStr(s, 0, 2, tcell.StyleDefault, fmt.Sprintf("ID: %s,", gw.Id))
 	emitStr(s, 6+len(gw.Name), 2, tcell.StyleDefault, fmt.Sprintf("Name: %s", gw.Name))
 	emitStr(s, 0, 3, tcell.StyleDefault, fmt.Sprintf("HA: %s,", gw.HaMode))
 	emitStr(s, 6+len(gw.HaMode), 3, tcell.StyleDefault, fmt.Sprintf("Preempt: %s", gw.FailoverMode))
 	emitStr(s, w-len(int_msg), 0, tcell.StyleDefault, int_msg)
+	displayFooter(s)
+	s.Show()
+}
+
+func displayFooter(s tcell.Screen) {
+	w, h := s.Size()
+	reverseStyle := tcell.StyleDefault.Reverse(true)
 	for x := 0; x < w; x++ {
 		s.SetContent(x, h-1, ' ', nil, reverseStyle)
 	}
-	emitStr(s, 0, h-1, reverseStyle, "[keys] k: Kbps, m: Mbps, g: Gbps, 'space': toggle")
+	footer_msg := "[display unit keys] b: bps, k: Kbps, m: Mbps, g: Gbps, 'space': toggle unit"
+	emitStr(s, 0, h-1, reverseStyle, footer_msg)
+	str_idx := 0
+	selected_unit := ""
+	switch unit {
+	case "":
+		str_idx = strings.Index(footer_msg, "b:")
+		selected_unit = "b: bps"
+	case "K":
+		str_idx = strings.Index(footer_msg, "k:")
+		selected_unit = "k: Kbps"
+	case "M":
+		str_idx = strings.Index(footer_msg, "m:")
+		selected_unit = "m: Mbps"
+	case "G":
+		str_idx = strings.Index(footer_msg, "g:")
+		selected_unit = "g: Gbps"
+	}
+	emitStr(s, str_idx, h-1, tcell.StyleDefault, selected_unit)
+
 	s.Show()
 }
 
@@ -139,13 +169,13 @@ func update(s tcell.Screen, stats map[int]structs.RouterStats, last_stats map[in
 		}
 	}
 	x_ifname := 0
-	x_time := max_ifname_len + 2
-	x_tx := max_ifname_len + 9
+	x_tx := max_ifname_len + 2
 	x_rx := max_ifname_len + 21
 	emitStr(s, 0, 5, tcell.StyleDefault, "IfName")
-	emitStr(s, x_time, 5, tcell.StyleDefault, "Time")
 	emitStr(s, x_tx, 5, tcell.StyleDefault, fmt.Sprintf("TX [%sbps]", unit))
+	emitStr(s, x_tx+10, 5, tcell.StyleDefault, fmt.Sprintf("TX[%spps]", unit))
 	emitStr(s, x_rx, 5, tcell.StyleDefault, fmt.Sprintf("RX [%sbps]", unit))
+	emitStr(s, x_rx+10, 5, tcell.StyleDefault, fmt.Sprintf("RX[%spps]", unit))
 	for col := 0; col <= w; col++ {
 		s.SetContent(col, 6, tcell.RuneHLine, nil, tcell.StyleDefault)
 	}
@@ -156,36 +186,37 @@ func update(s tcell.Screen, stats map[int]structs.RouterStats, last_stats map[in
 		port_id := port_id_slice[len(port_id_slice)-1]
 		if last_stats == nil {
 			emitStr(s, x_ifname, y+i, tcell.StyleDefault, port_id)
-			emitStr(s, x_time, y+i, tcell.StyleDefault, "*")
 			emitStr(s, x_tx, y+i, tcell.StyleDefault, "*")
+			emitStr(s, x_tx+10, y+i, tcell.StyleDefault, "*")
 			emitStr(s, x_rx, y+i, tcell.StyleDefault, "*")
+			emitStr(s, x_rx+10, y+i, tcell.StyleDefault, "*")
 		} else {
 			timediff := stat.PerNodeStatistics[0].LastUpdate - last_stats[i].PerNodeStatistics[0].LastUpdate
 			tx_bytes := stat.PerNodeStatistics[0].Tx.TotalBytes - last_stats[i].PerNodeStatistics[0].Tx.TotalBytes
 			rx_bytes := stat.PerNodeStatistics[0].Rx.TotalBytes - last_stats[i].PerNodeStatistics[0].Rx.TotalBytes
 			tx_bps := float64(tx_bytes<<3) / (float64(timediff) / 1000.0)
 			rx_bps := float64(rx_bytes<<3) / (float64(timediff) / 1000.0)
+			tx_pckts := stat.PerNodeStatistics[0].Tx.TotalPackets - last_stats[i].PerNodeStatistics[0].Tx.TotalPackets
+			rx_pckts := stat.PerNodeStatistics[0].Rx.TotalPackets - last_stats[i].PerNodeStatistics[0].Rx.TotalPackets
+			u := 1.0
 			if unit == "K" {
-				tx_bps = tx_bps / 1000.0
-				rx_bps = rx_bps / 1000.0
+				u = 1000.0
 			} else if unit == "M" {
-				tx_bps = tx_bps / 1000000.0
-				rx_bps = rx_bps / 1000000.0
+				u = 1000000.0
 			} else if unit == "G" {
-				tx_bps = tx_bps / 1000000000.0
-				rx_bps = rx_bps / 1000000000.0
+				u = 1000000000.0
 			}
 			emitStr(s, x_ifname, y+i, tcell.StyleDefault, port_id)
-			emitStr(s, x_time, y+i, tcell.StyleDefault, strconv.Itoa(int(timediff)))
-			emitStr(s, x_tx, y+i, tcell.StyleDefault, strconv.FormatFloat(tx_bps, 'f', 2, 64))
-			emitStr(s, x_rx, y+i, tcell.StyleDefault, strconv.FormatFloat(rx_bps, 'f', 2, 64))
+			emitStr(s, x_tx, y+i, tcell.StyleDefault, strconv.FormatFloat(tx_bps/u, 'f', 2, 64))
+			emitStr(s, x_tx+10, y+i, tcell.StyleDefault, strconv.FormatFloat(float64(tx_pckts)/u, 'f', 2, 64))
+			emitStr(s, x_rx, y+i, tcell.StyleDefault, strconv.FormatFloat(rx_bps/u, 'f', 2, 64))
+			emitStr(s, x_rx+10, y+i, tcell.StyleDefault, strconv.FormatFloat(float64(rx_pckts)/u, 'f', 2, 64))
 		}
 	}
 	s.Show()
 }
 
-func runTop(gw structs.Tier0Gateway) {
-	interval := 5
+func runTop(gw structs.Tier0Gateway, interval int) {
 	encoding.Register()
 	s, e := tcell.NewScreen()
 	if e != nil {
@@ -233,7 +264,7 @@ func runTop(gw structs.Tier0Gateway) {
 				os.Exit(0)
 			} else {
 				switch ev.Rune() {
-				case 'k', 'm', 'g', ' ':
+				case 'b', 'k', 'm', 'g', ' ':
 					updateBpsUnit(s, ev.Rune())
 				}
 			}
@@ -244,6 +275,8 @@ func runTop(gw structs.Tier0Gateway) {
 func updateBpsUnit(s tcell.Screen, u rune) {
 	w, h := s.Size()
 	switch u {
+	case 'b':
+		unit = ""
 	case 'k':
 		unit = "K"
 	case 'm':
@@ -266,6 +299,7 @@ func updateBpsUnit(s tcell.Screen, u rune) {
 		s.SetContent(x, h-2, ' ', nil, tcell.StyleDefault)
 	}
 	emitStr(s, 0, h-2, tcell.StyleDefault.Reverse(true), msg)
+	displayFooter(s)
 	s.Show()
 }
 
@@ -292,14 +326,12 @@ func drawBox(s tcell.Screen, x1, y1, x2, y2 int, style tcell.Style, text string)
 	if x2 < x1 {
 		x1, x2 = x2, x1
 	}
-
 	// Fill background
 	for row := y1; row <= y2; row++ {
 		for col := x1; col <= x2; col++ {
 			s.SetContent(col, row, ' ', nil, style)
 		}
 	}
-
 	// Draw borders
 	for col := x1; col <= x2; col++ {
 		s.SetContent(col, y1, tcell.RuneHLine, nil, style)
@@ -309,7 +341,6 @@ func drawBox(s tcell.Screen, x1, y1, x2, y2 int, style tcell.Style, text string)
 		s.SetContent(x1, row, tcell.RuneVLine, nil, style)
 		s.SetContent(x2, row, tcell.RuneVLine, nil, style)
 	}
-
 	// Only draw corners if necessary
 	if y1 != y2 && x1 != x2 {
 		s.SetContent(x1, y1, tcell.RuneULCorner, nil, style)
@@ -317,75 +348,5 @@ func drawBox(s tcell.Screen, x1, y1, x2, y2 int, style tcell.Style, text string)
 		s.SetContent(x1, y2, tcell.RuneLLCorner, nil, style)
 		s.SetContent(x2, y2, tcell.RuneLRCorner, nil, style)
 	}
-
 	drawText(s, x1+1, y1+1, x2-1, y2-1, style, text)
 }
-
-/*
-func runTop2() {
-	defStyle := tcell.StyleDefault.Background(tcell.ColorReset).Foreground(tcell.ColorReset)
-	boxStyle := tcell.StyleDefault.Foreground(tcell.ColorWhite).Background(tcell.ColorPurple)
-
-	// Initialize screen
-	s, err := tcell.NewScreen()
-	if err != nil {
-		log.Fatalf("%+v", err)
-	}
-	if err := s.Init(); err != nil {
-		log.Fatalf("%+v", err)
-	}
-	s.SetStyle(defStyle)
-	s.EnableMouse()
-	s.EnablePaste()
-	s.Clear()
-
-	// Draw initial boxes
-	drawBox(s, 1, 1, 42, 7, boxStyle, "Click and drag to draw a box")
-	drawBox(s, 5, 9, 32, 14, boxStyle, "Press C to reset")
-
-	// Event loop
-	ox, oy := -1, -1
-	quit := func() {
-		s.Fini()
-		os.Exit(0)
-	}
-	for {
-		// Update screen
-		s.Show()
-
-		// Poll event
-		ev := s.PollEvent()
-
-		// Process event
-		switch ev := ev.(type) {
-		case *tcell.EventResize:
-			s.Sync()
-		case *tcell.EventKey:
-			if ev.Key() == tcell.KeyEscape || ev.Key() == tcell.KeyCtrlC {
-				quit()
-			} else if ev.Key() == tcell.KeyCtrlL {
-				s.Sync()
-			} else if ev.Rune() == 'C' || ev.Rune() == 'c' {
-				s.Clear()
-			}
-		case *tcell.EventMouse:
-			x, y := ev.Position()
-			button := ev.Buttons()
-			// Only process button events, not wheel events
-			button &= tcell.ButtonMask(0xff)
-
-			if button != tcell.ButtonNone && ox < 0 {
-				ox, oy = x, y
-			}
-			switch ev.Buttons() {
-			case tcell.ButtonNone:
-				if ox >= 0 {
-					label := fmt.Sprintf("%d,%d to %d,%d", ox, oy, x, y)
-					drawBox(s, ox, oy, x, y, boxStyle, label)
-					ox, oy = -1, -1
-				}
-			}
-		}
-	}
-}
-*/
