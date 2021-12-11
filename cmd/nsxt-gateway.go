@@ -16,6 +16,7 @@ import (
 )
 
 var unit string
+var highlight_row int
 
 func NewCmdShowGateway() *cobra.Command {
 	var tier int16
@@ -77,6 +78,7 @@ func NewCmdTopGateway() *cobra.Command {
 			return nil
 		},
 		Run: func(cmd *cobra.Command, args []string) {
+			highlight_row = 0
 			if tier == 0 {
 				gws := nsxtclient.GetGateway(tier, args[0])
 				if len(gws) < 1 {
@@ -180,16 +182,29 @@ func update(s tcell.Screen, stats map[int]structs.RouterStats, last_stats map[in
 		s.SetContent(col, 6, tcell.RuneHLine, nil, tcell.StyleDefault)
 	}
 
+	if highlight_row > len(stats) {
+		highlight_row = 0
+	}
+	if highlight_row < 0 {
+		highlight_row = len(stats)
+	}
 	y := 7
 	for i, stat := range stats {
+		style := tcell.StyleDefault
+		if i+1 == highlight_row {
+			style = tcell.StyleDefault.Reverse(true)
+			for col := 0; col <= w; col++ {
+				s.SetContent(col, y+i, ' ', nil, style)
+			}
+		}
 		port_id_slice := strings.Split(stat.PortId, "/")
 		port_id := port_id_slice[len(port_id_slice)-1]
 		if last_stats == nil {
-			emitStr(s, x_ifname, y+i, tcell.StyleDefault, port_id)
-			emitStr(s, x_tx, y+i, tcell.StyleDefault, "*")
-			emitStr(s, x_tx+10, y+i, tcell.StyleDefault, "*")
-			emitStr(s, x_rx, y+i, tcell.StyleDefault, "*")
-			emitStr(s, x_rx+10, y+i, tcell.StyleDefault, "*")
+			emitStr(s, x_ifname, y+i, style, port_id)
+			emitStr(s, x_tx, y+i, style, "*")
+			emitStr(s, x_tx+10, y+i, style, "*")
+			emitStr(s, x_rx, y+i, style, "*")
+			emitStr(s, x_rx+10, y+i, style, "*")
 		} else {
 			timediff := stat.PerNodeStatistics[0].LastUpdate - last_stats[i].PerNodeStatistics[0].LastUpdate
 			tx_bytes := stat.PerNodeStatistics[0].Tx.TotalBytes - last_stats[i].PerNodeStatistics[0].Tx.TotalBytes
@@ -206,11 +221,11 @@ func update(s tcell.Screen, stats map[int]structs.RouterStats, last_stats map[in
 			} else if unit == "G" {
 				u = 1000000000.0
 			}
-			emitStr(s, x_ifname, y+i, tcell.StyleDefault, port_id)
-			emitStr(s, x_tx, y+i, tcell.StyleDefault, strconv.FormatFloat(tx_bps/u, 'f', 2, 64))
-			emitStr(s, x_tx+10, y+i, tcell.StyleDefault, strconv.FormatFloat(float64(tx_pckts)/u, 'f', 2, 64))
-			emitStr(s, x_rx, y+i, tcell.StyleDefault, strconv.FormatFloat(rx_bps/u, 'f', 2, 64))
-			emitStr(s, x_rx+10, y+i, tcell.StyleDefault, strconv.FormatFloat(float64(rx_pckts)/u, 'f', 2, 64))
+			emitStr(s, x_ifname, y+i, style, port_id)
+			emitStr(s, x_tx, y+i, style, strconv.FormatFloat(tx_bps/u, 'f', 2, 64))
+			emitStr(s, x_tx+10, y+i, style, strconv.FormatFloat(float64(tx_pckts)/u, 'f', 2, 64))
+			emitStr(s, x_rx, y+i, style, strconv.FormatFloat(rx_bps/u, 'f', 2, 64))
+			emitStr(s, x_rx+10, y+i, style, strconv.FormatFloat(float64(rx_pckts)/u, 'f', 2, 64))
 		}
 	}
 	s.Show()
@@ -262,6 +277,14 @@ func runTop(gw structs.Tier0Gateway, interval int) {
 			if ev.Key() == tcell.KeyEscape || ev.Key() == tcell.KeyCtrlC {
 				s.Fini()
 				os.Exit(0)
+			} else if ev.Key() == tcell.KeyRight {
+				updateBpsUnit(s, rune('R'))
+			} else if ev.Key() == tcell.KeyLeft {
+				updateBpsUnit(s, rune('L'))
+			} else if ev.Key() == tcell.KeyUp {
+				highlight_row--
+			} else if ev.Key() == tcell.KeyDown {
+				highlight_row++
 			} else {
 				switch ev.Rune() {
 				case 'b', 'k', 'm', 'g', ' ':
@@ -292,6 +315,26 @@ func updateBpsUnit(s tcell.Screen, u rune) {
 			unit = ""
 		} else {
 			unit = "K"
+		}
+	case 'R':
+		if unit == "K" {
+			unit = "M"
+		} else if unit == "M" {
+			unit = "G"
+		} else if unit == "G" {
+			unit = ""
+		} else {
+			unit = "K"
+		}
+	case 'L':
+		if unit == "K" {
+			unit = ""
+		} else if unit == "M" {
+			unit = "K"
+		} else if unit == "G" {
+			unit = "M"
+		} else {
+			unit = "G"
 		}
 	}
 	msg := fmt.Sprintf("unit has been changed to %sbps", unit)
