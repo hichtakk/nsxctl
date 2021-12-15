@@ -1,6 +1,6 @@
 NAME := nsxctl
 RELEASE_DIR := build
-BUILD_TARGETS := build-linux-amd64 build-linux-arm64 build-darwin-amd64
+BUILD_TARGETS := build-linux-amd64 build-linux-arm64 build-darwin-amd64 build-darwin-arm64
 GOVERSION = $(shell go version)
 THIS_GOOS = $(word 1,$(subst /, ,$(lastword $(GOVERSION))))
 THIS_GOARCH = $(word 2,$(subst /, ,$(lastword $(GOVERSION))))
@@ -20,9 +20,6 @@ lint: ## Examine source code and lint
 
 all: $(BUILD_TARGETS) ## build for all platform
 
-#build: ## build nsxctl
-#	go build -a -v -o ${RELEASE_DIR}/nsxctl ./main.go
-
 build: $(RELEASE_DIR)/nsxctl_$(GOOS)_$(GOARCH) ## build nsxctl
 
 build-linux-amd64: ## build AMD64 linux binary
@@ -33,6 +30,9 @@ build-linux-arm64: ## build ARM64 linux binary
 
 build-darwin-amd64: ## build AMD64 darwin binary
 	@$(MAKE) build GOOS=darwin GOARCH=amd64
+
+build-darwin-arm64: ## build AMD64 darwin binary
+	@$(MAKE) build GOOS=darwin GOARCH=arm64
 
 $(RELEASE_DIR)/nsxctl_$(GOOS)_$(GOARCH): ## Build nsx command-line client
 	@printf "\e[32m"
