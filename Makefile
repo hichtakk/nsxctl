@@ -1,13 +1,50 @@
 NAME := nsxctl
 RELEASE_DIR := build
+BUILD_TARGETS := build-linux-amd64 build-linux-arm64 build-darwin-amd64
+GOVERSION = $(shell go version)
+THIS_GOOS = $(word 1,$(subst /, ,$(lastword $(GOVERSION))))
+THIS_GOARCH = $(word 2,$(subst /, ,$(lastword $(GOVERSION))))
+GOOS = $(THIS_GOOS)
+GOARCH = $(THIS_GOARCH)
+VERSION = $(patsubst "%",%,$(lastword $(shell grep 'const version' main.go)))
+REVISION = $(shell git rev-parse HEAD)
 
 .PHONY: fmt build clean
 
 fmt: ## format
 	go fmt
 
-build: ## build nsxctl
-	go build -a -v -o ${RELEASE_DIR}/nsxctl ./main.go
+lint: ## Examine source code and lint
+	go vet ./...
+	golint -set_exit_status ./...
 
-clean: ## clean up files
-	rm -rf ./build
+all: $(BUILD_TARGETS) ## build for all platform
+
+#build: ## build nsxctl
+#	go build -a -v -o ${RELEASE_DIR}/nsxctl ./main.go
+
+build: $(RELEASE_DIR)/nsxctl_$(GOOS)_$(GOARCH) ## build nsxctl
+
+build-linux-amd64: ## build AMD64 linux binary
+	@$(MAKE) build GOOS=linux GOARCH=amd64
+
+build-linux-arm64: ## build ARM64 linux binary
+	@$(MAKE) build GOOS=linux GOARCH=arm64
+
+build-darwin-amd64: ## build AMD64 darwin binary
+	@$(MAKE) build GOOS=darwin GOARCH=amd64
+
+$(RELEASE_DIR)/nsxctl_$(GOOS)_$(GOARCH): ## Build nsx command-line client
+	@printf "\e[32m"
+	@echo "==> Build nsxctl for ${GOOS}-${GOARCH}"
+	@printf "\e[90m"
+	@GO111MODULE=on go build -ldflags "-X github.com/hichtakk/dosanco/root.revision=${REVISION}" -a -v -o $(RELEASE_DIR)/nsxctl_$(GOOS)_$(GOARCH) ./main.go
+	@printf "\e[m"
+
+clean: ## Clean up built files
+	@printf "\e[32m"
+	@echo '==> Remove built files ./build/...'
+	@printf "\e[90m"
+	@ls -1 ./build
+	@rm -rf build/*
+	@printf "\e[m"
