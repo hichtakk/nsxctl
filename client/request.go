@@ -28,24 +28,34 @@ func (c *NsxtClient) makeRequest(method string, path string) *http.Request {
 	return req
 }
 
-func (c *NsxtClient) Request(method string, path string, req_data string) {
-	reqJson, _ := json.Marshal(req_data)
-	req, _ := http.NewRequest(method, c.BaseUrl+path, bytes.NewBuffer(reqJson))
+func (c *NsxtClient) Request(method string, path string, req_data []byte) {
+	req, _ := http.NewRequest(method, c.BaseUrl+path, bytes.NewBuffer(req_data))
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("X-Xsrf-Token", c.Token)
 	res, err := c.httpClient.Do(req)
 	if err != nil {
 		fmt.Println(err)
-	}
-	defer res.Body.Close()
-	if res.StatusCode != 200 {
-		fmt.Printf("StatusCode=%d\n", res.StatusCode)
 		return
 	}
-	res_data := readResponseBody(res)
-	//fmt.Println(res_data)
-	j, _ := json.MarshalIndent(res_data, "", "  ")
-	fmt.Println(string(j))
+	defer res.Body.Close()
+	res_body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	fmt.Printf("StatusCode: %d\n", res.StatusCode)
+	var data interface{}
+	if len(res_body) > 0 {
+		err = json.Unmarshal(res_body, &data)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		j, _ := json.MarshalIndent(data, "", "  ")
+		fmt.Println(string(j))
+	} else {
+		fmt.Println("no response body")
+	}
 }
 
 func NewNsxtClient(basicAuth bool, debug bool) *NsxtClient {
