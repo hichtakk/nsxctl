@@ -118,7 +118,7 @@ func NewCmdConfigSetSite() *cobra.Command {
 func NewCmdConfigUseSite() *cobra.Command {
 	useSiteCmd := &cobra.Command{
 		Use:   "use-site ${SITE_NAME}",
-		Short: "add nsx-t/alb site configuration",
+		Short: "set current nsx-t/alb site",
 		Args: func(cmd *cobra.Command, args []string) error {
 			if len(args) < 1 {
 				cmd.Help()
