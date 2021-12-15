@@ -13,7 +13,7 @@ import (
 func NewCmdExec() *cobra.Command {
 	var execCmd = &cobra.Command{
 		Use:   "exec",
-		Short: "call API directly",
+		Short: "call API directly\nYou can find NSX-T REST API reference on https://developer.vmware.com/apis/1163/nsx-t",
 		PersistentPreRunE: func(c *cobra.Command, args []string) error {
 			file, _ := ioutil.ReadFile(configfile)
 			json.Unmarshal(file, &conf)
@@ -42,7 +42,7 @@ func NewCmdHttpGet() *cobra.Command {
 	httpGetCmd := &cobra.Command{
 		Use:   "get ${API-PATH}",
 		Short: "call api with HTTP GET method",
-		Long:  "ex) nsxctl exec get /policy/api/v1/infra/tier-0s",
+		Long:  "example) nsxctl exec get /policy/api/v1/infra/tier-0s",
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			nsxtclient.Request("GET", args[0], []byte{})
@@ -126,6 +126,7 @@ func NewCmdHttpPatch() *cobra.Command {
 	httpPatchCmd := &cobra.Command{
 		Use:   "patch",
 		Short: "call api with HTTP PATCH method",
+		Long:  "example) nsxctl exec patch /policy/api/v1/infra/tier-0s -f ./tier0.json",
 		Args:  cobra.ExactArgs(1),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			var raw_data []byte
