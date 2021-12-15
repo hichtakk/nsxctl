@@ -9,7 +9,7 @@ import (
 )
 
 func NewCmdShowIpPool() *cobra.Command {
-	aliases := []string{""}
+	aliases := []string{"ipp"}
 	ipPoolCmd := &cobra.Command{
 		Use:     "ip-pool",
 		Aliases: aliases,
@@ -36,10 +36,11 @@ func NewCmdShowIpPool() *cobra.Command {
 }
 
 func NewCmdShowIpBlock() *cobra.Command {
+	aliases := []string{"ipb"}
 	ipPoolCmd := &cobra.Command{
 		Use:     "ip-block",
 		Aliases: []string{""},
-		Short:   "show ip address blocks",
+		Short:   fmt.Sprintf("show ip address blocks [%s]", strings.Join(aliases, ",")),
 		Args:    cobra.MaximumNArgs(1),
 		PreRunE: func(c *cobra.Command, args []string) error {
 			site, err := conf.NsxT.GetCurrentSite()
@@ -63,10 +64,11 @@ func NewCmdShowIpBlock() *cobra.Command {
 
 func NewCmdCreateIpPool() *cobra.Command {
 	//var transportType string
+	aliases := []string{"ipp"}
 	ipPoolCmd := &cobra.Command{
 		Use:     "ip-pool",
-		Aliases: []string{""},
-		Short:   "create a new ip pool",
+		Aliases: aliases,
+		Short:   fmt.Sprintf("create a new ip pool [%s]", strings.Join(aliases, ",")),
 		Args:    cobra.MaximumNArgs(1),
 		PreRunE: func(c *cobra.Command, args []string) error {
 			site, err := conf.NsxT.GetCurrentSite()
@@ -93,10 +95,11 @@ func NewCmdCreateIpPool() *cobra.Command {
 
 func NewCmdCreateIpBlock() *cobra.Command {
 	var cidr string
+	aliases := []string{"ipb"}
 	ipBlockCmd := &cobra.Command{
 		Use:     "ip-block",
-		Aliases: []string{""},
-		Short:   "create a new ip block",
+		Aliases: aliases,
+		Short:   fmt.Sprintf("create a new ip block [%s]", strings.Join(aliases, ",")),
 		Args:    cobra.MaximumNArgs(1),
 		PreRunE: func(c *cobra.Command, args []string) error {
 			site, err := conf.NsxT.GetCurrentSite()
@@ -122,10 +125,11 @@ func NewCmdCreateIpBlock() *cobra.Command {
 }
 
 func NewCmdDeleteIpPool() *cobra.Command {
+	aliases := []string{"ipp"}
 	ipPoolCmd := &cobra.Command{
 		Use:     "ip-pool",
-		Aliases: []string{""},
-		Short:   "delete ip pool",
+		Aliases: aliases,
+		Short:   fmt.Sprintf("delete ip pool [%s]", strings.Join(aliases, ",")),
 		Args:    cobra.MaximumNArgs(1),
 		PreRunE: func(c *cobra.Command, args []string) error {
 			site, err := conf.NsxT.GetCurrentSite()
@@ -149,10 +153,11 @@ func NewCmdDeleteIpPool() *cobra.Command {
 }
 
 func NewCmdDeleteIpBlock() *cobra.Command {
+	aliases := []string{"ipb"}
 	ipPoolCmd := &cobra.Command{
 		Use:     "ip-block",
-		Aliases: []string{""},
-		Short:   "delete ip block",
+		Aliases: aliases,
+		Short:   fmt.Sprintf("delete ip block [%s]", strings.Join(aliases, ",")),
 		Args:    cobra.MaximumNArgs(1),
 		PreRunE: func(c *cobra.Command, args []string) error {
 			site, err := conf.NsxT.GetCurrentSite()
