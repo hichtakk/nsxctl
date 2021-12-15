@@ -23,7 +23,7 @@ func NewCmdShowGateway() *cobra.Command {
 	var output string
 	aliases := []string{"gw"}
 	gatewayCmd := &cobra.Command{
-		Use:     "gateway",
+		Use:     "gateway -t/--tier [0|1] ${GATEWAY_NAME}",
 		Aliases: aliases,
 		Short:   fmt.Sprintf("show logical gateways [%s]", strings.Join(aliases, ",")),
 		Args:    cobra.MaximumNArgs(1),
@@ -34,7 +34,7 @@ func NewCmdShowGateway() *cobra.Command {
 			}
 			nsxtclient.Login(site.GetCredential())
 			if tier < 0 || tier > 1 {
-				log.Fatalf("error %d\n", tier)
+				log.Fatalf("gateway tier must be specified by flag -t/--tier with value of 0 or 1.\n")
 			}
 			return nil
 		},
