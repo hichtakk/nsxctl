@@ -15,6 +15,10 @@ var (
 	debug      bool
 )
 
+const version = "v0.0.1"
+
+var revision = ""
+
 func newCmd() *cobra.Command {
 	rootCmd := &cobra.Command{
 		Use:   "nsxctl",
@@ -28,6 +32,7 @@ func newCmd() *cobra.Command {
 		NewCmdConfig(),
 		NewCmdClusterInfo(),
 		NewCmdTop(),
+		NewCmdVersion(),
 	)
 	homedir := os.Getenv("HOME")
 	rootCmd.PersistentFlags().BoolVarP(&debug, "debug", "", false, "enable debug mode")
