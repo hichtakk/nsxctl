@@ -11,6 +11,7 @@ import (
 	"net/http/cookiejar"
 	"net/http/httputil"
 	"net/url"
+	"strings"
 	"time"
 )
 
@@ -29,6 +30,10 @@ func (c *NsxtClient) makeRequest(method string, path string) *http.Request {
 }
 
 func (c *NsxtClient) Request(method string, path string, req_data []byte) {
+	if !(strings.HasPrefix(path, "/api/") || strings.HasPrefix(path, "/policy/")) {
+		fmt.Println("path must start with \"/api/\" or \"/policy/\"")
+		return
+	}
 	req, _ := http.NewRequest(method, c.BaseUrl+path, bytes.NewBuffer(req_data))
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("X-Xsrf-Token", c.Token)
