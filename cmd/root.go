@@ -32,6 +32,7 @@ func newCmd() *cobra.Command {
 		NewCmdConfig(),
 		NewCmdClusterInfo(),
 		NewCmdTop(),
+		NewCmdExec(),
 		NewCmdVersion(),
 	)
 	homedir := os.Getenv("HOME")

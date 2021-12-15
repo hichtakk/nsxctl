@@ -1,6 +1,7 @@
 package client
 
 import (
+	"bytes"
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
@@ -25,6 +26,26 @@ func (c *NsxtClient) makeRequest(method string, path string) *http.Request {
 	req, _ := http.NewRequest(method, c.BaseUrl+path, nil)
 	req.Header.Set("X-Xsrf-Token", c.Token)
 	return req
+}
+
+func (c *NsxtClient) Request(method string, path string, req_data string) {
+	reqJson, _ := json.Marshal(req_data)
+	req, _ := http.NewRequest(method, c.BaseUrl+path, bytes.NewBuffer(reqJson))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Xsrf-Token", c.Token)
+	res, err := c.httpClient.Do(req)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer res.Body.Close()
+	if res.StatusCode != 200 {
+		fmt.Printf("StatusCode=%d\n", res.StatusCode)
+		return
+	}
+	res_data := readResponseBody(res)
+	//fmt.Println(res_data)
+	j, _ := json.MarshalIndent(res_data, "", "  ")
+	fmt.Println(string(j))
 }
 
 func NewNsxtClient(basicAuth bool, debug bool) *NsxtClient {
