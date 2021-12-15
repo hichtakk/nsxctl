@@ -3,15 +3,17 @@ package cmd
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/spf13/cobra"
 )
 
 func NewCmdShowComputeManager() *cobra.Command {
+	aliases := []string{"cm"}
 	computeManagerCmd := &cobra.Command{
 		Use:     "compute-manager",
 		Aliases: []string{"cm"},
-		Short:   "show compute managers",
+		Short:   fmt.Sprintf("show compute managers [%s]", strings.Join(aliases, ",")),
 		Args:    cobra.MaximumNArgs(1),
 		PreRunE: func(c *cobra.Command, args []string) error {
 			site, err := conf.NsxT.GetCurrentSite()
@@ -40,10 +42,11 @@ func NewCmdCreateComputeManager() *cobra.Command {
 	var user string
 	var password string
 	var trust bool
+	aliases := []string{"cm"}
 	computeManagerCmd := &cobra.Command{
 		Use:     "compute-manager",
-		Aliases: []string{"cm"},
-		Short:   "create compute managers",
+		Aliases: aliases,
+		Short:   fmt.Sprintf("create compute managers [%s]", strings.Join(aliases, ",")),
 		Args:    cobra.MaximumNArgs(1),
 		PreRunE: func(c *cobra.Command, args []string) error {
 			site, err := conf.NsxT.GetCurrentSite()
@@ -76,10 +79,11 @@ func NewCmdCreateComputeManager() *cobra.Command {
 }
 
 func NewCmdDeleteComputeManager() *cobra.Command {
+	aliases := []string{"cm"}
 	computeManagerCmd := &cobra.Command{
 		Use:     "compute-manager",
-		Aliases: []string{"cm"},
-		Short:   "delete compute managers",
+		Aliases: aliases,
+		Short:   fmt.Sprintf("delete compute managers [%s]", strings.Join(aliases, ",")),
 		Args:    cobra.MaximumNArgs(1),
 		PreRunE: func(c *cobra.Command, args []string) error {
 			site, err := conf.NsxT.GetCurrentSite()
@@ -104,10 +108,11 @@ func NewCmdDeleteComputeManager() *cobra.Command {
 }
 
 func NewCmdShowTransportZone() *cobra.Command {
+	aliases := []string{"tz"}
 	transportZoneCmd := &cobra.Command{
 		Use:     "transport-zone",
-		Aliases: []string{"tz"},
-		Short:   "show transport zones (tz",
+		Aliases: aliases,
+		Short:   fmt.Sprintf("show transport zones [%s]", strings.Join(aliases, ",")),
 		Args:    cobra.MaximumNArgs(1),
 		PreRunE: func(c *cobra.Command, args []string) error {
 			site, err := conf.NsxT.GetCurrentSite()
@@ -131,10 +136,11 @@ func NewCmdShowTransportZone() *cobra.Command {
 
 func NewCmdCreateTransportZone() *cobra.Command {
 	var transportType string
+	aliases := []string{"tz"}
 	transportZoneCmd := &cobra.Command{
 		Use:     "transport-zone",
 		Aliases: []string{"tz"},
-		Short:   "create transport zone",
+		Short:   fmt.Sprintf("create transport zone [%s]", strings.Join(aliases, ",")),
 		Args:    cobra.MaximumNArgs(1),
 		PreRunE: func(c *cobra.Command, args []string) error {
 			site, err := conf.NsxT.GetCurrentSite()
@@ -160,10 +166,11 @@ func NewCmdCreateTransportZone() *cobra.Command {
 }
 
 func NewCmdDeleteTransportZone() *cobra.Command {
+	aliases := []string{"tz"}
 	transportZoneCmd := &cobra.Command{
 		Use:     "transport-zone",
-		Aliases: []string{"tz"},
-		Short:   "delete transport zone",
+		Aliases: aliases,
+		Short:   fmt.Sprintf("delete transport zone [%s]", strings.Join(aliases, ",")),
 		Args:    cobra.MaximumNArgs(1),
 		PreRunE: func(c *cobra.Command, args []string) error {
 			site, err := conf.NsxT.GetCurrentSite()
@@ -188,10 +195,11 @@ func NewCmdDeleteTransportZone() *cobra.Command {
 }
 
 func NewCmdShowTransportNode() *cobra.Command {
+	aliases := []string{"tn"}
 	tpnCmd := &cobra.Command{
 		Use:     "transport-node",
-		Aliases: []string{"tn"},
-		Short:   "show transport nodes",
+		Aliases: aliases,
+		Short:   fmt.Sprintf("show transport nodes [%s]", strings.Join(aliases, ",")),
 		Args:    cobra.MaximumNArgs(1),
 		PreRunE: func(c *cobra.Command, args []string) error {
 			site, err := conf.NsxT.GetCurrentSite()
@@ -214,10 +222,11 @@ func NewCmdShowTransportNode() *cobra.Command {
 }
 
 func NewCmdShowTransportNodeProfile() *cobra.Command {
+	aliases := []string{"tnp"}
 	tpnCmd := &cobra.Command{
 		Use:     "transport-node-profile",
-		Aliases: []string{"tnp"},
-		Short:   "show transport node profiles",
+		Aliases: aliases,
+		Short:   fmt.Sprintf("show transport node profiles [%s]", strings.Join(aliases, ",")),
 		Args:    cobra.MaximumNArgs(1),
 		PreRunE: func(c *cobra.Command, args []string) error {
 			site, err := conf.NsxT.GetCurrentSite()

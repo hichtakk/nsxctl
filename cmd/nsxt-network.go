@@ -1,16 +1,19 @@
 package cmd
 
 import (
+	"fmt"
 	"log"
+	"strings"
 
 	"github.com/spf13/cobra"
 )
 
 func NewCmdShowIpPool() *cobra.Command {
+	aliases := []string{""}
 	ipPoolCmd := &cobra.Command{
 		Use:     "ip-pool",
-		Aliases: []string{""},
-		Short:   "show ip address pools",
+		Aliases: aliases,
+		Short:   fmt.Sprintf("show ip address pools [%s]", strings.Join(aliases, ",")),
 		Args:    cobra.MaximumNArgs(1),
 		PreRunE: func(c *cobra.Command, args []string) error {
 			site, err := conf.NsxT.GetCurrentSite()

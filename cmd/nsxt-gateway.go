@@ -21,10 +21,11 @@ var highlight_row int
 func NewCmdShowGateway() *cobra.Command {
 	var tier int16
 	var output string
+	aliases := []string{"gw"}
 	gatewayCmd := &cobra.Command{
 		Use:     "gateway",
-		Aliases: []string{"gw"},
-		Short:   "show logical gateways",
+		Aliases: aliases,
+		Short:   fmt.Sprintf("show logical gateways [%s]", strings.Join(aliases, ",")),
 		Args:    cobra.MaximumNArgs(1),
 		PreRunE: func(c *cobra.Command, args []string) error {
 			site, err := conf.NsxT.GetCurrentSite()
@@ -60,10 +61,11 @@ func NewCmdShowGateway() *cobra.Command {
 func NewCmdTopGateway() *cobra.Command {
 	var tier int16
 	var interval int
+	aliases := []string{"gw"}
 	gatewayCmd := &cobra.Command{
 		Use:     "gateway",
-		Aliases: []string{"gw"},
-		Short:   "monitor logical gateways",
+		Aliases: aliases,
+		Short:   fmt.Sprintf("monitor logical gateways [%s]", strings.Join(aliases, ",")),
 		Args:    cobra.MaximumNArgs(1),
 		PreRunE: func(c *cobra.Command, args []string) error {
 			site, err := conf.NsxT.GetCurrentSite()
