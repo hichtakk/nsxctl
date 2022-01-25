@@ -30,9 +30,10 @@ func (c *NsxtClient) GetComputeManager() {
 	}
 }
 
-func (c *NsxtClient) CreateComputeManager(address string, thumbprint string, user string, password string, trust bool) {
+func (c *NsxtClient) CreateComputeManager(name string, address string, thumbprint string, user string, password string, trust bool) {
 	path := "/api/v1/fabric/compute-managers"
 	reqData := make(map[string]interface{})
+	reqData["display_name"] = name
 	reqData["server"] = address
 	reqData["origin_type"] = "vCenter"
 	reqData["set_as_oidc_provider"] = trust

@@ -61,7 +61,8 @@ func NewCmdCreateComputeManager() *cobra.Command {
 			return nil
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			nsxtclient.CreateComputeManager(address, thumbprint, user, password, trust)
+			name := args[0]
+			nsxtclient.CreateComputeManager(name, address, thumbprint, user, password, trust)
 			fmt.Println(debug)
 		},
 	}
