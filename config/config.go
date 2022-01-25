@@ -31,6 +31,15 @@ type NsxAlbConfig struct {
 	Sites       []NsxAlbSite `json:"sites" mapstructure:"sites"`
 }
 
+func (a *NsxAlbConfig) GetCurrentSite() (NsxAlbSite, error) {
+	for _, s := range a.Sites {
+		if s.Name == a.CurrentSite {
+			return s, nil
+		}
+	}
+	return NsxAlbSite{}, fmt.Errorf("site '%s' not found", a.CurrentSite)
+}
+
 type NsxTSite struct {
 	Name     string `json:"name"`
 	Endpoint string `json:"endpoint"`
@@ -58,6 +67,24 @@ func (t *NsxTSite) GetCredential() url.Values {
 }
 
 type NsxAlbSite struct {
-	NsxTSite
-	Version string `json:"version"`
+	Name     string `json:"name"`
+	Endpoint string `json:"endpoint"`
+	User     string `json:"user"`
+	Password string `json:"password"`
+	Version  string `json:"version"`
+}
+
+func (a *NsxAlbSite) getPassword() string {
+	pswd, err := base64.StdEncoding.DecodeString(a.Password)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return string(pswd)
+}
+
+func (a *NsxAlbSite) GetCredential() map[string]string {
+	return map[string]string{
+		"username": a.User,
+		"password": a.getPassword(),
+	}
 }
