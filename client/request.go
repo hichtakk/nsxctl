@@ -2,6 +2,7 @@ package client
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
@@ -97,6 +98,24 @@ func readResponseBody(res *http.Response) interface{} {
 	}
 
 	return data
+}
+
+func (c *NsxtClient) GetTlsFingerprint(server string, port uint) string {
+	conn, err := tls.Dial("tcp", fmt.Sprintf("%s:%d", server, port), &tls.Config{InsecureSkipVerify: true})
+	if err != nil {
+		panic("failed to connect: " + err.Error())
+	}
+	cert := conn.ConnectionState().PeerCertificates[0]
+	fingerprint := sha256.Sum256(cert.Raw)
+	var buf bytes.Buffer
+	for i, f := range fingerprint {
+		if i > 0 {
+			fmt.Fprintf(&buf, ":")
+		}
+		fmt.Fprintf(&buf, "%02X", f)
+	}
+	conn.Close()
+	return buf.String()
 }
 
 /*

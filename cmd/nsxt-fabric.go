@@ -38,7 +38,6 @@ func NewCmdShowComputeManager() *cobra.Command {
 
 func NewCmdCreateComputeManager() *cobra.Command {
 	var address string
-	var thumbprint string
 	var user string
 	var password string
 	var trust bool
@@ -62,17 +61,16 @@ func NewCmdCreateComputeManager() *cobra.Command {
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			name := args[0]
+			thumbprint := nsxtclient.GetTlsFingerprint(address, 443)
 			nsxtclient.CreateComputeManager(name, address, thumbprint, user, password, trust)
 			fmt.Println(debug)
 		},
 	}
 	computeManagerCmd.Flags().StringVarP(&address, "address", "a", "", "IPv4 address of target compute manager")
-	computeManagerCmd.Flags().StringVarP(&thumbprint, "thumbprint", "t", "", "thumbprint of target compute manager")
 	computeManagerCmd.Flags().StringVarP(&user, "user", "u", "", "user of target compute manager")
 	computeManagerCmd.Flags().StringVarP(&password, "password", "p", "", "password of target compute manager")
 	computeManagerCmd.Flags().BoolVarP(&trust, "enable-trust", "", false, "enable trust [default: false]")
 	computeManagerCmd.MarkFlagRequired("address")
-	computeManagerCmd.MarkFlagRequired("thumbprint")
 	computeManagerCmd.MarkFlagRequired("user")
 	computeManagerCmd.MarkFlagRequired("password")
 
