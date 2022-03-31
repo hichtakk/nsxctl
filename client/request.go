@@ -30,7 +30,7 @@ func (c *NsxtClient) makeRequest(method string, path string) *http.Request {
 	return req
 }
 
-func (c *NsxtClient) Request(method string, path string, req_data []byte) {
+func (c *NsxtClient) Request(method string, path string, query_param map[string]string, req_data []byte) {
 	if !(strings.HasPrefix(path, "/api/") || strings.HasPrefix(path, "/policy/")) {
 		fmt.Println("path must start with \"/api/\" or \"/policy/\"")
 		return
@@ -38,6 +38,13 @@ func (c *NsxtClient) Request(method string, path string, req_data []byte) {
 	req, _ := http.NewRequest(method, c.BaseUrl+path, bytes.NewBuffer(req_data))
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("X-Xsrf-Token", c.Token)
+	if len(query_param) > 0 {
+		params := req.URL.Query()
+		for k, v := range query_param {
+			params.Add(k, v)
+		}
+		req.URL.RawQuery = params.Encode()
+	}
 	res, err := c.httpClient.Do(req)
 	if err != nil {
 		fmt.Println(err)

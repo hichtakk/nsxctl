@@ -2,8 +2,10 @@ package cmd
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
+	"strings"
 
 	"github.com/hichtakk/nsxctl/client"
 	"github.com/spf13/cobra"
@@ -11,6 +13,7 @@ import (
 
 // NewCmdExec is subcommand to exec api.
 func NewCmdExec() *cobra.Command {
+	var query []string
 	var execCmd = &cobra.Command{
 		Use:   "exec",
 		Short: "call API directly\nYou can find NSX-T REST API reference on https://developer.vmware.com/apis/1163/nsx-t",
@@ -28,24 +31,34 @@ func NewCmdExec() *cobra.Command {
 		},
 	}
 	execCmd.AddCommand(
-		NewCmdHttpGet(),
+		NewCmdHttpGet(&query),
 		NewCmdHttpPost(),
 		NewCmdHttpPut(),
 		NewCmdHttpPatch(),
 		//NewCmdHttpDelete(),
 	)
+	execCmd.PersistentFlags().StringSliceVarP(&query, "query", "q", []string{}, "")
 
 	return execCmd
 }
 
-func NewCmdHttpGet() *cobra.Command {
+func NewCmdHttpGet(query *[]string) *cobra.Command {
 	httpGetCmd := &cobra.Command{
 		Use:   "get ${API-PATH}",
 		Short: "call api with HTTP GET method",
 		Long:  "example) nsxctl exec get /policy/api/v1/infra/tier-0s",
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			nsxtclient.Request("GET", args[0], []byte{})
+			fmt.Println(*query)
+			params := map[string]string{}
+			for _, q := range *query {
+				qSlice := strings.Split(q, "=")
+				if len(qSlice) != 2 {
+					panic("invalid query parameter. it should be formatted as '<name>=<value>'.")
+				}
+				params[qSlice[0]] = qSlice[1]
+			}
+			nsxtclient.Request("GET", args[0], params, []byte{})
 		},
 	}
 
@@ -78,7 +91,7 @@ func NewCmdHttpPost() *cobra.Command {
 			return nil
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			nsxtclient.Request("POST", args[0], data)
+			nsxtclient.Request("POST", args[0], nil, data)
 		},
 	}
 	httpPostCmd.Flags().StringVarP(&fileName, "filename", "f", "", "file name for send data(json)")
@@ -112,7 +125,7 @@ func NewCmdHttpPut() *cobra.Command {
 			return nil
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			nsxtclient.Request("PUT", args[0], data)
+			nsxtclient.Request("PUT", args[0], nil, data)
 		},
 	}
 	httpPutCmd.Flags().StringVarP(&fileName, "filename", "f", "", "file name for send data(json)")
@@ -147,7 +160,7 @@ func NewCmdHttpPatch() *cobra.Command {
 			return nil
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			nsxtclient.Request("PATCH", args[0], data)
+			nsxtclient.Request("PATCH", args[0], nil, data)
 		},
 	}
 	httpPatchCmd.Flags().StringVarP(&fileName, "filename", "f", "", "file name for send data(json)")

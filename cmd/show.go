@@ -34,11 +34,12 @@ func NewCmdShow() *cobra.Command {
 		NewCmdShowTransportZone(),
 		NewCmdShowTransportNode(),
 		NewCmdShowTransportNodeProfile(),
+		NewCmdShowEnforcementPoint(),
 		NewCmdShowIpPool(),
 		NewCmdShowIpBlock(),
 		NewCmdShowSegment(),
-		NewCmdShowAlbCloud(),
-		NewCmdShowAlbVirtualService(),
+		//NewCmdShowAlbCloud(),
+		//NewCmdShowAlbVirtualService(),
 	)
 
 	return showCmd
