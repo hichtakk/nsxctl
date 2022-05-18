@@ -20,17 +20,12 @@ func (c *NsxtClient) GetGateway(tier int16, gwId string) structs.Tier0Gateways {
 	if gwId != "" {
 		path = path + "/" + gwId
 	}
-	req := c.makeRequest("GET", path)
-	res, err := c.httpClient.Do(req)
+	res := c.Request("GET", path, nil, nil)
+	var data interface{}
+	err := json.Unmarshal([]byte(res), &data)
 	if err != nil {
-		fmt.Println(err)
+		log.Fatal(err)
 	}
-	defer res.Body.Close()
-	if res.StatusCode != 200 {
-		fmt.Printf("StatusCode=%d\n", res.StatusCode)
-		return nil
-	}
-	data := readResponseBody(res)
 	var gateways interface{}
 	gws := structs.Tier0Gateways{}
 	if gwId != "" {

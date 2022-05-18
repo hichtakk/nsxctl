@@ -29,7 +29,6 @@ func NewCmdShowComputeManager() *cobra.Command {
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			nsxtclient.GetComputeManager()
-			fmt.Println(debug)
 		},
 	}
 

@@ -12,6 +12,7 @@ import (
 	"net/http/cookiejar"
 	"net/http/httputil"
 	"net/url"
+	"os"
 	"strings"
 	"time"
 )
@@ -30,10 +31,24 @@ func (c *NsxtClient) makeRequest(method string, path string) *http.Request {
 	return req
 }
 
-func (c *NsxtClient) Request(method string, path string, query_param map[string]string, req_data []byte) {
-	if !(strings.HasPrefix(path, "/api/") || strings.HasPrefix(path, "/policy/")) {
-		fmt.Println("path must start with \"/api/\" or \"/policy/\"")
-		return
+func (c *NsxtClient) Request(method string, path string, query_param map[string]string, req_data []byte) string {
+	// validate path
+	err := func() error {
+		var match bool
+		match = false
+		for _, v := range []string{"/api/", "/policy/"} {
+			if strings.HasPrefix(path, v) {
+				match = true
+			}
+		}
+		if match == false {
+			return fmt.Errorf("path must start with \"/api/\" or \"/policy/\"")
+		}
+		return nil
+	}()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err.Error())
+		return ""
 	}
 	req, _ := http.NewRequest(method, c.BaseUrl+path, bytes.NewBuffer(req_data))
 	req.Header.Set("Content-Type", "application/json")
@@ -48,27 +63,33 @@ func (c *NsxtClient) Request(method string, path string, query_param map[string]
 	res, err := c.httpClient.Do(req)
 	if err != nil {
 		fmt.Println(err)
-		return
+		return ""
 	}
 	defer res.Body.Close()
 	res_body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		log.Println(err)
-		return
+		return ""
 	}
-	fmt.Printf("StatusCode: %d\n", res.StatusCode)
+	if res.StatusCode != 200 && res.StatusCode != 201 {
+		fmt.Fprintf(os.Stderr, "StatusCode: %d\n", res.StatusCode)
+		fmt.Fprintf(os.Stderr, "%s", res_body)
+		return ""
+	}
 	var data interface{}
 	if len(res_body) > 0 {
 		err = json.Unmarshal(res_body, &data)
 		if err != nil {
 			log.Println(err)
-			return
+			return ""
 		}
 		j, _ := json.MarshalIndent(data, "", "  ")
-		fmt.Println(string(j))
+		return string(j)
 	} else {
 		fmt.Println("no response body")
 	}
+
+	return ""
 }
 
 func NewNsxtClient(basicAuth bool, debug bool) *NsxtClient {

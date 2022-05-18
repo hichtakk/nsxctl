@@ -46,10 +46,11 @@ func NewCmdShowGateway() *cobra.Command {
 			var gws structs.Tier0Gateways
 			if len(args) > 0 {
 				gws = nsxtclient.GetGateway(tier, args[0])
+				fmt.Println(gws)
 			} else {
 				gws = nsxtclient.GetGateway(tier, "")
+				gws.Print(output)
 			}
-			gws.Print(output)
 		},
 	}
 	gatewayCmd.Flags().Int16VarP(&tier, "tier", "t", -1, "gateway tier type (0 or 1)")

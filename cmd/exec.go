@@ -49,7 +49,6 @@ func NewCmdHttpGet(query *[]string) *cobra.Command {
 		Long:  "example) nsxctl exec get /policy/api/v1/infra/tier-0s",
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println(*query)
 			params := map[string]string{}
 			for _, q := range *query {
 				qSlice := strings.Split(q, "=")
@@ -58,7 +57,8 @@ func NewCmdHttpGet(query *[]string) *cobra.Command {
 				}
 				params[qSlice[0]] = qSlice[1]
 			}
-			nsxtclient.Request("GET", args[0], params, []byte{})
+			resp := nsxtclient.Request("GET", args[0], params, []byte{})
+			fmt.Println(resp)
 		},
 	}
 
