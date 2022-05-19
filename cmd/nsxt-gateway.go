@@ -46,7 +46,7 @@ func NewCmdShowGateway() *cobra.Command {
 			var gws structs.Tier0Gateways
 			if len(args) > 0 {
 				gws = nsxtclient.GetGateway(tier, args[0])
-				fmt.Println(gws)
+				gws.Print(output)
 			} else {
 				gws = nsxtclient.GetGateway(tier, "")
 				gws.Print(output)

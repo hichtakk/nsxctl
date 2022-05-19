@@ -25,13 +25,27 @@ type NsxtClient struct {
 	Debug      bool
 }
 
+type Response struct {
+	*http.Response
+	Body interface{}
+}
+
+func (r *Response) BodyBytes() ([]byte, error) {
+	return json.Marshal(r.Body)
+}
+
+func (r *Response) UnmarshalBody(strct interface{}) {
+	bytes, _ := r.BodyBytes()
+	json.Unmarshal(bytes, strct)
+}
+
 func (c *NsxtClient) makeRequest(method string, path string) *http.Request {
 	req, _ := http.NewRequest(method, c.BaseUrl+path, nil)
 	req.Header.Set("X-Xsrf-Token", c.Token)
 	return req
 }
 
-func (c *NsxtClient) Request(method string, path string, query_param map[string]string, req_data []byte) string {
+func (c *NsxtClient) Request(method string, path string, query_param map[string]string, req_data []byte) *Response {
 	// validate path
 	err := func() error {
 		var match bool
@@ -48,7 +62,7 @@ func (c *NsxtClient) Request(method string, path string, query_param map[string]
 	}()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err.Error())
-		return ""
+		return &Response{}
 	}
 	req, _ := http.NewRequest(method, c.BaseUrl+path, bytes.NewBuffer(req_data))
 	req.Header.Set("Content-Type", "application/json")
@@ -63,33 +77,35 @@ func (c *NsxtClient) Request(method string, path string, query_param map[string]
 	res, err := c.httpClient.Do(req)
 	if err != nil {
 		fmt.Println(err)
-		return ""
+		return &Response{}
 	}
 	defer res.Body.Close()
 	res_body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		log.Println(err)
-		return ""
+		return &Response{}
 	}
 	if res.StatusCode != 200 && res.StatusCode != 201 {
 		fmt.Fprintf(os.Stderr, "StatusCode: %d\n", res.StatusCode)
 		fmt.Fprintf(os.Stderr, "%s", res_body)
-		return ""
+		return &Response{}
 	}
 	var data interface{}
 	if len(res_body) > 0 {
 		err = json.Unmarshal(res_body, &data)
 		if err != nil {
 			log.Println(err)
-			return ""
+			return &Response{}
 		}
-		j, _ := json.MarshalIndent(data, "", "  ")
-		return string(j)
+		//j, _ := json.MarshalIndent(data, "", "  ")
+		r := &Response{res, data}
+		return r
+		//return string(j)
 	} else {
 		fmt.Println("no response body")
 	}
 
-	return ""
+	return &Response{}
 }
 
 func NewNsxtClient(basicAuth bool, debug bool) *NsxtClient {

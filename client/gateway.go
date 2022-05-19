@@ -21,24 +21,14 @@ func (c *NsxtClient) GetGateway(tier int16, gwId string) structs.Tier0Gateways {
 		path = path + "/" + gwId
 	}
 	res := c.Request("GET", path, nil, nil)
-	var data interface{}
-	err := json.Unmarshal([]byte(res), &data)
-	if err != nil {
-		log.Fatal(err)
-	}
 	var gateways interface{}
 	gws := structs.Tier0Gateways{}
 	if gwId != "" {
-		gateways = data
 		gw := structs.Tier0Gateway{}
-		jsonStr, err := json.Marshal(data)
-		if err != nil {
-			log.Println(err)
-		}
-		json.Unmarshal(jsonStr, &gw)
+		res.UnmarshalBody(&gw)
 		gws = append(gws, gw)
 	} else {
-		gateways = data.(map[string]interface{})["results"]
+		gateways = res.Body.(map[string]interface{})["results"]
 		for _, gateway := range gateways.([]interface{}) {
 			gw := structs.Tier0Gateway{}
 			jsonStr, err := json.Marshal(gateway)
