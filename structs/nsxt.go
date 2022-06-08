@@ -2,6 +2,32 @@ package structs
 
 import "fmt"
 
+type ComputeManager struct {
+	Id     string
+	Name   string
+	Type   string
+	Server string
+	Detail string
+	Status *ComputeManagerStatus
+}
+
+func (cm *ComputeManager) Print() {
+	fmt.Println("Name:    ", cm.Name)
+	fmt.Println("ID:      ", cm.Id)
+	fmt.Println("Type:    ", cm.Type)
+	fmt.Println("FQDN/IP: ", cm.Server)
+	fmt.Println("Version: ", cm.Detail)
+	if cm.Status != nil {
+		s := fmt.Sprintf("Status:   %s, %s", cm.Status.Connection, cm.Status.Registration)
+		fmt.Println(s)
+	}
+}
+
+type ComputeManagerStatus struct {
+	Connection   string
+	Registration string
+}
+
 type PerNodeStatisticsRx struct {
 	TotalBytes                           uint64 `json:"total_bytes"`
 	TotalPackets                         uint64 `json:"total_packets"`
