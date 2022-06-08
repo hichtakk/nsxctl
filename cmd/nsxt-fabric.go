@@ -28,7 +28,11 @@ func NewCmdShowComputeManager() *cobra.Command {
 			return nil
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			nsxtclient.GetComputeManager()
+			cms := nsxtclient.GetComputeManager()
+			for _, cm := range *cms {
+				cm.Status = nsxtclient.GetComputeManagerStatus(cm.Id)
+				cm.Print()
+			}
 		},
 	}
 
@@ -50,6 +54,9 @@ func NewCmdCreateComputeManager() *cobra.Command {
 			site, err := conf.NsxT.GetCurrentSite()
 			if err != nil {
 				log.Fatal(err)
+			}
+			if len(args) == 0 {
+				log.Fatal("compute manager name is required")
 			}
 			nsxtclient.Login(site.GetCredential())
 			return nil

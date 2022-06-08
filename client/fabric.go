@@ -6,12 +6,35 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+
+	"github.com/hichtakk/nsxctl/structs"
 )
 
-func (c *NsxtClient) GetComputeManager() {
+func (c *NsxtClient) GetComputeManager() *[]structs.ComputeManager {
 	path := "/api/v1/fabric/compute-managers"
 	res := c.Request("GET", path, nil, nil)
-	fmt.Println(res)
+	res_cms := res.Body.(map[string]interface{})["results"]
+	cms := []structs.ComputeManager{}
+	for _, res_cm := range res_cms.([]interface{}) {
+		c := structs.ComputeManager{
+			Id:     res_cm.(map[string]interface{})["id"].(string),
+			Name:   res_cm.(map[string]interface{})["display_name"].(string),
+			Type:   res_cm.(map[string]interface{})["origin_type"].(string),
+			Server: res_cm.(map[string]interface{})["server"].(string),
+			Detail: res_cm.(map[string]interface{})["origin_properties"].([]interface{})[0].(map[string]interface{})["value"].(string),
+		}
+		cms = append(cms, c)
+	}
+	return &cms
+}
+
+func (c *NsxtClient) GetComputeManagerStatus(cmId string) *structs.ComputeManagerStatus {
+	path := "/api/v1/fabric/compute-managers/" + cmId + "/status"
+	res := c.Request("GET", path, nil, nil)
+	status := structs.ComputeManagerStatus{}
+	status.Connection = res.Body.(map[string]interface{})["connection_status"].(string)
+	status.Registration = res.Body.(map[string]interface{})["registration_status"].(string)
+	return &status
 }
 
 func (c *NsxtClient) CreateComputeManager(name string, address string, thumbprint string, user string, password string, trust bool) {
