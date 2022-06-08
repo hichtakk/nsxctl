@@ -38,7 +38,7 @@ $(RELEASE_DIR)/nsxctl_$(GOOS)_$(GOARCH): ## Build nsx command-line client
 	@printf "\e[32m"
 	@echo "==> Build nsxctl for ${GOOS}-${GOARCH}"
 	@printf "\e[90m"
-	@GO111MODULE=on go build -ldflags "-X github.com/hichtakk/dosanco/root.revision=${REVISION}" -a -v -o $(RELEASE_DIR)/nsxctl_$(GOOS)_$(GOARCH) ./main.go
+	@GO111MODULE=on go build -tags netgo -ldflags "-X github.com/hichtakk/dosanco/root.revision=${REVISION}" -a -v -o $(RELEASE_DIR)/nsxctl_$(GOOS)_$(GOARCH) ./main.go
 	@printf "\e[m"
 
 clean: ## Clean up built files
@@ -48,3 +48,5 @@ clean: ## Clean up built files
 	@ls -1 ./build
 	@rm -rf build/*
 	@printf "\e[m"
+
+rebuild: clean build
