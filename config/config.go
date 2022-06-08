@@ -26,6 +26,15 @@ func (t *NsxTConfig) GetCurrentSite() (NsxTSite, error) {
 	return NsxTSite{}, fmt.Errorf("site '%s' not found", t.CurrentSite)
 }
 
+func (t *NsxTConfig) GetSite(name string) (NsxTSite, error) {
+	for _, s := range t.Sites {
+		if s.Name == name {
+			return s, nil
+		}
+	}
+	return NsxTSite{}, fmt.Errorf("site '%s' not found", name)
+}
+
 type NsxAlbConfig struct {
 	CurrentSite string       `json:"current-site" mapstructure:"current-site"`
 	Sites       []NsxAlbSite `json:"sites" mapstructure:"sites"`

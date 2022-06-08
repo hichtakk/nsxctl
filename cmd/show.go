@@ -20,7 +20,12 @@ func NewCmdShow() *cobra.Command {
 			json.Unmarshal(file, &conf)
 			nsxtclient = client.NewNsxtClient(false, debug)
 			var site config.NsxTSite
-			site, err := conf.NsxT.GetCurrentSite()
+			var err error
+			if useSite != "" {
+				site, err = conf.NsxT.GetSite(useSite)
+			} else {
+				site, err = conf.NsxT.GetCurrentSite()
+			}
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -38,6 +43,7 @@ func NewCmdShow() *cobra.Command {
 		NewCmdShowIpPool(),
 		NewCmdShowIpBlock(),
 		NewCmdShowSegment(),
+		NewCmdShowRoutingTable(),
 		//NewCmdShowAlbCloud(),
 		//NewCmdShowAlbVirtualService(),
 	)

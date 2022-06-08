@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/hichtakk/nsxctl/client"
+	"github.com/hichtakk/nsxctl/config"
 	"github.com/spf13/cobra"
 )
 
@@ -21,7 +22,13 @@ func NewCmdExec() *cobra.Command {
 			file, _ := ioutil.ReadFile(configfile)
 			json.Unmarshal(file, &conf)
 			nsxtclient = client.NewNsxtClient(false, debug)
-			site, err := conf.NsxT.GetCurrentSite()
+			var site config.NsxTSite
+			var err error
+			if useSite != "" {
+				site, err = conf.NsxT.GetSite(useSite)
+			} else {
+				site, err = conf.NsxT.GetCurrentSite()
+			}
 			if err != nil {
 				log.Fatal(err)
 			}
