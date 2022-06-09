@@ -65,7 +65,8 @@ func NewCmdHttpGet(query *[]string) *cobra.Command {
 				params[qSlice[0]] = qSlice[1]
 			}
 			resp := nsxtclient.Request("GET", args[0], params, []byte{})
-			fmt.Println(resp)
+			body, _ := resp.BodyBytes()
+			fmt.Println(string(body))
 		},
 	}
 
