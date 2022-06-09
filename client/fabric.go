@@ -100,6 +100,7 @@ func (c *NsxtClient) DeleteComputeManager(cmId string) {
 	_dumpResponse(res)
 }
 
+// DEPRECATED
 func (c *NsxtClient) GetTransportZone() {
 	path := "/api/v1/transport-zones"
 	req, _ := http.NewRequest("GET", c.BaseUrl+path, nil)
@@ -119,6 +120,19 @@ func (c *NsxtClient) GetTransportZone() {
 		b, _ := json.MarshalIndent(cm, "", "  ")
 		fmt.Println(string(b))
 	}
+}
+
+func (c *NsxtClient) GetPolicyTransportZone(ep_path string) *[]structs.TransportZone {
+	path := "/policy/api/v1" + ep_path + "/transport-zones"
+	tzs := []structs.TransportZone{}
+	res := c.Request("GET", path, nil, nil)
+	for _, tz := range res.Body.(map[string]interface{})["results"].([]interface{}) {
+		id := tz.(map[string]interface{})["id"].(string)
+		name := tz.(map[string]interface{})["display_name"].(string)
+		tz_type := tz.(map[string]interface{})["tz_type"].(string)
+		tzs = append(tzs, structs.TransportZone{Id: id, Name: name, Type: tz_type})
+	}
+	return &tzs
 }
 
 func (c *NsxtClient) CreateTransportZone(name string, transportType string) {

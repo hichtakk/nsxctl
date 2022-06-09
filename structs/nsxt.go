@@ -2,6 +2,17 @@ package structs
 
 import "fmt"
 
+type EnforcementPoint struct {
+	Id   string
+	Path string
+}
+
+type TransportZone struct {
+	Id   string
+	Name string
+	Type string
+}
+
 type ComputeManager struct {
 	Id     string
 	Name   string

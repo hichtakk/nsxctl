@@ -5,6 +5,7 @@ import (
 	"log"
 	"strings"
 
+	"github.com/hichtakk/nsxctl/structs"
 	"github.com/spf13/cobra"
 )
 
@@ -132,7 +133,15 @@ func NewCmdShowTransportZone() *cobra.Command {
 			return nil
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			nsxtclient.GetTransportZone()
+			eps := nsxtclient.GetEnforcementPoint("default")
+			var ep structs.EnforcementPoint
+			for _, ep = range *eps {
+				break
+			}
+			tzs := nsxtclient.GetPolicyTransportZone(ep.Path)
+			for _, tz := range *tzs {
+				fmt.Println(tz.Id, tz.Name, tz.Type)
+			}
 		},
 	}
 

@@ -28,8 +28,10 @@ func NewCmdShowEnforcementPoint() *cobra.Command {
 			return nil
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			eps := nsxtclient.GetEnforcementPoint("defaualt")
-			fmt.Println(eps)
+			eps := nsxtclient.GetEnforcementPoint("default")
+			for _, ep := range *eps {
+				fmt.Println(ep.Id, ep.Path)
+			}
 		},
 	}
 
