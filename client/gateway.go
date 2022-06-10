@@ -49,24 +49,12 @@ func (c *NsxtClient) GetLocaleService(tier0_id string) []string {
 		fmt.Println(err)
 	}
 	defer res.Body.Close()
-	//_dumpRequest(req)
 
 	if res.StatusCode != 200 {
 		fmt.Printf("StatusCode=%d\n", res.StatusCode)
 		_dumpResponse(res)
 		return []string{}
 	}
-	//data := readResponseBody(res)
-	/*
-		        gateways := data.(map[string]interface{})["results"]
-				for _, gateway := range gateways.([]interface{}) {
-					//fmt.Printf("role: %s, permission: %s\n", v.(map[string]interface{})["role"], v.(map[string]interface{})["permissions"])
-					b, _ := json.MarshalIndent(gateway, "", "  ")
-					fmt.Println(string(b))
-				}
-	*/
-	//_dumpResponse(res)
-
 	locale_service_id := "default"
 
 	return []string{locale_service_id}
@@ -79,15 +67,12 @@ func (c *NsxtClient) GetInterface(tier0_id string, locale_service_id string) []m
 		fmt.Println(err)
 	}
 	defer res.Body.Close()
-	//_dumpRequest(req)
-
 	if res.StatusCode != 200 {
 		fmt.Printf("StatusCode=%d\n", res.StatusCode)
 		_dumpResponse(res)
 		return []map[string]string{}
 	}
 	data := readResponseBody(res)
-	//_dumpResponse(res)
 	interfaces := []map[string]string{}
 	ifs := data.(map[string]interface{})["results"]
 	for _, if_data := range ifs.([]interface{}) {
@@ -100,7 +85,6 @@ func (c *NsxtClient) GetInterface(tier0_id string, locale_service_id string) []m
 		}
 		interfaces = append(interfaces, if_data_map)
 	}
-	//log.Println(interfaces)
 
 	return interfaces
 }
@@ -159,4 +143,19 @@ func (c *NsxtClient) GetGatewayInterfaceStats(gw structs.Tier0Gateway) map[int]s
 	}
 	wg.Wait()
 	return result
+}
+
+func (c *NsxtClient) GetRoutingTable(tier0Id string) []structs.EdgeRoute {
+	var path string
+	path = "/policy/api/v1/infra/tier-0s/" + tier0Id + "/routing-table"
+	res := c.Request("GET", path, nil, nil)
+	entries := []structs.EdgeRoute{}
+	for _, ed := range res.Body.(map[string]interface{})["results"].([]interface{}) {
+		str, _ := json.Marshal(ed)
+		var edgeRoutes structs.EdgeRoute
+		json.Unmarshal(str, &edgeRoutes)
+		entries = append(entries, edgeRoutes)
+	}
+
+	return entries
 }

@@ -59,6 +59,44 @@ func NewCmdShowGateway() *cobra.Command {
 	return gatewayCmd
 }
 
+func NewCmdShowRoutingTable() *cobra.Command {
+	//var tier int16
+	aliases := []string{"rt"}
+	gatewayCmd := &cobra.Command{
+		Use:     "routes -g/--gateway ${TIER_0_GATEWAY_NAME}",
+		Aliases: aliases,
+		Short:   fmt.Sprintf("show routing table of specified tier-0 gateways [%s]", strings.Join(aliases, ",")),
+		Args:    cobra.ExactArgs(1),
+		PreRunE: func(c *cobra.Command, args []string) error {
+			site, err := conf.NsxT.GetCurrentSite()
+			if err != nil {
+				log.Fatal(err)
+			}
+			nsxtclient.Login(site.GetCredential())
+			/*
+				if tier < 0 || tier > 1 {
+					log.Fatalf("gateway tier must be specified by flag -t/--tier with value of 0 or 1.\n")
+				}
+			*/
+			return nil
+		},
+		PostRunE: func(c *cobra.Command, args []string) error {
+			nsxtclient.Logout()
+			return nil
+		},
+		Run: func(cmd *cobra.Command, args []string) {
+			routes := nsxtclient.GetRoutingTable(args[0])
+			for _, er := range routes {
+				er.Print()
+			}
+		},
+	}
+	//gatewayCmd.Flags().Int16VarP(&tier, "tier", "t", -1, "gateway tier type (0 or 1)")
+	//gatewayCmd.MarkFlagRequired("tier")
+
+	return gatewayCmd
+}
+
 func NewCmdTopGateway() *cobra.Command {
 	var tier int16
 	var interval int

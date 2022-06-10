@@ -13,6 +13,27 @@ type TransportZone struct {
 	Type string
 }
 
+type RouteEntry struct {
+	Type       string `json:"route_type"`
+	Network    string `json:"network"`
+	NextHop    string `json:"next_hop"`
+	Ad         uint8  `json:"admin_distance"`
+	RouterId   string `json:"lr_component_id"`
+	RouterType string `json:"lr_component_type"`
+}
+
+type EdgeRoute struct {
+	NodePath string       `json:"edge_node"`
+	Entries  []RouteEntry `json:"route_entries"`
+}
+
+func (er *EdgeRoute) Print() {
+	fmt.Println(er.NodePath)
+	for _, e := range er.Entries {
+		fmt.Println(e.Type, e.Network, e.NextHop, e.Ad)
+	}
+}
+
 type ComputeManager struct {
 	Id     string
 	Name   string
