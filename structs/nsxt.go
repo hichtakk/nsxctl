@@ -1,6 +1,10 @@
 package structs
 
-import "fmt"
+import (
+	"fmt"
+	"strconv"
+	"strings"
+)
 
 type EnforcementPoint struct {
 	Id   string
@@ -11,6 +15,30 @@ type TransportZone struct {
 	Id   string
 	Name string
 	Type string
+}
+
+type EdgeClusterMember struct {
+	Index int    `json:"member_index"`
+	Id    string `json:"transport_node_id"`
+}
+
+type EdgeCluster struct {
+	Id             string              `json:"id"`
+	Name           string              `json:"display_name"`
+	Type           string              `json:"deployment_type"`
+	Members        []EdgeClusterMember `json:"members"`
+	MemberNodeType string              `json:"member_node_type"`
+}
+
+type EdgeClusters []EdgeCluster
+
+func (ecs *EdgeClusters) GetClusterById(Id string) *EdgeCluster {
+	for _, ec := range *ecs {
+		if ec.Id == Id {
+			return &ec
+		}
+	}
+	return &EdgeCluster{}
 }
 
 type RouteEntry struct {
@@ -28,10 +56,55 @@ type EdgeRoute struct {
 }
 
 func (er *EdgeRoute) Print() {
-	fmt.Println(er.NodePath)
+	//fmt.Println(er.NodePath)
 	for _, e := range er.Entries {
-		fmt.Println(e.Type, e.Network, e.NextHop, e.Ad)
+		var routeType string
+		switch e.Type {
+		case "t0c":
+			routeType = "C"
+		case "t0s":
+			routeType = "S"
+		case "b":
+			routeType = "B"
+		case "t0n":
+			routeType = "N"
+		case "t1c":
+			routeType = "c"
+		case "t1s":
+			routeType = "s"
+		case "t1n":
+			routeType = "n"
+		case "t1l":
+			routeType = "l"
+		case "t1ls":
+			routeType = "ln"
+		case "t1d":
+			routeType = "d"
+		case "t1ipsec":
+			routeType = "p"
+		case "isr":
+			routeType = "i"
+		}
+		if routeType == "C" {
+			fmt.Printf("%v> %v is directly connected\n", routeType, e.Network)
+		} else if routeType == "i" && e.NextHop == "" {
+			fmt.Printf("%v> %v [%v] blackhole\n", routeType, e.Network, e.Ad)
+		} else {
+			fmt.Printf("%v> %v [%v] via %v\n", routeType, e.Network, e.Ad, e.NextHop)
+		}
 	}
+	fmt.Println()
+}
+
+func (er *EdgeRoute) GetEdgeClusterId() string {
+	path := strings.Split(er.NodePath, "/")
+	return path[7]
+}
+
+func (er *EdgeRoute) GetEdgeClusterNodeIdx() int {
+	path := strings.Split(er.NodePath, "/")
+	idx, _ := strconv.Atoi(path[9])
+	return idx
 }
 
 type ComputeManager struct {
@@ -58,6 +131,11 @@ func (cm *ComputeManager) Print() {
 type ComputeManagerStatus struct {
 	Connection   string
 	Registration string
+}
+
+type TransportNode struct {
+	Id   string `json:"id"`
+	Name string `json:"display_name"`
 }
 
 type PerNodeStatisticsRx struct {

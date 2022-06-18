@@ -85,8 +85,14 @@ func NewCmdShowRoutingTable() *cobra.Command {
 			return nil
 		},
 		Run: func(cmd *cobra.Command, args []string) {
+			ecs := nsxtclient.GetEdgeCluster()
+			ecss := structs.EdgeClusters(*ecs)
 			routes := nsxtclient.GetRoutingTable(args[0])
 			for _, er := range routes {
+				ec := ecss.GetClusterById(er.GetEdgeClusterId())
+				idx := er.GetEdgeClusterNodeIdx()
+				node := nsxtclient.GetTransportNodeById(ec.Members[idx].Id)
+				fmt.Printf("/edge-cluster/%v/node/%v\n", ec.Name, node.Name)
 				er.Print()
 			}
 		},

@@ -243,6 +243,15 @@ func (c *NsxtClient) GetTransportNode() {
 	}
 }
 
+func (c *NsxtClient) GetTransportNodeById(uuid string) *structs.TransportNode {
+	path := "/api/v1/transport-nodes/" + uuid
+	res := c.Request("GET", path, nil, nil)
+	str, _ := json.Marshal(res.Body)
+	var node structs.TransportNode
+	json.Unmarshal(str, &node)
+	return &node
+}
+
 func (c *NsxtClient) GetTransportNodeProfile() {
 	req := c.makeRequest("GET", "/api/v1/transport-node-profiles")
 	res, err := c.httpClient.Do(req)
@@ -261,4 +270,17 @@ func (c *NsxtClient) GetTransportNodeProfile() {
 		b, _ := json.MarshalIndent(gateway, "", "  ")
 		fmt.Println(string(b))
 	}
+}
+
+func (c *NsxtClient) GetEdgeCluster() *[]structs.EdgeCluster {
+	path := "/api/v1/edge-clusters/"
+	res := c.Request("GET", path, nil, nil)
+	edgeClusters := []structs.EdgeCluster{}
+	for _, ec := range res.Body.(map[string]interface{})["results"].([]interface{}) {
+		str, _ := json.Marshal(ec)
+		var edgeCluster structs.EdgeCluster
+		json.Unmarshal(str, &edgeCluster)
+		edgeClusters = append(edgeClusters, edgeCluster)
+	}
+	return &edgeClusters
 }

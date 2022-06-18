@@ -100,7 +100,6 @@ func (c *NsxtClient) Request(method string, path string, query_param map[string]
 		//j, _ := json.MarshalIndent(data, "", "  ")
 		r := &Response{res, data}
 		return r
-		//return string(j)
 	} else {
 		fmt.Println("no response body")
 	}
