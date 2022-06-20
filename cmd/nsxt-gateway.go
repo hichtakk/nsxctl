@@ -60,7 +60,7 @@ func NewCmdShowGateway() *cobra.Command {
 }
 
 func NewCmdShowRoutingTable() *cobra.Command {
-	//var tier int16
+	var ipVer int
 	aliases := []string{"rt"}
 	gatewayCmd := &cobra.Command{
 		Use:     "routes -g/--gateway ${TIER_0_GATEWAY_NAME}",
@@ -93,11 +93,12 @@ func NewCmdShowRoutingTable() *cobra.Command {
 				idx := er.GetEdgeClusterNodeIdx()
 				node := nsxtclient.GetTransportNodeById(ec.Members[idx].Id)
 				fmt.Printf("/edge-cluster/%v/node/%v\n", ec.Name, node.Name)
-				er.Print()
+				e := er.GetEntries(ipVer)
+				e.Print()
 			}
 		},
 	}
-	//gatewayCmd.Flags().Int16VarP(&tier, "tier", "t", -1, "gateway tier type (0 or 1)")
+	gatewayCmd.Flags().IntVarP(&ipVer, "ip", "", 4, "ip address version (4 or 6)")
 	//gatewayCmd.MarkFlagRequired("tier")
 
 	return gatewayCmd

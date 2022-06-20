@@ -261,8 +261,3 @@ func NewCmdShowTransportNodeProfile() *cobra.Command {
 
 	return tpnCmd
 }
-
-func GetEdgeClusterNodeIdFromClusterIndex(ec structs.EdgeCluster, idx int) string {
-	edgeNode := ec.Members[idx]
-	return edgeNode.Id
-}

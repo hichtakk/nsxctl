@@ -2,6 +2,7 @@ package structs
 
 import (
 	"fmt"
+	"net/netip"
 	"strconv"
 	"strings"
 )
@@ -56,7 +57,6 @@ type EdgeRoute struct {
 }
 
 func (er *EdgeRoute) Print() {
-	//fmt.Println(er.NodePath)
 	for _, e := range er.Entries {
 		var routeType string
 		switch e.Type {
@@ -105,6 +105,84 @@ func (er *EdgeRoute) GetEdgeClusterNodeIdx() int {
 	path := strings.Split(er.NodePath, "/")
 	idx, _ := strconv.Atoi(path[9])
 	return idx
+}
+
+func (er *EdgeRoute) GetEntries(version int) RouteEntries {
+	var entries []RouteEntry
+	var bitLen int
+	if version == 6 {
+		bitLen = 128
+	} else {
+		bitLen = 32
+	}
+	// filter whether IPv4 or IPv6
+	for _, e := range er.Entries {
+		eip, _ := netip.ParsePrefix(e.Network)
+		if eip.Addr().BitLen() != bitLen {
+			continue
+		}
+		entries = append(entries, e)
+	}
+	// check addresssing order
+	nthSmall := make([]int, len(entries))
+	for idx, en := range entries {
+		small := 0
+		for _, e := range entries {
+			en_prefix, _ := netip.ParsePrefix(en.Network)
+			e_prefix, _ := netip.ParsePrefix(e.Network)
+			if e_prefix.Addr().Compare(en_prefix.Addr()) < 0 {
+				small += 1
+			}
+		}
+		nthSmall[idx] = small
+	}
+	sorted_entries := make([]RouteEntry, len(entries))
+	for idx, se := range nthSmall {
+		sorted_entries[se] = entries[idx]
+	}
+	return RouteEntries(sorted_entries)
+}
+
+type RouteEntries []RouteEntry
+
+func (res *RouteEntries) Print() {
+	for _, e := range *res {
+		var routeType string
+		switch e.Type {
+		case "t0c":
+			routeType = "C"
+		case "t0s":
+			routeType = "S"
+		case "b":
+			routeType = "B"
+		case "t0n":
+			routeType = "N"
+		case "t1c":
+			routeType = "c"
+		case "t1s":
+			routeType = "s"
+		case "t1n":
+			routeType = "n"
+		case "t1l":
+			routeType = "l"
+		case "t1ls":
+			routeType = "ln"
+		case "t1d":
+			routeType = "d"
+		case "t1ipsec":
+			routeType = "p"
+		case "isr":
+			routeType = "i"
+		}
+		if routeType == "C" {
+			fmt.Printf("%v> %v is directly connected\n", routeType, e.Network)
+		} else if routeType == "i" && e.NextHop == "" {
+			fmt.Printf("%v> %v [%v] blackhole\n", routeType, e.Network, e.Ad)
+		} else {
+			fmt.Printf("%v> %v [%v] via %v\n", routeType, e.Network, e.Ad, e.NextHop)
+		}
+	}
+	fmt.Println()
 }
 
 type ComputeManager struct {
