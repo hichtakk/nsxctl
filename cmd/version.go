@@ -12,7 +12,7 @@ func NewCmdVersion() *cobra.Command {
 		Use:   "version",
 		Short: "show version of nsxctl",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Printf("nsxctl version: %s, revision: %s", version, revision)
+			fmt.Printf("nsxctl version: %s, revision: %s\n", version, revision)
 		},
 	}
 

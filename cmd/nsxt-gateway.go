@@ -60,7 +60,7 @@ func NewCmdShowGateway() *cobra.Command {
 }
 
 func NewCmdShowRoutingTable() *cobra.Command {
-	var ipVer int
+	var ipv6 bool
 	aliases := []string{"rt"}
 	gatewayCmd := &cobra.Command{
 		Use:     "routes -g/--gateway ${TIER_0_GATEWAY_NAME}",
@@ -93,13 +93,17 @@ func NewCmdShowRoutingTable() *cobra.Command {
 				idx := er.GetEdgeClusterNodeIdx()
 				node := nsxtclient.GetTransportNodeById(ec.Members[idx].Id)
 				fmt.Printf("/edge-cluster/%v/node/%v\n", ec.Name, node.Name)
-				e := er.GetEntries(ipVer)
-				e.Print()
+				if ipv6 == true {
+					e := er.GetEntries(6)
+					e.Print()
+				} else {
+					e := er.GetEntries(4)
+					e.Print()
+				}
 			}
 		},
 	}
-	gatewayCmd.Flags().IntVarP(&ipVer, "ip", "", 4, "ip address version (4 or 6)")
-	//gatewayCmd.MarkFlagRequired("tier")
+	gatewayCmd.Flags().BoolVarP(&ipv6, "ipv6", "6", false, "show IPv6 routes")
 
 	return gatewayCmd
 }
