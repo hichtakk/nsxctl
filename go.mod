@@ -1,9 +1,10 @@
 module github.com/hichtakk/nsxctl
 
-go 1.17
+go 1.18
 
 require (
 	github.com/gdamore/tcell/v2 v2.4.0
+	github.com/mattn/go-runewidth v0.0.10
 	github.com/spf13/cobra v1.2.1
 	github.com/spf13/viper v1.8.1
 )
@@ -15,7 +16,6 @@ require (
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.0.3 // indirect
 	github.com/magiconair/properties v1.8.5 // indirect
-	github.com/mattn/go-runewidth v0.0.10 // indirect
 	github.com/mitchellh/mapstructure v1.4.1 // indirect
 	github.com/pelletier/go-toml v1.9.3 // indirect
 	github.com/rivo/uniseg v0.1.0 // indirect
