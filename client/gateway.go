@@ -159,3 +159,35 @@ func (c *NsxtClient) GetRoutingTable(tier0Id string) []structs.EdgeRoute {
 
 	return entries
 }
+
+func (c *NsxtClient) GetBgpNeighbors(tier0Id string, locale string) []structs.BgpNeighbor {
+	var path string
+	path = "/policy/api/v1/infra/tier-0s/" + tier0Id + "/locale-services/" + locale + "/bgp/neighbors"
+	res := c.Request("GET", path, nil, nil)
+	neighbors := []structs.BgpNeighbor{}
+	for _, nb := range res.Body.(map[string]interface{})["results"].([]interface{}) {
+		str, _ := json.Marshal(nb)
+		var neighbor structs.BgpNeighbor
+		json.Unmarshal(str, &neighbor)
+		neighbors = append(neighbors, neighbor)
+	}
+
+	return neighbors
+}
+
+func (c *NsxtClient) GetBgpNeighborsAdvRoutes(path string) []structs.EdgeBgpAdvRoute {
+	path = "/policy/api/v1" + path + "/advertised-routes"
+	res := c.Request("GET", path, nil, nil)
+	edges := []structs.EdgeBgpAdvRoute{}
+	for _, nb := range res.Body.(map[string]interface{})["results"].([]interface{}) {
+		es := nb.(map[string]interface{})["edge_node_routes"].([]interface{})
+		for _, e := range es {
+			str, _ := json.Marshal(e)
+			var edge structs.EdgeBgpAdvRoute
+			json.Unmarshal(str, &edge)
+			edges = append(edges, edge)
+		}
+	}
+
+	return edges
+}

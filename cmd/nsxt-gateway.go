@@ -108,6 +108,45 @@ func NewCmdShowRoutingTable() *cobra.Command {
 	return gatewayCmd
 }
 
+func NewCmdShowBgpAdvRoutes() *cobra.Command {
+	aliases := []string{"adv"}
+	gatewayCmd := &cobra.Command{
+		Use:     "bgp-adv-routes -g/--gateway ${TIER_0_GATEWAY_NAME}",
+		Aliases: aliases,
+		Short:   fmt.Sprintf("show bgp advertise routes of specified tier-0 gateways [%s]", strings.Join(aliases, ",")),
+		Args:    cobra.ExactArgs(1),
+		PreRunE: func(c *cobra.Command, args []string) error {
+			site, err := conf.NsxT.GetCurrentSite()
+			if err != nil {
+				log.Fatal(err)
+			}
+			nsxtclient.Login(site.GetCredential())
+			return nil
+		},
+		PostRunE: func(c *cobra.Command, args []string) error {
+			nsxtclient.Logout()
+			return nil
+		},
+		Run: func(cmd *cobra.Command, args []string) {
+			locale := "default"
+			neighbors := nsxtclient.GetBgpNeighbors(args[0], locale)
+			for _, nb := range neighbors {
+				fmt.Printf("BGP neighbor: %v, Remote ASN: %v\n", nb.Address, nb.Asn)
+				nb_edges := nsxtclient.GetBgpNeighborsAdvRoutes(nb.Path)
+				for _, e := range nb_edges {
+					node := nsxtclient.GetTransportNodeById(e.EdgeId)
+					fmt.Printf("Edge node: %v, Source IP: %v\n\n", node.Name, e.Source)
+					entries := e.GetEntries()
+					entries.Print()
+					fmt.Println()
+				}
+			}
+		},
+	}
+
+	return gatewayCmd
+}
+
 func NewCmdTopGateway() *cobra.Command {
 	var tier int16
 	var interval int

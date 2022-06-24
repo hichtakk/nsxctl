@@ -44,6 +44,7 @@ func NewCmdShow() *cobra.Command {
 		NewCmdShowIpBlock(),
 		NewCmdShowSegment(),
 		NewCmdShowRoutingTable(),
+		NewCmdShowBgpAdvRoutes(),
 		//NewCmdShowAlbCloud(),
 		//NewCmdShowAlbVirtualService(),
 	)

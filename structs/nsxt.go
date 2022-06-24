@@ -185,6 +185,61 @@ func (res *RouteEntries) Print() {
 	fmt.Println()
 }
 
+type BgpAdvRouteEntry struct {
+	AsPath    string `json:"as_path"`
+	LocalPref int    `json:"local_pref"`
+	Med       int    `json:"med"`
+	Network   string `json:"network"`
+	NextHop   string `json:"next_hop"`
+	Weight    int    `json:"weight"`
+}
+
+type BgpAdvRouteEntries []BgpAdvRouteEntry
+
+func (ar *BgpAdvRouteEntries) Print() {
+	fmt.Printf("%-8s	 %-8s	%-8s	%-8s	%-5s\n", "Network", "Next Hop", "Metric", "Local Pref", "Path")
+	for _, e := range *ar {
+		fmt.Printf("%-8s	%8s	%6d		%10d %5s\n", e.Network, e.NextHop, e.Med, e.LocalPref, e.AsPath)
+	}
+}
+
+type EdgeBgpAdvRoute struct {
+	Source  string             `json:"source_address"`
+	EdgeId  string             `json:"transport_node_id"`
+	Entries []BgpAdvRouteEntry `json:"routes"`
+}
+
+func (ar *EdgeBgpAdvRoute) Print() {
+	for _, e := range ar.Entries {
+		fmt.Printf("%-8s	%-8s	%-8s	%-8s %-5s\n", "Network", "Next Hop", "Metric", "Local Pref", "Path")
+		fmt.Printf("%-8s	%8s	%8d	%8d %5s\n", e.Network, e.NextHop, e.Med, e.LocalPref, e.AsPath)
+	}
+}
+
+func (ar *EdgeBgpAdvRoute) GetEntries() BgpAdvRouteEntries {
+	var entries []BgpAdvRouteEntry
+	entries = ar.Entries
+
+	// check addresssing order
+	nthSmall := make([]int, len(entries))
+	for idx, en := range entries {
+		small := 0
+		for _, e := range entries {
+			en_prefix, _ := netip.ParsePrefix(en.Network)
+			e_prefix, _ := netip.ParsePrefix(e.Network)
+			if e_prefix.Addr().Compare(en_prefix.Addr()) < 0 {
+				small += 1
+			}
+		}
+		nthSmall[idx] = small
+	}
+	sorted_entries := make([]BgpAdvRouteEntry, len(entries))
+	for idx, se := range nthSmall {
+		sorted_entries[se] = entries[idx]
+	}
+	return BgpAdvRouteEntries(sorted_entries)
+}
+
 type ComputeManager struct {
 	Id     string
 	Name   string
@@ -287,4 +342,13 @@ func (gws Tier0Gateways) Print(output string) {
 		}
 	}
 
+}
+
+type BgpNeighbor struct {
+	Name    string   `json:"display_name"`
+	Id      string   `json:"id"`
+	Address string   `json:"neighbor_address"`
+	Path    string   `json:"path"`
+	Asn     string   `json:"remote_as_num"`
+	Source  []string `json:"source_addresses"`
 }
