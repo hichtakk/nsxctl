@@ -9,47 +9,66 @@ import (
 
 	"github.com/hichtakk/nsxctl/client"
 	"github.com/hichtakk/nsxctl/config"
+	ac "github.com/hichtakk/nsxctl/nsxalb"
 	"github.com/spf13/cobra"
 )
 
 // NewCmdExec is subcommand to exec api.
 func NewCmdExec() *cobra.Command {
 	var query []string
+	var alb bool
 	var execCmd = &cobra.Command{
 		Use:   "exec",
 		Short: "call API directly\nYou can find NSX-T REST API reference on https://developer.vmware.com/apis/1163/nsx-t",
 		PersistentPreRunE: func(c *cobra.Command, args []string) error {
 			file, _ := ioutil.ReadFile(configfile)
 			json.Unmarshal(file, &conf)
-			nsxtclient = client.NewNsxtClient(false, debug)
-			var site config.NsxTSite
-			var err error
-			if useSite != "" {
-				site, err = conf.NsxT.GetSite(useSite)
+			if alb == false {
+				nsxtclient = client.NewNsxtClient(false, debug)
+				var site config.NsxTSite
+				var err error
+				if useSite != "" {
+					site, err = conf.NsxT.GetSite(useSite)
+				} else {
+					site, err = conf.NsxT.GetCurrentSite()
+				}
+				if err != nil {
+					log.Fatal(err)
+				}
+				nsxtclient.BaseUrl = site.Endpoint
+				nsxtclient.Login(site.GetCredential())
 			} else {
-				site, err = conf.NsxT.GetCurrentSite()
+				albclient = ac.NewNsxAlbClient(false, debug)
+				var site config.NsxAlbSite
+				var err error
+				if useSite != "" {
+					site, err = conf.NsxAlb.GetSite(useSite)
+				} else {
+					site, err = conf.NsxAlb.GetCurrentSite()
+				}
+				if err != nil {
+					log.Fatal(err)
+				}
+				albclient.BaseUrl = site.Endpoint
+				albclient.Login(site.GetCredential())
 			}
-			if err != nil {
-				log.Fatal(err)
-			}
-			nsxtclient.BaseUrl = site.Endpoint
-			nsxtclient.Login(site.GetCredential())
 			return nil
 		},
 	}
 	execCmd.AddCommand(
-		NewCmdHttpGet(&query),
+		NewCmdHttpGet(&query, &alb),
 		NewCmdHttpPost(),
 		NewCmdHttpPut(),
 		NewCmdHttpPatch(),
 		//NewCmdHttpDelete(),
 	)
 	execCmd.PersistentFlags().StringSliceVarP(&query, "query", "q", []string{}, "")
+	execCmd.PersistentFlags().BoolVarP(&alb, "alb", "", false, "call api to NSX ALB")
 
 	return execCmd
 }
 
-func NewCmdHttpGet(query *[]string) *cobra.Command {
+func NewCmdHttpGet(query *[]string, alb *bool) *cobra.Command {
 	var noPretty bool
 	httpGetCmd := &cobra.Command{
 		Use:   "get ${API-PATH}",
@@ -65,8 +84,13 @@ func NewCmdHttpGet(query *[]string) *cobra.Command {
 				}
 				params[qSlice[0]] = qSlice[1]
 			}
-			resp := nsxtclient.Request("GET", args[0], params, []byte{})
 			var body []byte
+			var resp *client.Response
+			if *alb == false {
+				resp = nsxtclient.Request("GET", args[0], params, []byte{})
+			} else {
+				resp = albclient.Request("GET", args[0], params, []byte{})
+			}
 			if noPretty {
 				body, _ = resp.BodyBytes()
 			} else {

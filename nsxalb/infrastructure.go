@@ -10,9 +10,10 @@ import (
 )
 
 func (c *NsxAlbClient) ShowCloud() {
-	res_json := c.Request("GET", "/api/cloud", nil)
+	resp := c.Request("GET", "/api/cloud", map[string]string{}, nil)
+	resByte, _ := resp.BodyBytes()
 	var res interface{}
-	json.Unmarshal([]byte(res_json), &res)
+	json.Unmarshal(resByte, &res)
 	clouds := res.(map[string]interface{})["results"]
 	for _, cloud := range clouds.([]interface{}) {
 		name := cloud.(map[string]interface{})["name"]
@@ -23,7 +24,7 @@ func (c *NsxAlbClient) ShowCloud() {
 }
 
 func (c *NsxAlbClient) GenerateSeImage() {
-	c.Request("POST", "/api/fileservice/seova", nil)
+	c.Request("POST", "/api/fileservice/seova", map[string]string{}, nil)
 	fmt.Println("file will be generated in /host/pkgs/21.1.1-9045-20210811.170844")
 }
 

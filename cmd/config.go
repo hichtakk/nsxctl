@@ -51,6 +51,7 @@ func NewCmdConfigSetSite() *cobra.Command {
 	var user string
 	var password string
 	var init bool
+	var alb bool
 	setSiteCmd := &cobra.Command{
 		Use:   "set-site ${SITE_NAME}",
 		Short: "add nsx-t/alb site configuration",
@@ -84,20 +85,38 @@ func NewCmdConfigSetSite() *cobra.Command {
 			}
 			file, _ := ioutil.ReadFile(configfile)
 			json.Unmarshal(file, &conf)
-			site := config.NsxTSite{
-				Name:     name,
-				Endpoint: endpoint,
-				User:     user,
-			}
-			site.SetPassword(password)
-			for _, s := range conf.NsxT.Sites {
-				if s.Name == name {
-					log.Fatalf("name '%s' is already exist in config", name)
+			if alb == false {
+				site := config.NsxTSite{
+					Name:     name,
+					Endpoint: endpoint,
+					User:     user,
 				}
-			}
-			conf.NsxT.Sites = append(conf.NsxT.Sites, site)
-			if len(conf.NsxT.Sites) == 1 {
-				conf.NsxT.CurrentSite = name
+				site.SetPassword(password)
+				for _, s := range conf.NsxT.Sites {
+					if s.Name == name {
+						log.Fatalf("name '%s' is already exist in config", name)
+					}
+				}
+				conf.NsxT.Sites = append(conf.NsxT.Sites, site)
+				if len(conf.NsxT.Sites) == 1 {
+					conf.NsxT.CurrentSite = name
+				}
+			} else {
+				site := config.NsxAlbSite{
+					Name:     name,
+					Endpoint: endpoint,
+					User:     user,
+				}
+				site.SetPassword(password)
+				for _, s := range conf.NsxAlb.Sites {
+					if s.Name == name {
+						log.Fatalf("name '%s' is already exist in config", name)
+					}
+				}
+				conf.NsxAlb.Sites = append(conf.NsxAlb.Sites, site)
+				if len(conf.NsxAlb.Sites) == 1 {
+					conf.NsxAlb.CurrentSite = name
+				}
 			}
 			writeConfig()
 		},
@@ -109,6 +128,7 @@ func NewCmdConfigSetSite() *cobra.Command {
 	setSiteCmd.Flags().StringVarP(&user, "user", "u", "", "user for the new site")
 	setSiteCmd.Flags().StringVarP(&password, "password", "p", "", "password for the new site user")
 	setSiteCmd.Flags().BoolVarP(&init, "init", "", false, "create new configfile")
+	setSiteCmd.Flags().BoolVarP(&alb, "alb", "", false, "NSX ALB config")
 	setSiteCmd.MarkFlagRequired("endpoint")
 	setSiteCmd.MarkFlagRequired("user")
 	setSiteCmd.MarkFlagRequired("password")

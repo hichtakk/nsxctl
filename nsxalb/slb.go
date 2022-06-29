@@ -9,10 +9,10 @@ import (
 )
 
 func (c *NsxAlbClient) ShowVirtualService() {
-	res_json := c.Request("GET", "/api/virtualservice", nil)
-	fmt.Println(res_json)
+	resp := c.Request("GET", "/api/virtualservice", map[string]string{}, nil)
 	var results structs.VSResult
-	json.Unmarshal([]byte(res_json), &results)
+	resByte, _ := resp.BodyBytes()
+	json.Unmarshal(resByte, &results)
 	for _, vs := range results.VirtualServices {
 		name := vs.Name
 		uuid := vs.UUID

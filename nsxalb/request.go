@@ -11,6 +11,8 @@ import (
 	"os"
 	"strings"
 	"time"
+
+	"github.com/hichtakk/nsxctl/client"
 )
 
 func newHttpClient() *http.Client {
@@ -38,7 +40,7 @@ func readResponseBody(res *http.Response) interface{} {
 	return data
 }
 
-func (c *NsxAlbClient) Request(method string, path string, req_data []byte) string {
+func (c *NsxAlbClient) Request(method string, path string, query_param map[string]string, req_data []byte) *client.Response {
 	// validate path
 	err := func() error {
 		var match bool
@@ -55,7 +57,7 @@ func (c *NsxAlbClient) Request(method string, path string, req_data []byte) stri
 	}()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err.Error())
-		return ""
+		return &client.Response{}
 	}
 
 	req, _ := http.NewRequest(method, c.BaseUrl+path, bytes.NewBuffer(req_data))
@@ -64,33 +66,40 @@ func (c *NsxAlbClient) Request(method string, path string, req_data []byte) stri
 		req.Header.Set("X-CSRFToken", c.Token)
 	}
 	req.Header.Set("Referer", c.BaseUrl)
+	if len(query_param) > 0 {
+		params := req.URL.Query()
+		for k, v := range query_param {
+			params.Add(k, v)
+		}
+		req.URL.RawQuery = params.Encode()
+	}
 	res, err := c.httpClient.Do(req)
 	if err != nil {
 		fmt.Println(err)
-		return ""
+		return &client.Response{}
 	}
 	defer res.Body.Close()
 	res_body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		log.Println(err)
-		return ""
+		return &client.Response{}
 	}
 	if res.StatusCode != 200 && res.StatusCode != 201 {
-		fmt.Printf("StatusCode: %d\n", res.StatusCode)
-		fmt.Printf("%s\n", res_body)
+		fmt.Fprintf(os.Stderr, "StatusCode: %d\n", res.StatusCode)
+		fmt.Fprintf(os.Stderr, "%s", res_body)
+		return &client.Response{}
 	}
 	var data interface{}
 	if len(res_body) > 0 {
 		err = json.Unmarshal(res_body, &data)
 		if err != nil {
 			log.Println(err)
-			return ""
+			return &client.Response{}
 		}
-		j, _ := json.MarshalIndent(data, "", "  ")
-		return string(j)
+		return &client.Response{res, data}
 	} else {
 		fmt.Println("no response body")
 	}
 
-	return ""
+	return &client.Response{}
 }
