@@ -50,7 +50,7 @@ func NewCmdExec() *cobra.Command {
 }
 
 func NewCmdHttpGet(query *[]string) *cobra.Command {
-	var pretty bool
+	var noPretty bool
 	httpGetCmd := &cobra.Command{
 		Use:   "get ${API-PATH}",
 		Short: "call api with HTTP GET method",
@@ -66,14 +66,16 @@ func NewCmdHttpGet(query *[]string) *cobra.Command {
 				params[qSlice[0]] = qSlice[1]
 			}
 			resp := nsxtclient.Request("GET", args[0], params, []byte{})
-			body, _ := resp.BodyBytes()
-			if pretty {
+			var body []byte
+			if noPretty {
+				body, _ = resp.BodyBytes()
+			} else {
 				body, _ = json.MarshalIndent(resp.Body, "", "  ")
 			}
 			fmt.Println(string(body))
 		},
 	}
-	httpGetCmd.PersistentFlags().BoolVarP(&pretty, "pretty", "", false, "pretty output json")
+	httpGetCmd.PersistentFlags().BoolVarP(&noPretty, "no-pretty", "", false, "pretty output json")
 
 	return httpGetCmd
 }
