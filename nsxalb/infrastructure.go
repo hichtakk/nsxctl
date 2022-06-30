@@ -7,6 +7,8 @@ import (
 	"log"
 	"net/http"
 	"os"
+
+	"github.com/hichtakk/nsxctl/structs"
 )
 
 func (c *NsxAlbClient) ShowCloud() {
@@ -21,6 +23,38 @@ func (c *NsxAlbClient) ShowCloud() {
 		vtype := cloud.(map[string]interface{})["vtype"]
 		fmt.Printf("%s  %s  %s\n", name, uuid, vtype)
 	}
+}
+
+func (c *NsxAlbClient) GetCloudById(cloudId string) structs.Cloud {
+	resp := c.Request("GET", "/api/cloud/"+cloudId, map[string]string{}, nil)
+	resByte, _ := resp.BodyBytes()
+	cloud := structs.Cloud{}
+	json.Unmarshal(resByte, &cloud)
+	return cloud
+}
+
+func (c *NsxAlbClient) GetSeGroup() {
+	/*
+		resp := c.Request("GET", "/api/serviceenginegroup", map[string]string{}, nil)
+		resByte, _ := resp.BodyBytes()
+		res := []structs.ServiceEngineGroup{}
+		json.Unmarshal(resByte, &res)
+		clouds := res.(map[string]interface{})["results"]
+		for _, cloud := range clouds.([]interface{}) {
+			name := cloud.(map[string]interface{})["name"]
+			uuid := cloud.(map[string]interface{})["uuid"]
+			vtype := cloud.(map[string]interface{})["vtype"]
+			fmt.Printf("%s  %s  %s\n", name, uuid, vtype)
+		}
+	*/
+}
+
+func (c *NsxAlbClient) GetSeGroupById(segId string) structs.ServiceEngineGroup {
+	resp := c.Request("GET", "/api/serviceenginegroup/"+segId, map[string]string{}, nil)
+	resByte, _ := resp.BodyBytes()
+	seg := structs.ServiceEngineGroup{}
+	json.Unmarshal(resByte, &seg)
+	return seg
 }
 
 func (c *NsxAlbClient) GenerateSeImage() {
