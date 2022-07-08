@@ -39,6 +39,20 @@ func (r *Response) UnmarshalBody(strct interface{}) {
 	json.Unmarshal(bytes, strct)
 }
 
+func (r *Response) Print(noPretty bool) {
+	var body []byte
+	if r.Body == nil {
+		fmt.Printf("{\"code\": %d, \"body\": \"no response body\"}\n", r.StatusCode)
+	} else {
+		if noPretty {
+			body, _ = r.BodyBytes()
+		} else {
+			body, _ = json.MarshalIndent(r.Body, "", "  ")
+		}
+		fmt.Println(string(body))
+	}
+}
+
 func (c *NsxtClient) makeRequest(method string, path string) *http.Request {
 	req, _ := http.NewRequest(method, c.BaseUrl+path, nil)
 	req.Header.Set("X-Xsrf-Token", c.Token)
@@ -85,11 +99,6 @@ func (c *NsxtClient) Request(method string, path string, query_param map[string]
 		log.Println(err)
 		return &Response{}
 	}
-	if res.StatusCode != 200 && res.StatusCode != 201 {
-		fmt.Fprintf(os.Stderr, "StatusCode: %d\n", res.StatusCode)
-		fmt.Fprintf(os.Stderr, "%s", res_body)
-		return &Response{}
-	}
 	var data interface{}
 	if len(res_body) > 0 {
 		err = json.Unmarshal(res_body, &data)
@@ -97,14 +106,11 @@ func (c *NsxtClient) Request(method string, path string, query_param map[string]
 			log.Println(err)
 			return &Response{}
 		}
-		//j, _ := json.MarshalIndent(data, "", "  ")
 		r := &Response{res, data}
 		return r
 	} else {
-		fmt.Println("no response body")
+		return &Response{res, nil}
 	}
-
-	return &Response{}
 }
 
 func NewNsxtClient(basicAuth bool, debug bool) *NsxtClient {

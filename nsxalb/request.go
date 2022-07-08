@@ -59,7 +59,6 @@ func (c *NsxAlbClient) Request(method string, path string, query_param map[strin
 		fmt.Fprintln(os.Stderr, err.Error())
 		return &client.Response{}
 	}
-
 	req, _ := http.NewRequest(method, c.BaseUrl+path, bytes.NewBuffer(req_data))
 	req.Header.Set("Content-Type", "application/json")
 	if c.Token != "" {
@@ -84,11 +83,6 @@ func (c *NsxAlbClient) Request(method string, path string, query_param map[strin
 		log.Println(err)
 		return &client.Response{}
 	}
-	if res.StatusCode != 200 && res.StatusCode != 201 {
-		fmt.Fprintf(os.Stderr, "StatusCode: %d\n", res.StatusCode)
-		fmt.Fprintf(os.Stderr, "%s", res_body)
-		return &client.Response{}
-	}
 	var data interface{}
 	if len(res_body) > 0 {
 		err = json.Unmarshal(res_body, &data)
@@ -96,10 +90,9 @@ func (c *NsxAlbClient) Request(method string, path string, query_param map[strin
 			log.Println(err)
 			return &client.Response{}
 		}
-		return &client.Response{res, data}
+		r := &client.Response{res, data}
+		return r
 	} else {
-		fmt.Println("no response body")
+		return &client.Response{res, nil}
 	}
-
-	return &client.Response{}
 }

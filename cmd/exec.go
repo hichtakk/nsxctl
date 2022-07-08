@@ -1,10 +1,11 @@
 package cmd
 
 import (
+	"bufio"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"log"
+	"os"
 	"strings"
 
 	"github.com/hichtakk/nsxctl/client"
@@ -13,10 +14,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var noPretty bool
+var alb bool
+
 // NewCmdExec is subcommand to exec api.
 func NewCmdExec() *cobra.Command {
 	var query []string
-	var alb bool
 	var execCmd = &cobra.Command{
 		Use:   "exec",
 		Short: "call API directly\nYou can find NSX-T REST API reference on https://developer.vmware.com/apis/1163/nsx-t",
@@ -56,20 +59,20 @@ func NewCmdExec() *cobra.Command {
 		},
 	}
 	execCmd.AddCommand(
-		NewCmdHttpGet(&query, &alb),
+		NewCmdHttpGet(&query),
 		NewCmdHttpPost(),
 		NewCmdHttpPut(),
 		NewCmdHttpPatch(),
 		//NewCmdHttpDelete(),
 	)
 	execCmd.PersistentFlags().StringSliceVarP(&query, "query", "q", []string{}, "")
+	execCmd.PersistentFlags().BoolVarP(&noPretty, "no-pretty", "", false, "pretty output json")
 	execCmd.PersistentFlags().BoolVarP(&alb, "alb", "", false, "call api to NSX ALB")
 
 	return execCmd
 }
 
-func NewCmdHttpGet(query *[]string, alb *bool) *cobra.Command {
-	var noPretty bool
+func NewCmdHttpGet(query *[]string) *cobra.Command {
 	httpGetCmd := &cobra.Command{
 		Use:   "get ${API-PATH}",
 		Short: "call api with HTTP GET method",
@@ -84,22 +87,15 @@ func NewCmdHttpGet(query *[]string, alb *bool) *cobra.Command {
 				}
 				params[qSlice[0]] = qSlice[1]
 			}
-			var body []byte
 			var resp *client.Response
-			if *alb == false {
+			if alb == false {
 				resp = nsxtclient.Request("GET", args[0], params, []byte{})
 			} else {
 				resp = albclient.Request("GET", args[0], params, []byte{})
 			}
-			if noPretty {
-				body, _ = resp.BodyBytes()
-			} else {
-				body, _ = json.MarshalIndent(resp.Body, "", "  ")
-			}
-			fmt.Println(string(body))
+			resp.Print(noPretty)
 		},
 	}
-	httpGetCmd.PersistentFlags().BoolVarP(&noPretty, "no-pretty", "", false, "pretty output json")
 
 	return httpGetCmd
 }
@@ -115,7 +111,7 @@ func NewCmdHttpPost() *cobra.Command {
 			var raw_data []byte
 			var err error
 			if fileName != "" {
-				raw_data, err = ioutil.ReadFile(fileName)
+				raw_data, err = readRequestBody(fileName)
 				if err != nil {
 					return err
 				}
@@ -130,7 +126,13 @@ func NewCmdHttpPost() *cobra.Command {
 			return nil
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			nsxtclient.Request("POST", args[0], nil, data)
+			var resp *client.Response
+			if alb == false {
+				resp = nsxtclient.Request("POST", args[0], nil, data)
+			} else {
+				resp = albclient.Request("POST", args[0], nil, data)
+			}
+			resp.Print(noPretty)
 		},
 	}
 	httpPostCmd.Flags().StringVarP(&fileName, "filename", "f", "", "file name for send data(json)")
@@ -149,7 +151,7 @@ func NewCmdHttpPut() *cobra.Command {
 			var raw_data []byte
 			var err error
 			if fileName != "" {
-				raw_data, err = ioutil.ReadFile(fileName)
+				raw_data, err = readRequestBody(fileName)
 				if err != nil {
 					return err
 				}
@@ -164,7 +166,13 @@ func NewCmdHttpPut() *cobra.Command {
 			return nil
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			nsxtclient.Request("PUT", args[0], nil, data)
+			var resp *client.Response
+			if alb == false {
+				resp = nsxtclient.Request("PUT", args[0], nil, data)
+			} else {
+				resp = albclient.Request("PUT", args[0], nil, data)
+			}
+			resp.Print(noPretty)
 		},
 	}
 	httpPutCmd.Flags().StringVarP(&fileName, "filename", "f", "", "file name for send data(json)")
@@ -184,7 +192,7 @@ func NewCmdHttpPatch() *cobra.Command {
 			var raw_data []byte
 			var err error
 			if fileName != "" {
-				raw_data, err = ioutil.ReadFile(fileName)
+				raw_data, err = readRequestBody(fileName)
 				if err != nil {
 					return err
 				}
@@ -199,10 +207,36 @@ func NewCmdHttpPatch() *cobra.Command {
 			return nil
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			nsxtclient.Request("PATCH", args[0], nil, data)
+			var resp *client.Response
+			if alb == false {
+				resp = nsxtclient.Request("PATCH", args[0], nil, data)
+			} else {
+				resp = albclient.Request("PATCH", args[0], nil, data)
+			}
+			resp.Print(noPretty)
 		},
 	}
 	httpPatchCmd.Flags().StringVarP(&fileName, "filename", "f", "", "file name for send data(json)")
 
 	return httpPatchCmd
+}
+
+func readRequestBody(fileName string) ([]byte, error) {
+	if fileName == "-" {
+		return readFromStdIn()
+	} else {
+		return ioutil.ReadFile(fileName)
+	}
+}
+
+func readFromStdIn() ([]byte, error) {
+	var body string
+	stdin := bufio.NewScanner(os.Stdin)
+	for stdin.Scan() {
+		if err := stdin.Err(); err != nil {
+			return []byte{}, err
+		}
+		body += stdin.Text()
+	}
+	return []byte(body), nil
 }
