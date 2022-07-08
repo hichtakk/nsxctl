@@ -63,7 +63,7 @@ func NewCmdExec() *cobra.Command {
 		NewCmdHttpPost(),
 		NewCmdHttpPut(),
 		NewCmdHttpPatch(),
-		//NewCmdHttpDelete(),
+		NewCmdHttpDelete(&query, &alb),
 	)
 	execCmd.PersistentFlags().StringSliceVarP(&query, "query", "q", []string{}, "")
 	execCmd.PersistentFlags().BoolVarP(&noPretty, "no-pretty", "", false, "pretty output json")
@@ -219,6 +219,24 @@ func NewCmdHttpPatch() *cobra.Command {
 	httpPatchCmd.Flags().StringVarP(&fileName, "filename", "f", "", "file name for send data(json)")
 
 	return httpPatchCmd
+}
+
+func NewCmdHttpDelete(query *[]string, alb *bool) *cobra.Command {
+       httpDeleteCmd := &cobra.Command{
+               Use:   "delete",
+               Short: "call api with HTTP DELETE method",
+               Long:  "example) nsxctl exec delete /policy/api/v1/infra/tier-0s",
+               Args:  cobra.ExactArgs(1),
+               Run: func(cmd *cobra.Command, args []string) {
+                       if *alb == false {
+                               nsxtclient.Request("DELETE", args[0], nil, []byte{})
+                       } else {
+                               albclient.Request("DELETE", args[0], nil, []byte{})
+                       }
+               },
+       }
+
+       return httpDeleteCmd
 }
 
 func readRequestBody(fileName string) ([]byte, error) {
