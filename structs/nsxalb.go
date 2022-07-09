@@ -3,6 +3,7 @@ package structs
 import (
 	"fmt"
 	"strings"
+	"text/tabwriter"
 )
 
 type Cloud struct {
@@ -56,7 +57,7 @@ type VirtualService struct {
 	Vips        []Vip    `json:"vip"`
 }
 
-func (v *VirtualService) Print(cloud string, seg string) {
+func (v *VirtualService) Print(cloud string, seg string, w *tabwriter.Writer) {
 	ports := ""
 	for i, p := range v.Ports {
 		summary := p.GetSummary()
@@ -72,7 +73,7 @@ func (v *VirtualService) Print(cloud string, seg string) {
 			ports += ","
 		}
 	}
-	fmt.Printf("%-51v  %-16v  %-15v  %-5v  %-12v  %-16v\n", v.UUID, v.Name, vips, ports, cloud, seg)
+	w.Write([]byte(strings.Join([]string{v.UUID, v.Name, vips, ports, cloud, seg}, "\t") + "\n"))
 }
 
 func (v *VirtualService) GetCloudId() string {
