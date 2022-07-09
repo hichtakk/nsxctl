@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"text/tabwriter"
+	"os"
 
 	ac "github.com/hichtakk/nsxctl/nsxalb"
 	"github.com/hichtakk/nsxctl/structs"
@@ -65,7 +67,9 @@ func NewCmdShowAlbVirtualService() *cobra.Command {
 			vss := albclient.ShowVirtualService()
 			clouds := map[string]structs.Cloud{}
 			segs := map[string]structs.ServiceEngineGroup{}
-			fmt.Printf("%-51v  %-16v  %-15v  %-5v  %-12v  %-16v\n", "ID", "Name", "VIP", "Port", "Cloud", "SEGroup")
+
+			w := tabwriter.NewWriter(os.Stdout, 0, 1, 3, ' ', 0)
+			w.Write([]byte(strings.Join([]string{"ID", "Name", "VIP", "Port", "Cloud", "SEGroup"}, "\t") + "\n"))
 			for _, vs := range vss {
 				cloudId := vs.GetCloudId()
 				cloud, ok := clouds[cloudId]
@@ -77,8 +81,9 @@ func NewCmdShowAlbVirtualService() *cobra.Command {
 				if ok != true {
 					seg = albclient.GetSeGroupById(segId)
 				}
-				vs.Print(cloud.Name, seg.Name)
+				vs.Print(cloud.Name, seg.Name, w)
 			}
+			w.Flush()
 		},
 	}
 
