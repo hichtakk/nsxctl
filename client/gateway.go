@@ -10,13 +10,8 @@ import (
 	"github.com/hichtakk/nsxctl/structs"
 )
 
-func (c *NsxtClient) GetGateway(tier int16, gwId string) structs.Tier0Gateways {
-	var path string
-	if tier == 0 {
-		path = "/policy/api/v1/infra/tier-0s"
-	} else {
-		path = "/policy/api/v1/infra/tier-1s"
-	}
+func (c *NsxtClient) GetTier0Gateway(gwId string) structs.Tier0Gateways {
+	path := "/policy/api/v1/infra/tier-0s"
 	if gwId != "" {
 		path = path + "/" + gwId
 	}
@@ -31,6 +26,33 @@ func (c *NsxtClient) GetGateway(tier int16, gwId string) structs.Tier0Gateways {
 		gateways = res.Body.(map[string]interface{})["results"]
 		for _, gateway := range gateways.([]interface{}) {
 			gw := structs.Tier0Gateway{}
+			jsonStr, err := json.Marshal(gateway)
+			if err != nil {
+				log.Println(err)
+			}
+			json.Unmarshal(jsonStr, &gw)
+			gws = append(gws, gw)
+		}
+	}
+	return gws
+}
+
+func (c *NsxtClient) GetTier1Gateway(gwId string) structs.Tier1Gateways {
+	path := "/policy/api/v1/infra/tier-1s"
+	if gwId != "" {
+		path = path + "/" + gwId
+	}
+	res := c.Request("GET", path, nil, nil)
+	var gateways interface{}
+	gws := structs.Tier1Gateways{}
+	if gwId != "" {
+		gw := structs.Tier1Gateway{}
+		res.UnmarshalBody(&gw)
+		gws = append(gws, gw)
+	} else {
+		gateways = res.Body.(map[string]interface{})["results"]
+		for _, gateway := range gateways.([]interface{}) {
+			gw := structs.Tier1Gateway{}
 			jsonStr, err := json.Marshal(gateway)
 			if err != nil {
 				log.Println(err)

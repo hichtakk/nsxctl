@@ -324,6 +324,10 @@ type RouterStats struct {
 	PerNodeStatistics []PerNodeStatistics `json:"per_node_statistics"`
 }
 
+type Gateway interface {
+	Print()
+}
+
 type Tier0Gateway struct {
 	Id           string `json:"id"`
 	HaMode       string `json:"ha_mode"`
@@ -333,11 +337,31 @@ type Tier0Gateway struct {
 
 type Tier0Gateways []Tier0Gateway
 
-func (gws Tier0Gateways) Print(output string) {
+func (gws *Tier0Gateways) Print(output string) {
 	if output == "json" {
 	} else {
 		fmt.Printf("%-8s	%-8s	%-8s	%-8s\n", "ID", "Name", "HA Mode", "Failover Mode")
-		for _, gw := range gws {
+		for _, gw := range *gws {
+			fmt.Printf("%-8s	%8s	%8s	%8s\n", gw.Id, gw.Name, gw.HaMode, gw.FailoverMode)
+		}
+	}
+
+}
+
+type Tier1Gateway struct {
+	Id           string `json:"id"`
+	HaMode       string `json:"ha_mode"`
+	Name         string `json:"display_name"`
+	FailoverMode string `json:"failover_mode"`
+}
+
+type Tier1Gateways []Tier1Gateway
+
+func (gws *Tier1Gateways) Print(output string) {
+	if output == "json" {
+	} else {
+		fmt.Printf("%-8s	%-8s	%-8s	%-8s\n", "ID", "Name", "HA Mode", "Failover Mode")
+		for _, gw := range *gws {
 			fmt.Printf("%-8s	%8s	%8s	%8s\n", gw.Id, gw.Name, gw.HaMode, gw.FailoverMode)
 		}
 	}

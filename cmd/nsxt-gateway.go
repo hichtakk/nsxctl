@@ -43,12 +43,18 @@ func NewCmdShowGateway() *cobra.Command {
 			return nil
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			var gws structs.Tier0Gateways
+			var gwId string
 			if len(args) > 0 {
-				gws = nsxtclient.GetGateway(tier, args[0])
-				gws.Print(output)
+				gwId = args[0]
 			} else {
-				gws = nsxtclient.GetGateway(tier, "")
+				gwId = ""
+			}
+			switch tier {
+			case 0:
+				gws := nsxtclient.GetTier0Gateway(gwId)
+				gws.Print(output)
+			case 1:
+				gws := nsxtclient.GetTier1Gateway(gwId)
 				gws.Print(output)
 			}
 		},
@@ -171,7 +177,7 @@ func NewCmdTopGateway() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			highlight_row = 0
 			if tier == 0 {
-				gws := nsxtclient.GetGateway(tier, args[0])
+				gws := nsxtclient.GetTier0Gateway(args[0])
 				if len(gws) < 1 {
 					log.Fatalln("Tier-0 gateway not found")
 				} else if len(gws) > 1 {
