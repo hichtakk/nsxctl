@@ -175,6 +175,7 @@ func NewCmdConfigUseSite() *cobra.Command {
 }
 
 func NewCmdConfigRemoveSite() *cobra.Command {
+	var alb bool
 	removeSiteCmd := &cobra.Command{
 		Use:   "remove-site ${SITE_NAME}",
 		Short: "remove specified nsx-t/alb site configuration",
@@ -193,24 +194,41 @@ func NewCmdConfigRemoveSite() *cobra.Command {
 			file, _ := ioutil.ReadFile(configfile)
 			json.Unmarshal(file, &conf)
 			siteExist := false
-			var newSites []config.NsxTSite
-			for _, s := range conf.NsxT.Sites {
-				if s.Name == name {
-					siteExist = true
-				} else {
-					newSites = append(newSites, s)
+			if alb == false {
+				var newSites []config.NsxTSite
+				for _, s := range conf.NsxT.Sites {
+					if s.Name == name {
+						siteExist = true
+					} else {
+						newSites = append(newSites, s)
+					}
 				}
+				if siteExist == false {
+					log.Fatalf("site '%s' not found", name)
+				}
+				conf.NsxT.Sites = newSites
+				writeConfig()
+			} else {
+				var newSites []config.NsxAlbSite
+				for _, s := range conf.NsxAlb.Sites {
+					if s.Name == name {
+						siteExist = true
+					} else {
+						newSites = append(newSites, s)
+					}
+				}
+				if siteExist == false {
+					log.Fatalf("site '%s' not found", name)
+				}
+				conf.NsxAlb.Sites = newSites
+				writeConfig()
 			}
-			if siteExist == false {
-				log.Fatalf("site '%s' not found", name)
-			}
-			conf.NsxT.Sites = newSites
-			writeConfig()
 		},
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			return nil
 		},
 	}
+	removeSiteCmd.Flags().BoolVarP(&alb, "alb", "", false, "NSX ALB config")
 
 	return removeSiteCmd
 }
