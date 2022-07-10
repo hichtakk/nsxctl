@@ -137,6 +137,7 @@ func NewCmdConfigSetSite() *cobra.Command {
 }
 
 func NewCmdConfigUseSite() *cobra.Command {
+	var alb bool
 	useSiteCmd := &cobra.Command{
 		Use:   "use-site ${SITE_NAME}",
 		Short: "set current nsx-t/alb site",
@@ -155,21 +156,34 @@ func NewCmdConfigUseSite() *cobra.Command {
 			}
 			json.Unmarshal(file, &conf)
 			siteExist := false
-			for _, s := range conf.NsxT.Sites {
-				if s.Name == name {
-					siteExist = true
+			if alb == false {
+				for _, s := range conf.NsxT.Sites {
+					if s.Name == name {
+						siteExist = true
+					}
 				}
+				if siteExist == false {
+					log.Fatalf("site '%s' not found", name)
+				}
+				conf.NsxT.CurrentSite = name
+			} else {
+				for _, s := range conf.NsxAlb.Sites {
+					if s.Name == name {
+						siteExist = true
+					}
+				}
+				if siteExist == false {
+					log.Fatalf("site '%s' not found", name)
+				}
+				conf.NsxAlb.CurrentSite = name
 			}
-			if siteExist == false {
-				log.Fatalf("site '%s' not found", name)
-			}
-			conf.NsxT.CurrentSite = name
 			writeConfig()
 		},
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			return nil
 		},
 	}
+	useSiteCmd.Flags().BoolVarP(&alb, "alb", "", false, "NSX ALB config")
 
 	return useSiteCmd
 }
