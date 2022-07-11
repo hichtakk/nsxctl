@@ -87,8 +87,8 @@ func (c *NsxAlbClient) Request(method string, path string, query_param map[strin
 	if len(res_body) > 0 {
 		err = json.Unmarshal(res_body, &data)
 		if err != nil {
-			log.Println(err)
-			return &client.Response{}
+			//log.Fatal("response json decode error")
+			return &client.Response{res, nil}
 		}
 		r := &client.Response{res, data}
 		return r

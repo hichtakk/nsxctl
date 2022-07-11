@@ -42,7 +42,16 @@ func (r *Response) UnmarshalBody(strct interface{}) {
 func (r *Response) Print(noPretty bool) {
 	var body []byte
 	if r.Body == nil {
-		fmt.Printf("{\"code\": %d, \"body\": \"no response body\"}\n", r.StatusCode)
+		var msg string
+		switch r.StatusCode {
+		case 404:
+			msg = "request error"
+		case 500:
+			msg = "server error"
+		case 200, 201:
+			msg = "no response body"
+		}
+		fmt.Printf("{\"code\": %d, \"body\": \"%v\"}\n", r.StatusCode, msg)
 	} else {
 		if noPretty {
 			body, _ = r.BodyBytes()
