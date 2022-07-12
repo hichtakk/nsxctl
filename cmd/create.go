@@ -38,6 +38,7 @@ func NewCmdCreate() *cobra.Command {
 		NewCmdCreateTransportZone(),
 		NewCmdCreateIpPool(),
 		NewCmdCreateIpBlock(),
+		NewCmdCreateEdge(),
 	)
 
 	return showCmd

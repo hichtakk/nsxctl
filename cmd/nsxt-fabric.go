@@ -261,3 +261,47 @@ func NewCmdShowTransportNodeProfile() *cobra.Command {
 
 	return tpnCmd
 }
+
+func NewCmdCreateEdge() *cobra.Command {
+	var template string
+	var address string
+	var root_password string
+	var admin_password string
+	aliases := []string{"edge"}
+	edgeCmd := &cobra.Command{
+		Use:     "edge",
+		Aliases: aliases,
+		Short:   fmt.Sprintf("create edges [%s]", strings.Join(aliases, ",")),
+		Args:    cobra.MaximumNArgs(1),
+		PreRunE: func(c *cobra.Command, args []string) error {
+			site, err := conf.NsxT.GetCurrentSite()
+			if err != nil {
+				log.Fatal(err)
+			}
+			if len(args) == 0 {
+				log.Fatal("edge name is required")
+			}
+			nsxtclient.Login(site.GetCredential())
+			return nil
+		},
+		Run: func(cmd *cobra.Command, args []string) {
+			name := args[0]
+			nsxtclient.CreateEdge(name, template, address, root_password, admin_password)
+			fmt.Println(debug)
+		},
+		PostRunE: func(c *cobra.Command, args []string) error {
+			nsxtclient.Logout()
+			return nil
+		},
+	}
+	edgeCmd.Flags().StringVarP(&template, "template", "", "", "template edge name")
+	edgeCmd.Flags().StringVarP(&address, "address", "", "", "management I/F address of new edge")
+	edgeCmd.Flags().StringVarP(&root_password, "root_password", "", "", "root password of new edge")
+	edgeCmd.Flags().StringVarP(&admin_password, "admin_password", "", "", "admin password of new edge")
+	edgeCmd.MarkFlagRequired("template")
+	edgeCmd.MarkFlagRequired("address")
+	edgeCmd.MarkFlagRequired("root_password")
+	edgeCmd.MarkFlagRequired("admin_password")
+
+	return edgeCmd
+}
