@@ -41,7 +41,23 @@ type SeInterface struct {
 }
 
 type VSResult struct {
-	VirtualServices []VirtualService `json:"results"`
+	VirtualServiceInventories []VirtualServiceInventory `json:"results"`
+}
+
+type VirtualServiceInventory struct {
+	Config  VirtualService `json:"config"`
+	Runtime VSRuntime      `json:"runtime"`
+}
+
+type VSRuntime struct {
+	PersentSEsUp int          `json:"percent_ses_up"`
+	VipSummary   []VipSummary `json:"vip_summary"`
+}
+
+type VipSummary struct {
+	Id     string              `json:"vip_id"`
+	Status map[string]string   `json:"oper_status"`
+	Se     []map[string]string `json:"service_engine"`
 }
 
 type VirtualService struct {
@@ -50,30 +66,30 @@ type VirtualService struct {
 	Tenant      string   `json:"tenant_ref"`
 	Name        string   `json:"name"`
 	Ports       []VSPort `json:"services"`
-	Cloud       string   `json:"cloud_type"`
 	CloudRef    string   `json:"cloud_ref"`
-	AutoGateway bool     `json:"enable_autogw"`
 	SeGroupRef  string   `json:"se_group_ref"`
 	Vips        []Vip    `json:"vip"`
 }
 
-func (v *VirtualService) Print(cloud string, seg string, w *tabwriter.Writer) {
+func (v *VirtualServiceInventory) Print(w *tabwriter.Writer) {
 	ports := ""
-	for i, p := range v.Ports {
+	for i, p := range v.Config.Ports {
 		summary := p.GetSummary()
 		ports += summary
-		if i != len(v.Ports)-1 {
+		if i != len(v.Config.Ports)-1 {
 			ports += ","
 		}
 	}
 	vips := ""
-	for i, vip := range v.Vips {
+	for i, vip := range v.Config.Vips {
 		vips += vip.Address["addr"]
-		if i != len(v.Vips)-1 {
+		if i != len(v.Config.Vips)-1 {
 			ports += ","
 		}
 	}
-	w.Write([]byte(strings.Join([]string{v.UUID, v.Name, vips, ports, cloud, seg}, "\t") + "\n"))
+	cloud := strings.Split(v.Config.CloudRef, "#")
+	segroup := strings.Split(v.Config.SeGroupRef, "#")
+	w.Write([]byte(strings.Join([]string{v.Config.UUID, v.Config.Name, vips, ports, cloud[1], segroup[1]}, "\t") + "\n"))
 }
 
 func (v *VirtualService) GetCloudId() string {
