@@ -267,8 +267,90 @@ type ComputeManagerStatus struct {
 }
 
 type TransportNode struct {
-	Id   string `json:"id"`
-	Name string `json:"display_name"`
+	Id                     string                 `json:"id"`
+	Name                   string                 `json:"display_name"`
+	HostSwitchSpec         HostSwitchSpec         `json:"host_switch_spec"`
+	EdgeNodeDeploymentInfo EdgeNodeDeploymentInfo `json:"node_deployment_info"`
+	ResourceType           string                 `json:"resource_type"`
+}
+
+type HostSwitchSpec struct {
+	HostSwitches           []HostSwitch           `json:"host_switches"`
+	ResourceType           string                 `json:"resource_type"`
+}
+
+type HostSwitch struct {
+	Mode                   string              `json:"host_switch_mode"`
+	Name                   string              `json:"host_switch_name"`
+	UplinkProfiles         []map[string]string `json:"host_switch_profile_ids"`
+	Type                   string              `json:"host_switch_type"`
+	IPAssignment           IpAssignmentSpec    `json:"ip_assignment_spec"`
+	Pnics                  []map[string]string `json:"pnics"`
+	TransportZoneEndpoints []TransportZoneEndpoints `json:"transport_zone_endpoints"`
+}
+
+type TransportZoneEndpoints struct {
+	TransportZoneId         string              `json:"transport_zone_id"`
+	TransportZoneProfileIds []map[string]string `json:"transport_zone_profile_ids"`
+}
+
+type IpAssignmentSpec struct {
+	ResourceType           string               `json:"resource_type"`
+	IpPoolId               string               `json:"ip_pool_id,omitempty"`
+}
+
+type EdgeNodeDeploymentInfo struct {
+	Name                   string               `json:"display_name"`
+	IPAddress              []string             `json:"ip_addresses"`
+	EdgeDeploymentConfig   EdgeDeploymentConfig `json:"deployment_config"`
+	NodeSettings           NodeSettings         `json:"node_settings"`
+	ResourceType           string                 `json:"resource_type"`
+}
+
+type EdgeDeploymentConfig struct {
+	Size                   string               `json:"form_factor"`
+	Users                  map[string]string    `json:"node_user_settings"`
+	VMDeploymentConfig     VMDeploymentConfig   `json:"vm_deployment_config"`
+}
+
+type VMDeploymentConfig struct {
+	ComputeId              string               `json:"compute_id"`
+	DataNetworkIds         []string             `json:"data_network_ids"`
+	DefaultGateway         []string             `json:"default_gateway_addresses"`
+	ManagementNetworkId    string               `json:"management_network_id"`
+	ManagementPortSubnets  []Subnet             `json:"management_port_subnets"`
+	ReservationInfo        ReservationInfo      `json:"reservation_info"`
+	StorageId              string               `json:"storage_id"`
+	VcId                   string               `json:"vc_id"`
+	PlacementType          string               `json:"placement_type"`
+}
+
+type Subnet struct {
+	IPAddresses            []string             `json:"ip_addresses"`
+	PrefixLength           int                  `json:"prefix_length"`
+}
+
+type ReservationInfo struct {
+	Cpu                    CpuReservationInfo    `json:"cpu_reservation"`
+	Memory                 MemoryReservationInfo `json:"memory_reservation"`
+}
+
+type CpuReservationInfo struct {
+	MHz                    uint64               `json:"reservation_in_mhz"`
+	Priority               string               `json:"reservation_in_shares"`
+}
+
+type MemoryReservationInfo struct {
+	Percentage             int                  `json:"reservation_percentage"`
+}
+
+type NodeSettings struct {
+	AllowSshRootLogin      bool                 `json:"allow_ssh_root_login"`
+	DnsServers             []string             `json:"dns_servers"`
+	EnableSsh              bool                 `json:"enable_ssh"`
+	Hostname               string               `json:"hostname"`
+	NtpServers             []string             `json:"ntp_servers"`
+	SearchDomains          []string             `json:"search_domains"`
 }
 
 type PerNodeStatisticsRx struct {

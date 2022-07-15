@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"log"
 
 	"github.com/hichtakk/nsxctl/structs"
 )
@@ -283,4 +284,40 @@ func (c *NsxtClient) GetEdgeCluster() *[]structs.EdgeCluster {
 		edgeClusters = append(edgeClusters, edgeCluster)
 	}
 	return &edgeClusters
+}
+
+func (c *NsxtClient) CreateEdge(name string, template_name string, address string, root_password string, admin_password string) {
+	path := "/api/v1/transport-nodes/"
+	res := c.Request("GET", path, nil, nil)
+	edges := []structs.TransportNode{}
+	for _, e := range res.Body.(map[string]interface{})["results"].([]interface{}) {
+		str, _ := json.Marshal(e)
+		var edge structs.TransportNode
+		json.Unmarshal(str, &edge)
+		edges = append(edges, edge)
+	}
+
+	var template_edge structs.TransportNode
+	for _, e := range edges {
+		if e.Name == template_name {
+			template_edge = e
+			break
+		}
+	}
+
+	template_edge.Name = name
+	template_edge.EdgeNodeDeploymentInfo.IPAddress[0] = address
+	template_edge.EdgeNodeDeploymentInfo.EdgeDeploymentConfig.VMDeploymentConfig.ManagementPortSubnets[0].IPAddresses[0] = address
+	template_edge.EdgeNodeDeploymentInfo.EdgeDeploymentConfig.Users["cli_password"] = admin_password
+	template_edge.EdgeNodeDeploymentInfo.EdgeDeploymentConfig.Users["root_password"] = root_password
+
+	jsonObj, err := json.Marshal(template_edge)
+	if err != nil {
+		log.Print(err)
+		return
+	}
+
+	var resp *Response
+	resp = c.Request("POST", path, nil, jsonObj)
+	fmt.Println(resp)
 }
