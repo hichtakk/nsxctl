@@ -27,7 +27,8 @@ type NsxtClient struct {
 
 type Response struct {
 	*http.Response
-	Body interface{}
+	Body  interface{}
+	Error error
 }
 
 func (r *Response) BodyBytes() ([]byte, error) {
@@ -41,8 +42,21 @@ func (r *Response) UnmarshalBody(strct interface{}) {
 
 func (r *Response) Print(noPretty bool) {
 	var body []byte
+	if r.Error != nil {
+		fmt.Fprintln(os.Stderr, r.Error.Error())
+		return
+	}
 	if r.Body == nil {
-		fmt.Printf("{\"code\": %d, \"body\": \"no response body\"}\n", r.StatusCode)
+		var msg string
+		switch r.StatusCode {
+		case 404:
+			msg = "request error"
+		case 500:
+			msg = "server error"
+		case 200, 201:
+			msg = "no response body"
+		}
+		fmt.Printf("{\"code\": %d, \"body\": \"%v\"}\n", r.StatusCode, msg)
 	} else {
 		if noPretty {
 			body, _ = r.BodyBytes()
@@ -75,8 +89,7 @@ func (c *NsxtClient) Request(method string, path string, query_param map[string]
 		return nil
 	}()
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err.Error())
-		return &Response{}
+		return &Response{nil, nil, err}
 	}
 	req, _ := http.NewRequest(method, c.BaseUrl+path, bytes.NewBuffer(req_data))
 	req.Header.Set("Content-Type", "application/json")
@@ -106,10 +119,10 @@ func (c *NsxtClient) Request(method string, path string, query_param map[string]
 			log.Println(err)
 			return &Response{}
 		}
-		r := &Response{res, data}
+		r := &Response{res, data, nil}
 		return r
 	} else {
-		return &Response{res, nil}
+		return &Response{res, nil, nil}
 	}
 }
 
