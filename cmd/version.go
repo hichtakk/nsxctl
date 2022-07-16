@@ -3,7 +3,9 @@ package cmd
 import (
 	"fmt"
 	"log"
+	"strings"
 
+	ac "github.com/hichtakk/nsxctl/nsxalb"
 	"github.com/spf13/cobra"
 )
 
@@ -26,7 +28,7 @@ func NewCmdShowVersion() *cobra.Command {
 	versionCmd := &cobra.Command{
 		Use:     "version",
 		Aliases: aliases,
-		Short:   "show version of NSX-T",
+		Short:   fmt.Sprintf("show version of NSX-T [%s]", strings.Join(aliases, ",")),
 		PreRunE: func(c *cobra.Command, args []string) error {
 			site, err := conf.NsxT.GetCurrentSite()
 			if err != nil {
@@ -40,6 +42,35 @@ func NewCmdShowVersion() *cobra.Command {
 		},
 		PostRunE: func(c *cobra.Command, args []string) error {
 			nsxtclient.Logout()
+			return nil
+		},
+	}
+
+	return versionCmd
+}
+
+// show ALB version
+func NewCmdShowAlbVersion() *cobra.Command {
+	aliases := []string{"av"}
+	versionCmd := &cobra.Command{
+		Use:     "alb-version",
+		Aliases: aliases,
+		Short:   fmt.Sprintf("show version of ALB [%s]", strings.Join(aliases, ",")),
+		PreRunE: func(c *cobra.Command, args []string) error {
+			albclient = ac.NewNsxAlbClient(false, debug)
+			albsite, err := conf.NsxAlb.GetCurrentSite()
+			if err != nil {
+				log.Fatal(err)
+			}
+			albclient.BaseUrl = albsite.Endpoint
+			albclient.Login(albsite.GetCredential())
+			return nil
+		},
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Println(albclient.Version)
+		},
+		PostRunE: func(c *cobra.Command, args []string) error {
+			albclient.Logout()
 			return nil
 		},
 	}
