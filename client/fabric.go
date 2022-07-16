@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"net/http"
 	"log"
+	"net/http"
 
 	"github.com/hichtakk/nsxctl/structs"
 )
@@ -244,6 +244,15 @@ func (c *NsxtClient) GetTransportNode() {
 	}
 }
 
+func (c *NsxtClient) GetTransportNodeStatus(id string) string {
+	path := "/api/v1/transport-nodes/" + id + "/status?source=realtime"
+	res := c.Request("GET", path, nil, nil)
+	if res.Error != nil {
+		return ""
+	}
+	return res.Body.(map[string]interface{})["status"].(string)
+}
+
 func (c *NsxtClient) GetTransportNodeById(uuid string) *structs.TransportNode {
 	path := "/api/v1/transport-nodes/" + uuid
 	res := c.Request("GET", path, nil, nil)
@@ -287,14 +296,10 @@ func (c *NsxtClient) GetEdgeCluster() *[]structs.EdgeCluster {
 }
 
 func (c *NsxtClient) CreateEdge(name string, template_name string, address string, root_password string, admin_password string) {
-	path := "/api/v1/transport-nodes/"
-	res := c.Request("GET", path, nil, nil)
-	edges := []structs.TransportNode{}
-	for _, e := range res.Body.(map[string]interface{})["results"].([]interface{}) {
-		str, _ := json.Marshal(e)
-		var edge structs.TransportNode
-		json.Unmarshal(str, &edge)
-		edges = append(edges, edge)
+	edges := c.GetEdge()
+	if edges == nil {
+		log.Fatal("template edge not found")
+		return
 	}
 
 	var template_edge structs.TransportNode
@@ -317,7 +322,22 @@ func (c *NsxtClient) CreateEdge(name string, template_name string, address strin
 		return
 	}
 
+	path := "/api/v1/transport-nodes"
 	var resp *Response
 	resp = c.Request("POST", path, nil, jsonObj)
 	fmt.Println(resp)
+}
+
+func (c *NsxtClient) GetEdge() []structs.TransportNode {
+	path := "/api/v1/transport-nodes?node_types=EdgeNode"
+	res := c.Request("GET", path, nil, nil)
+	edges := []structs.TransportNode{}
+	for _, e := range res.Body.(map[string]interface{})["results"].([]interface{}) {
+		str, _ := json.Marshal(e)
+		var edge structs.TransportNode
+		json.Unmarshal(str, &edge)
+		edges = append(edges, edge)
+	}
+
+	return edges
 }
