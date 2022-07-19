@@ -182,6 +182,17 @@ func (c *NsxtClient) GetRoutingTable(tier0Id string) []structs.EdgeRoute {
 	return entries
 }
 
+func (c *NsxtClient) GetBgpConfig(tier0Id string, locale string) structs.BgpConfig {
+	var path string
+	path = "/policy/api/v1/infra/tier-0s/" + tier0Id + "/locale-services/" + locale + "/bgp"
+	res := c.Request("GET", path, nil, nil)
+	bgpConfig := structs.BgpConfig{}
+	body, _ := res.BodyBytes()
+	json.Unmarshal(body, &bgpConfig)
+
+	return bgpConfig
+}
+
 func (c *NsxtClient) GetBgpNeighbors(tier0Id string, locale string) []structs.BgpNeighbor {
 	var path string
 	path = "/policy/api/v1/infra/tier-0s/" + tier0Id + "/locale-services/" + locale + "/bgp/neighbors"

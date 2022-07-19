@@ -185,6 +185,16 @@ func (res *RouteEntries) Print() {
 	fmt.Println()
 }
 
+type BgpConfig struct {
+	Id              string `json:"id"`
+	Name            string `json:"display_name"`
+	Ecmp            bool   `json:"ecmp"`
+	Enabled         bool   `json:"enabled"`
+	GracefulRestart bool   `json:"graceful_restart"`
+	InterSrRouting  bool   `json:"inter_sr_ibgp"`
+	Asn             string `json:"local_as_num"`
+}
+
 type BgpAdvRouteEntry struct {
 	AsPath    string `json:"as_path"`
 	LocalPref int    `json:"local_pref"`
@@ -275,17 +285,17 @@ type TransportNode struct {
 }
 
 type HostSwitchSpec struct {
-	HostSwitches           []HostSwitch           `json:"host_switches"`
-	ResourceType           string                 `json:"resource_type"`
+	HostSwitches []HostSwitch `json:"host_switches"`
+	ResourceType string       `json:"resource_type"`
 }
 
 type HostSwitch struct {
-	Mode                   string              `json:"host_switch_mode"`
-	Name                   string              `json:"host_switch_name"`
-	UplinkProfiles         []map[string]string `json:"host_switch_profile_ids"`
-	Type                   string              `json:"host_switch_type"`
-	IPAssignment           IpAssignmentSpec    `json:"ip_assignment_spec"`
-	Pnics                  []map[string]string `json:"pnics"`
+	Mode                   string                   `json:"host_switch_mode"`
+	Name                   string                   `json:"host_switch_name"`
+	UplinkProfiles         []map[string]string      `json:"host_switch_profile_ids"`
+	Type                   string                   `json:"host_switch_type"`
+	IPAssignment           IpAssignmentSpec         `json:"ip_assignment_spec"`
+	Pnics                  []map[string]string      `json:"pnics"`
 	TransportZoneEndpoints []TransportZoneEndpoints `json:"transport_zone_endpoints"`
 }
 
@@ -295,62 +305,62 @@ type TransportZoneEndpoints struct {
 }
 
 type IpAssignmentSpec struct {
-	ResourceType           string               `json:"resource_type"`
-	IpPoolId               string               `json:"ip_pool_id,omitempty"`
+	ResourceType string `json:"resource_type"`
+	IpPoolId     string `json:"ip_pool_id,omitempty"`
 }
 
 type EdgeNodeDeploymentInfo struct {
-	Name                   string               `json:"display_name"`
-	IPAddress              []string             `json:"ip_addresses"`
-	EdgeDeploymentConfig   EdgeDeploymentConfig `json:"deployment_config"`
-	NodeSettings           NodeSettings         `json:"node_settings"`
-	ResourceType           string                 `json:"resource_type"`
+	Name                 string               `json:"display_name"`
+	IPAddress            []string             `json:"ip_addresses"`
+	EdgeDeploymentConfig EdgeDeploymentConfig `json:"deployment_config"`
+	NodeSettings         NodeSettings         `json:"node_settings"`
+	ResourceType         string               `json:"resource_type"`
 }
 
 type EdgeDeploymentConfig struct {
-	Size                   string               `json:"form_factor"`
-	Users                  map[string]string    `json:"node_user_settings"`
-	VMDeploymentConfig     VMDeploymentConfig   `json:"vm_deployment_config"`
+	Size               string             `json:"form_factor"`
+	Users              map[string]string  `json:"node_user_settings"`
+	VMDeploymentConfig VMDeploymentConfig `json:"vm_deployment_config"`
 }
 
 type VMDeploymentConfig struct {
-	ComputeId              string               `json:"compute_id"`
-	DataNetworkIds         []string             `json:"data_network_ids"`
-	DefaultGateway         []string             `json:"default_gateway_addresses"`
-	ManagementNetworkId    string               `json:"management_network_id"`
-	ManagementPortSubnets  []Subnet             `json:"management_port_subnets"`
-	ReservationInfo        ReservationInfo      `json:"reservation_info"`
-	StorageId              string               `json:"storage_id"`
-	VcId                   string               `json:"vc_id"`
-	PlacementType          string               `json:"placement_type"`
+	ComputeId             string          `json:"compute_id"`
+	DataNetworkIds        []string        `json:"data_network_ids"`
+	DefaultGateway        []string        `json:"default_gateway_addresses"`
+	ManagementNetworkId   string          `json:"management_network_id"`
+	ManagementPortSubnets []Subnet        `json:"management_port_subnets"`
+	ReservationInfo       ReservationInfo `json:"reservation_info"`
+	StorageId             string          `json:"storage_id"`
+	VcId                  string          `json:"vc_id"`
+	PlacementType         string          `json:"placement_type"`
 }
 
 type Subnet struct {
-	IPAddresses            []string             `json:"ip_addresses"`
-	PrefixLength           int                  `json:"prefix_length"`
+	IPAddresses  []string `json:"ip_addresses"`
+	PrefixLength int      `json:"prefix_length"`
 }
 
 type ReservationInfo struct {
-	Cpu                    CpuReservationInfo    `json:"cpu_reservation"`
-	Memory                 MemoryReservationInfo `json:"memory_reservation"`
+	Cpu    CpuReservationInfo    `json:"cpu_reservation"`
+	Memory MemoryReservationInfo `json:"memory_reservation"`
 }
 
 type CpuReservationInfo struct {
-	MHz                    uint64               `json:"reservation_in_mhz"`
-	Priority               string               `json:"reservation_in_shares"`
+	MHz      uint64 `json:"reservation_in_mhz"`
+	Priority string `json:"reservation_in_shares"`
 }
 
 type MemoryReservationInfo struct {
-	Percentage             int                  `json:"reservation_percentage"`
+	Percentage int `json:"reservation_percentage"`
 }
 
 type NodeSettings struct {
-	AllowSshRootLogin      bool                 `json:"allow_ssh_root_login"`
-	DnsServers             []string             `json:"dns_servers"`
-	EnableSsh              bool                 `json:"enable_ssh"`
-	Hostname               string               `json:"hostname"`
-	NtpServers             []string             `json:"ntp_servers"`
-	SearchDomains          []string             `json:"search_domains"`
+	AllowSshRootLogin bool     `json:"allow_ssh_root_login"`
+	DnsServers        []string `json:"dns_servers"`
+	EnableSsh         bool     `json:"enable_ssh"`
+	Hostname          string   `json:"hostname"`
+	NtpServers        []string `json:"ntp_servers"`
+	SearchDomains     []string `json:"search_domains"`
 }
 
 type PerNodeStatisticsRx struct {
@@ -411,11 +421,18 @@ type Gateway interface {
 }
 
 type Tier0Gateway struct {
-	Id           string `json:"id"`
-	HaMode       string `json:"ha_mode"`
-	Name         string `json:"display_name"`
-	FailoverMode string `json:"failover_mode"`
+	Id            string `json:"id"`
+	HaMode        string `json:"ha_mode"`
+	Name          string `json:"display_name"`
+	FailoverMode  string `json:"failover_mode"`
 	RealizationId string `json:"realization_id"`
+}
+
+func (gw *Tier0Gateway) Print() {
+	fmt.Printf("ID:   %v\n", gw.Id)
+	fmt.Printf("Name: %v\n", gw.Name)
+	fmt.Printf("HA Mode: %v\n", gw.HaMode)
+	fmt.Printf("Failover Mode: %v\n", gw.FailoverMode)
 }
 
 type Tier0Gateways []Tier0Gateway
@@ -432,11 +449,18 @@ func (gws *Tier0Gateways) Print(output string) {
 }
 
 type Tier1Gateway struct {
-	Id           string `json:"id"`
-	HaMode       string `json:"ha_mode"`
-	Name         string `json:"display_name"`
-	FailoverMode string `json:"failover_mode"`
+	Id            string `json:"id"`
+	HaMode        string `json:"ha_mode"`
+	Name          string `json:"display_name"`
+	FailoverMode  string `json:"failover_mode"`
 	RealizationId string `json:"realization_id"`
+}
+
+func (gw *Tier1Gateway) Print() {
+	fmt.Printf("ID:   %v\n", gw.Id)
+	fmt.Printf("Name: %v\n", gw.Name)
+	fmt.Printf("HA Mode: %v\n", gw.HaMode)
+	fmt.Printf("Failover Mode: %v\n", gw.FailoverMode)
 }
 
 type Tier1Gateways []Tier1Gateway

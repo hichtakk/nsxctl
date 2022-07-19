@@ -8,18 +8,18 @@ import (
 	"strings"
 )
 
-func (c *NsxtClient) Login(cred url.Values) {
+func (c *NsxtClient) Login(cred url.Values) error {
 	target_url := c.BaseUrl + "/api/session/create"
 	req, _ := http.NewRequest("POST", target_url, strings.NewReader(cred.Encode()))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	res, err := c.httpClient.Do(req)
 	if err != nil {
-		log.Println(err)
+		return err
 	}
 	defer res.Body.Close()
 	if res.StatusCode != 200 {
-		log.Printf("StatusCode=%d\n", res.StatusCode)
-		return
+		//log.Printf("StatusCode=%d\n", res.StatusCode)
+		return fmt.Errorf("request failed")
 	}
 	c.Token = res.Header.Get("X-Xsrf-Token")
 	if c.Token == "" {
@@ -34,6 +34,8 @@ func (c *NsxtClient) Login(cred url.Values) {
 			fmt.Printf("role: %s, permission: %s\n", v.(map[string]interface{})["role"], v.(map[string]interface{})["permissions"])
 		}
 	}
+
+	return nil
 }
 
 func (c *NsxtClient) Logout() {
