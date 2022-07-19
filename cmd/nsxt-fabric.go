@@ -3,7 +3,9 @@ package cmd
 import (
 	"fmt"
 	"log"
+	"os"
 	"strings"
+	"text/tabwriter"
 
 	"github.com/hichtakk/nsxctl/structs"
 	"github.com/spf13/cobra"
@@ -302,6 +304,94 @@ func NewCmdCreateEdge() *cobra.Command {
 	edgeCmd.MarkFlagRequired("address")
 	edgeCmd.MarkFlagRequired("root_password")
 	edgeCmd.MarkFlagRequired("admin_password")
+
+	return edgeCmd
+}
+
+func NewCmdShowEdge() *cobra.Command {
+	var verbose bool
+	aliases := []string{"e"}
+	edgeCmd := &cobra.Command{
+		Use:     "edge",
+		Aliases: aliases,
+		Short:   fmt.Sprintf("show edges [%s]", strings.Join(aliases, ",")),
+		PreRunE: func(c *cobra.Command, args []string) error {
+			site, err := conf.NsxT.GetCurrentSite()
+			if err != nil {
+				log.Fatal(err)
+			}
+			nsxtclient.Login(site.GetCredential())
+			return nil
+		},
+		Run: func(cmd *cobra.Command, args []string) {
+			w := tabwriter.NewWriter(os.Stdout, 0, 1, 3, ' ', 0)
+			if verbose {
+				w.Write([]byte(strings.Join([]string{"Id", "Name", "IP", "EdgeCluster", "Status", "Gatways"}, "\t") + "\n"))
+			} else {
+				w.Write([]byte(strings.Join([]string{"Id", "Name", "IP", "EdgeCluster", "Status"}, "\t") + "\n"))
+			}
+
+			edges := nsxtclient.GetEdge()
+			ecs := nsxtclient.GetEdgeCluster()
+
+			edge_gw_map := make(map[string][]string)  // edge_id : [gwid, gwid, ...]
+			if verbose {
+				t0s := nsxtclient.GetTier0Gateway("")
+				t1s := nsxtclient.GetTier1Gateway("")
+				for _, gw := range t0s {
+					per_node_status := nsxtclient.GetGatewayAggregateInfo(gw.RealizationId)
+					for _, st := range per_node_status {
+						eid := st["transport_node_id"]
+						ha := st["high_availability_status"]
+						val, ok := edge_gw_map[eid]
+						if ! ok {
+							val = []string{}
+						}
+						val = append(val, gw.Name + "(" + ha + ")")
+						edge_gw_map[eid] = val
+					}
+				}
+				for _, gw := range t1s {
+					per_node_status := nsxtclient.GetGatewayAggregateInfo(gw.RealizationId)
+					for _, st := range per_node_status {
+						eid := st["transport_node_id"]
+						ha := st["high_availability_status"]
+						val, ok := edge_gw_map[eid]
+						if ! ok {
+							val = []string{}
+						}
+						val = append(val, gw.Name + "(" + ha + ")")
+						edge_gw_map[eid] = val
+					}
+				}
+			}
+
+			for _, e := range edges {
+				var edgeCluster structs.EdgeCluster
+				for _, ec := range *ecs {
+					for _, ecm := range ec.Members {
+						if ecm.Id == e.Id {
+							edgeCluster = ec
+						}
+					}
+				}
+				ip := strings.Join(e.EdgeNodeDeploymentInfo.IPAddress, ",")
+				status := nsxtclient.GetTransportNodeStatus(e.Id)
+				if verbose {
+					gws := strings.Join(edge_gw_map[e.Id], ",")
+					w.Write([]byte(strings.Join([]string{e.Id, e.Name, ip, edgeCluster.Name, status, gws}, "\t") + "\n"))
+				} else {
+					w.Write([]byte(strings.Join([]string{e.Id, e.Name, ip, edgeCluster.Name, status}, "\t") + "\n"))
+				}
+			}
+			w.Flush()
+		},
+		PostRunE: func(c *cobra.Command, args []string) error {
+			nsxtclient.Logout()
+			return nil
+		},
+	}
+	edgeCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "display gateway placement")
 
 	return edgeCmd
 }

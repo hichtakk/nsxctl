@@ -415,6 +415,7 @@ type Tier0Gateway struct {
 	HaMode       string `json:"ha_mode"`
 	Name         string `json:"display_name"`
 	FailoverMode string `json:"failover_mode"`
+	RealizationId string `json:"realization_id"`
 }
 
 type Tier0Gateways []Tier0Gateway
@@ -435,6 +436,7 @@ type Tier1Gateway struct {
 	HaMode       string `json:"ha_mode"`
 	Name         string `json:"display_name"`
 	FailoverMode string `json:"failover_mode"`
+	RealizationId string `json:"realization_id"`
 }
 
 type Tier1Gateways []Tier1Gateway

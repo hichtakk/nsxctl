@@ -42,6 +42,7 @@ func NewCmdShow() *cobra.Command {
 		NewCmdShowEnforcementPoint(),
 		NewCmdShowIpPool(),
 		NewCmdShowIpBlock(),
+		NewCmdShowEdge(),
 		NewCmdShowSegment(),
 		NewCmdShowRoutingTable(),
 		NewCmdShowBgpAdvRoutes(),
