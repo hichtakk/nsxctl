@@ -473,7 +473,6 @@ func (gws *Tier1Gateways) Print(output string) {
 			fmt.Printf("%-8s	%8s	%8s	%8s\n", gw.Id, gw.Name, gw.HaMode, gw.FailoverMode)
 		}
 	}
-
 }
 
 type BgpNeighbor struct {
@@ -483,4 +482,45 @@ type BgpNeighbor struct {
 	Path    string   `json:"path"`
 	Asn     string   `json:"remote_as_num"`
 	Source  []string `json:"source_addresses"`
+}
+
+type Segments []Segment
+
+func (segs *Segments) Print() {
+	fmt.Printf("%-8s	%-8s	%-8s	%-8s	%-8s\n", "ID", "Name", "Gateway", "Subnet", "State")
+	for _, seg := range *segs {
+		gw := seg.Connectivity
+		if gw == "" {
+			gw = "-	"
+		} else {
+			gw = strings.Split(gw, "/")[2]
+		}
+		subnets := []string{}
+		for _, subnet := range seg.Subnets {
+			subnets = append(subnets, subnet.Gateway)
+		}
+		subnetStr := ""
+		if len(subnets) > 0 {
+			subnetStr = strings.Join(subnets, ",")
+		} else {
+			subnetStr = "-"
+		}
+		fmt.Printf("%-8s	%8s	%8s	%8s	%8s\n", seg.Id, seg.Name, gw, subnetStr, seg.AdminState)
+	}
+}
+
+type Segment struct {
+	Name              string                 `json:"display_name"`
+	Id                string                 `json:"id"`
+	AdminState        string                 `json:"admin_state"`
+	AdvancedConifg    map[string]interface{} `json:"advanced_config"`
+	Connectivity      string                 `json:"connectivity_path"`
+	ReplicationMode   string                 `json:"replication_mode"`
+	Subnets           []SegmentSubnet        `json:"subnets"`
+	TransportZonePath string                 `json:"transport_zone_path"`
+}
+
+type SegmentSubnet struct {
+	Gateway string `json:"gateway_address"`
+	Network string `json:"network"`
 }
