@@ -230,7 +230,11 @@ func NewCmdShowTransportNode() *cobra.Command {
 			return nil
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			nodes := nsxtclient.GetTransportNode()
+			sites := nsxtclient.GetSite()
+			eps := nsxtclient.GetEnforcementPoint(sites[0])
+			ep := *eps
+			// use default for site and enforcementpoint
+			nodes := nsxtclient.GetTransportNode(sites[0], ep[0].Id)
 			nodes.Print()
 		},
 	}

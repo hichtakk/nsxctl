@@ -224,8 +224,8 @@ func (c *NsxtClient) PublishFQDN() {
 	_dumpResponse(res)
 }
 
-func (c *NsxtClient) GetTransportNode() structs.TransportNodes {
-	path := "/api/v1/transport-nodes"
+func (c *NsxtClient) GetTransportNode(site string, ep string) structs.TransportNodes {
+	path := "/policy/api/v1/infra/sites/" + site + "/enforcement-points/" + ep + "/host-transport-nodes"
 	params := map[string]string{"node_types": "HostNode"}
 	res := c.Request("GET", path, params, nil)
 	nodes := []structs.TransportNode{}
