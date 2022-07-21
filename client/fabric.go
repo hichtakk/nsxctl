@@ -239,6 +239,20 @@ func (c *NsxtClient) GetTransportNode(site string, ep string) structs.TransportN
 	return nodes
 }
 
+func (c *NsxtClient) GetTransportNodeTunnels(node_id string) structs.TransportNodeTunnels {
+	path := "/api/v1/transport-nodes/" + node_id + "/tunnels"
+	res := c.Request("GET", path, nil, nil)
+	tunnels := []structs.TransportNodeTunnel{}
+	for _, t := range res.Body.(map[string]interface{})["tunnels"].([]interface{}) {
+		str, _ := json.Marshal(t)
+		var tunnel structs.TransportNodeTunnel
+		json.Unmarshal(str, &tunnel)
+		tunnels = append(tunnels, tunnel)
+	}
+
+	return structs.TransportNodeTunnels(tunnels)
+}
+
 func (c *NsxtClient) GetTransportNodeStatus(id string) string {
 	path := "/api/v1/transport-nodes/" + id + "/status?source=realtime"
 	res := c.Request("GET", path, nil, nil)

@@ -234,8 +234,14 @@ func NewCmdShowTransportNode() *cobra.Command {
 			eps := nsxtclient.GetEnforcementPoint(sites[0])
 			ep := *eps
 			// use default for site and enforcementpoint
+			nodesWithTunnels := structs.TransportNodes{}
 			nodes := nsxtclient.GetTransportNode(sites[0], ep[0].Id)
-			nodes.Print()
+			for _, n := range nodes {
+				tuns := nsxtclient.GetTransportNodeTunnels(n.Id)
+				n.Tunnels = tuns
+				nodesWithTunnels = append(nodesWithTunnels, n)
+			}
+			nodesWithTunnels.Print()
 		},
 	}
 

@@ -282,10 +282,11 @@ type TransportNodes []TransportNode
 
 func (tns *TransportNodes) Print() {
 	w := tabwriter.NewWriter(os.Stdout, 0, 1, 3, ' ', 0)
-	w.Write([]byte(strings.Join([]string{"ID", "Name", "IP"}, "\t") + "\n"))
+	w.Write([]byte(strings.Join([]string{"ID", "Name", "IP", "Tunnel"}, "\t") + "\n"))
 	for _, tn := range *tns {
 		ip := strings.Join(tn.EdgeNodeDeploymentInfo.IPAddress, ",")
-		w.Write([]byte(strings.Join([]string{tn.Id, tn.Name, ip}, "\t") + "\n"))
+		numTun := fmt.Sprintf("%v", len(tn.Tunnels))
+		w.Write([]byte(strings.Join([]string{tn.Id, tn.Name, ip, numTun}, "\t") + "\n"))
 	}
 	w.Flush()
 }
@@ -296,6 +297,20 @@ type TransportNode struct {
 	HostSwitchSpec         HostSwitchSpec         `json:"host_switch_spec"`
 	EdgeNodeDeploymentInfo EdgeNodeDeploymentInfo `json:"node_deployment_info"`
 	ResourceType           string                 `json:"resource_type"`
+	Tunnels                TransportNodeTunnels
+}
+
+type TransportNodeTunnels []TransportNodeTunnel
+
+type TransportNodeTunnel struct {
+	Name            string `json:"name"`
+	Status          string `json:"status"`
+	Encapsulation   string `json:"encap"`
+	EgressInterface string `json:"egress_interface"`
+	LocalIp         string `json:"local_ip"`
+	RemoteIp        string `json:"remote_ip"`
+	RemoteNodeName  string `json:"remote_node_display_name"`
+	RemoteNodeId    string `json:"remote_node_id"`
 }
 
 type HostSwitchSpec struct {
