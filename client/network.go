@@ -9,25 +9,14 @@ import (
 	"github.com/hichtakk/nsxctl/structs"
 )
 
-func (c *NsxtClient) GetIpPool() {
+func (c *NsxtClient) GetIpPool() structs.IpPools {
 	path := "/policy/api/v1/infra/ip-pools"
-	req, _ := http.NewRequest("GET", c.BaseUrl+path, nil)
-	req.Header.Set("X-Xsrf-Token", c.Token)
-	res, err := c.httpClient.Do(req)
-	if err != nil {
-		fmt.Println(err)
-	}
-	defer res.Body.Close()
-	if res.StatusCode != 200 {
-		fmt.Printf("StatusCode=%d\n", res.StatusCode)
-		return
-	}
-	data := readResponseBody(res)
-	cms := data.(map[string]interface{})["results"]
-	for _, cm := range cms.([]interface{}) {
-		b, _ := json.MarshalIndent(cm, "", "  ")
-		fmt.Println(string(b))
-	}
+	res := c.Request("GET", path, nil, nil)
+	ipps := structs.IpPools{}
+	str, _ := json.Marshal(res.Body.(map[string]interface{})["results"].([]interface{}))
+	json.Unmarshal(str, &ipps)
+
+	return ipps
 }
 
 func (c *NsxtClient) GetIpBlock() structs.IpBlocks {

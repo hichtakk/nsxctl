@@ -571,3 +571,21 @@ type IpBlock struct {
 	Cidr string `json:"cidr"`
 	Path string `json:"path"`
 }
+
+type IpPools []IpPool
+
+func (ps *IpPools) Print() {
+	w := tabwriter.NewWriter(os.Stdout, 0, 1, 3, ' ', 0)
+	w.Write([]byte(strings.Join([]string{"ID", "Name", "Usage(allocated/available)"}, "\t") + "\n"))
+	for _, p := range *ps {
+		usage := fmt.Sprintf("%v/%v", p.Usage["allocated_ip_allocations"], p.Usage["available_ips"])
+		w.Write([]byte(strings.Join([]string{p.Id, p.Name, usage}, "\t") + "\n"))
+	}
+	w.Flush()
+}
+
+type IpPool struct {
+	Name  string         `json:"display_name"`
+	Id    string         `json:"id"`
+	Usage map[string]int `json:"pool_usage"`
+}

@@ -28,7 +28,8 @@ func NewCmdShowIpPool() *cobra.Command {
 			return nil
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			nsxtclient.GetIpPool()
+			pools := nsxtclient.GetIpPool()
+			pools.Print()
 		},
 	}
 
