@@ -39,7 +39,7 @@ func NewCmdShowIpBlock() *cobra.Command {
 	aliases := []string{"ipb"}
 	ipPoolCmd := &cobra.Command{
 		Use:     "ip-block",
-		Aliases: []string{""},
+		Aliases: aliases,
 		Short:   fmt.Sprintf("show ip address blocks [%s]", strings.Join(aliases, ",")),
 		Args:    cobra.MaximumNArgs(1),
 		PreRunE: func(c *cobra.Command, args []string) error {
@@ -55,7 +55,8 @@ func NewCmdShowIpBlock() *cobra.Command {
 			return nil
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			nsxtclient.GetIpBlock()
+			blocks := nsxtclient.GetIpBlock()
+			blocks.Print()
 		},
 	}
 

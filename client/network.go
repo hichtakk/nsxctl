@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+
+	"github.com/hichtakk/nsxctl/structs"
 )
 
 func (c *NsxtClient) GetIpPool() {
@@ -28,25 +30,18 @@ func (c *NsxtClient) GetIpPool() {
 	}
 }
 
-func (c *NsxtClient) GetIpBlock() {
+func (c *NsxtClient) GetIpBlock() structs.IpBlocks {
 	path := "/policy/api/v1/infra/ip-blocks"
-	req, _ := http.NewRequest("GET", c.BaseUrl+path, nil)
-	req.Header.Set("X-Xsrf-Token", c.Token)
-	res, err := c.httpClient.Do(req)
-	if err != nil {
-		fmt.Println(err)
+	res := c.Request("GET", path, nil, nil)
+	ipbs := structs.IpBlocks{}
+	for _, b := range res.Body.(map[string]interface{})["results"].([]interface{}) {
+		str, _ := json.Marshal(b)
+		var block structs.IpBlock
+		json.Unmarshal(str, &block)
+		ipbs = append(ipbs, block)
 	}
-	defer res.Body.Close()
-	if res.StatusCode != 200 {
-		fmt.Printf("StatusCode=%d\n", res.StatusCode)
-		return
-	}
-	data := readResponseBody(res)
-	blks := data.(map[string]interface{})["results"]
-	for _, blk := range blks.([]interface{}) {
-		b, _ := json.MarshalIndent(blk, "", "  ")
-		fmt.Println(string(b))
-	}
+
+	return ipbs
 }
 
 func (c *NsxtClient) CreateIpPool(name string) {

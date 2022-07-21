@@ -553,3 +553,21 @@ type SegmentSubnet struct {
 	Gateway string `json:"gateway_address"`
 	Network string `json:"network"`
 }
+
+type IpBlocks []IpBlock
+
+func (bs *IpBlocks) Print() {
+	w := tabwriter.NewWriter(os.Stdout, 0, 1, 3, ' ', 0)
+	w.Write([]byte(strings.Join([]string{"ID", "Name", "CIDR"}, "\t") + "\n"))
+	for _, b := range *bs {
+		w.Write([]byte(strings.Join([]string{b.Id, b.Name, b.Cidr}, "\t") + "\n"))
+	}
+	w.Flush()
+}
+
+type IpBlock struct {
+	Name string `json:"display_name"`
+	Id   string `json:"id"`
+	Cidr string `json:"cidr"`
+	Path string `json:"path"`
+}
