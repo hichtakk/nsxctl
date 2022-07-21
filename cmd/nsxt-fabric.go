@@ -230,7 +230,8 @@ func NewCmdShowTransportNode() *cobra.Command {
 			return nil
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			nsxtclient.GetTransportNode()
+			nodes := nsxtclient.GetTransportNode()
+			nodes.Print()
 		},
 	}
 
@@ -334,7 +335,7 @@ func NewCmdShowEdge() *cobra.Command {
 			edges := nsxtclient.GetEdge()
 			ecs := nsxtclient.GetEdgeCluster()
 
-			edge_gw_map := make(map[string][]string)  // edge_id : [gwid, gwid, ...]
+			edge_gw_map := make(map[string][]string) // edge_id : [gwid, gwid, ...]
 			if verbose {
 				t0s := nsxtclient.GetTier0Gateway("")
 				t1s := nsxtclient.GetTier1Gateway("")
@@ -344,10 +345,10 @@ func NewCmdShowEdge() *cobra.Command {
 						eid := st["transport_node_id"]
 						ha := st["high_availability_status"]
 						val, ok := edge_gw_map[eid]
-						if ! ok {
+						if !ok {
 							val = []string{}
 						}
-						val = append(val, gw.Name + "(" + ha + ")")
+						val = append(val, gw.Name+"("+ha+")")
 						edge_gw_map[eid] = val
 					}
 				}
@@ -357,10 +358,10 @@ func NewCmdShowEdge() *cobra.Command {
 						eid := st["transport_node_id"]
 						ha := st["high_availability_status"]
 						val, ok := edge_gw_map[eid]
-						if ! ok {
+						if !ok {
 							val = []string{}
 						}
-						val = append(val, gw.Name + "(" + ha + ")")
+						val = append(val, gw.Name+"("+ha+")")
 						edge_gw_map[eid] = val
 					}
 				}

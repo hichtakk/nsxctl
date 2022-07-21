@@ -3,8 +3,10 @@ package structs
 import (
 	"fmt"
 	"net/netip"
+	"os"
 	"strconv"
 	"strings"
+	"text/tabwriter"
 )
 
 type EnforcementPoint struct {
@@ -274,6 +276,18 @@ func (cm *ComputeManager) Print() {
 type ComputeManagerStatus struct {
 	Connection   string
 	Registration string
+}
+
+type TransportNodes []TransportNode
+
+func (tns *TransportNodes) Print() {
+	w := tabwriter.NewWriter(os.Stdout, 0, 1, 3, ' ', 0)
+	w.Write([]byte(strings.Join([]string{"ID", "Name", "IP"}, "\t") + "\n"))
+	for _, tn := range *tns {
+		ip := strings.Join(tn.EdgeNodeDeploymentInfo.IPAddress, ",")
+		w.Write([]byte(strings.Join([]string{tn.Id, tn.Name, ip}, "\t") + "\n"))
+	}
+	w.Flush()
 }
 
 type TransportNode struct {

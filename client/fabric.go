@@ -224,24 +224,19 @@ func (c *NsxtClient) PublishFQDN() {
 	_dumpResponse(res)
 }
 
-func (c *NsxtClient) GetTransportNode() {
-	req := c.makeRequest("GET", "/api/v1/transport-nodes")
-	res, err := c.httpClient.Do(req)
-	if err != nil {
-		fmt.Println(err)
+func (c *NsxtClient) GetTransportNode() structs.TransportNodes {
+	path := "/api/v1/transport-nodes"
+	params := map[string]string{"node_types": "HostNode"}
+	res := c.Request("GET", path, params, nil)
+	nodes := []structs.TransportNode{}
+	for _, n := range res.Body.(map[string]interface{})["results"].([]interface{}) {
+		str, _ := json.Marshal(n)
+		var node structs.TransportNode
+		json.Unmarshal(str, &node)
+		nodes = append(nodes, node)
 	}
-	defer res.Body.Close()
-	if res.StatusCode != 200 {
-		fmt.Printf("StatusCode=%d\n", res.StatusCode)
-		return
-	}
-	data := readResponseBody(res)
-	gateways := data.(map[string]interface{})["results"]
-	for _, gateway := range gateways.([]interface{}) {
-		//fmt.Printf("role: %s, permission: %s\n", v.(map[string]interface{})["role"], v.(map[string]interface{})["permissions"])
-		b, _ := json.MarshalIndent(gateway, "", "  ")
-		fmt.Println(string(b))
-	}
+
+	return nodes
 }
 
 func (c *NsxtClient) GetTransportNodeStatus(id string) string {
