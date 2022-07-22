@@ -14,12 +14,6 @@ type EnforcementPoint struct {
 	Path string
 }
 
-type TransportZone struct {
-	Id   string
-	Name string
-	Type string
-}
-
 type EdgeClusterMember struct {
 	Index int    `json:"member_index"`
 	Id    string `json:"transport_node_id"`
@@ -278,6 +272,23 @@ type ComputeManagerStatus struct {
 	Registration string
 }
 
+type TransportZones []TransportZone
+
+func (tzs *TransportZones) Print() {
+	w := tabwriter.NewWriter(os.Stdout, 0, 1, 3, ' ', 0)
+	w.Write([]byte(strings.Join([]string{"ID", "Name", "Type"}, "\t") + "\n"))
+	for _, tz := range *tzs {
+		w.Write([]byte(strings.Join([]string{tz.Id, tz.Name, tz.Type}, "\t") + "\n"))
+	}
+	w.Flush()
+}
+
+type TransportZone struct {
+	Id   string `json:"id"`
+	Name string `json:"display_name"`
+	Type string `json:"tz_type"`
+}
+
 type TransportNodes []TransportNode
 
 func (tns *TransportNodes) Print() {
@@ -533,11 +544,12 @@ type BgpNeighbor struct {
 type Segments []Segment
 
 func (segs *Segments) Print() {
-	fmt.Printf("%-8s	%-8s	%-8s	%-8s	%-8s\n", "ID", "Name", "Gateway", "Subnet", "State")
+	w := tabwriter.NewWriter(os.Stdout, 0, 1, 3, ' ', 0)
+	w.Write([]byte(strings.Join([]string{"ID", "Name", "Gateway", "Subnet", "State"}, "\t") + "\n"))
 	for _, seg := range *segs {
 		gw := seg.Connectivity
 		if gw == "" {
-			gw = "-	"
+			gw = "-"
 		} else {
 			gw = strings.Split(gw, "/")[2]
 		}
@@ -551,8 +563,9 @@ func (segs *Segments) Print() {
 		} else {
 			subnetStr = "-"
 		}
-		fmt.Printf("%-8s	%8s	%8s	%8s	%8s\n", seg.Id, seg.Name, gw, subnetStr, seg.AdminState)
+		w.Write([]byte(strings.Join([]string{seg.Id, seg.Name, gw, subnetStr, seg.AdminState}, "\t") + "\n"))
 	}
+	w.Flush()
 }
 
 type Segment struct {

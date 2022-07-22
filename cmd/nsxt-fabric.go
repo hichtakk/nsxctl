@@ -135,15 +135,12 @@ func NewCmdShowTransportZone() *cobra.Command {
 			return nil
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			eps := nsxtclient.GetEnforcementPoint("default")
-			var ep structs.EnforcementPoint
-			for _, ep = range *eps {
-				break
-			}
-			tzs := nsxtclient.GetPolicyTransportZone(ep.Path)
-			for _, tz := range *tzs {
-				fmt.Println(tz.Id, tz.Name, tz.Type)
-			}
+			sites := nsxtclient.GetSite()
+			eps := nsxtclient.GetEnforcementPoint(sites[0])
+			ep := *eps
+			// use default for site and enforcementpoint
+			zones := nsxtclient.GetPolicyTransportZone(sites[0], ep[0].Id)
+			zones.Print()
 		},
 	}
 

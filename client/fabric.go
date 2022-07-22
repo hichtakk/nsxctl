@@ -123,17 +123,26 @@ func (c *NsxtClient) GetTransportZone() {
 	}
 }
 
-func (c *NsxtClient) GetPolicyTransportZone(ep_path string) *[]structs.TransportZone {
-	path := "/policy/api/v1" + ep_path + "/transport-zones"
-	tzs := []structs.TransportZone{}
+func (c *NsxtClient) GetPolicyTransportZone(site string, ep string) *structs.TransportZones {
+	/*
+		path := "/policy/api/v1" + ep_path + "/transport-zones"
+		tzs := []structs.TransportZone{}
+		res := c.Request("GET", path, nil, nil)
+		for _, tz := range res.Body.(map[string]interface{})["results"].([]interface{}) {
+			id := tz.(map[string]interface{})["id"].(string)
+			name := tz.(map[string]interface{})["display_name"].(string)
+			tz_type := tz.(map[string]interface{})["tz_type"].(string)
+			tzs = append(tzs, structs.TransportZone{Id: id, Name: name, Type: tz_type})
+		}
+		return &tzs
+	*/
+	path := "/policy/api/v1/infra/sites/" + site + "/enforcement-points/" + ep + "/transport-zones"
 	res := c.Request("GET", path, nil, nil)
-	for _, tz := range res.Body.(map[string]interface{})["results"].([]interface{}) {
-		id := tz.(map[string]interface{})["id"].(string)
-		name := tz.(map[string]interface{})["display_name"].(string)
-		tz_type := tz.(map[string]interface{})["tz_type"].(string)
-		tzs = append(tzs, structs.TransportZone{Id: id, Name: name, Type: tz_type})
-	}
-	return &tzs
+	zones := structs.TransportZones{}
+	str, _ := json.Marshal(res.Body.(map[string]interface{})["results"].([]interface{}))
+	json.Unmarshal(str, &zones)
+
+	return &zones
 }
 
 func (c *NsxtClient) CreateTransportZone(name string, transportType string) {
