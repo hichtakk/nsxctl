@@ -75,3 +75,9 @@ func (c *NsxtClient) GetEdgeClusterUnderEnforcementPoint(site_id string, ep_id s
 	// tentative: return default path
 	return []string{"/infra/sites/default/enforcement-points/" + site_id}
 }
+
+func (c *NsxtClient) GetVersion() string {
+	path := "/api/v1/node/version"
+	res := c.Request("GET", path, nil, nil)
+	return res.Body.(map[string]interface{})["product_version"].(string)
+}
