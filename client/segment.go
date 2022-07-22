@@ -2,22 +2,23 @@ package client
 
 import (
 	"encoding/json"
-	"fmt"
+
+	"github.com/hichtakk/nsxctl/structs"
 )
 
-func (c *NsxtClient) GetSegment() {
+func (c *NsxtClient) GetSegment() structs.Segments {
 	path := "/policy/api/v1/infra/segments"
-	req := c.makeRequest("GET", path)
-	res, err := c.httpClient.Do(req)
-	if err != nil {
-		fmt.Println(err)
+	res := c.Request("GET", path, nil, nil)
+	segments := []structs.Segment{}
+	body, _ := res.BodyBytes()
+	json.Unmarshal(body, &segments)
+
+	for _, seg := range res.Body.(map[string]interface{})["results"].([]interface{}) {
+		str, _ := json.Marshal(seg)
+		var segment structs.Segment
+		json.Unmarshal(str, &segment)
+		segments = append(segments, segment)
 	}
-	defer res.Body.Close()
-	data := readResponseBody(res)
-	seg := data.(map[string]interface{})["results"]
-	for _, s := range seg.([]interface{}) {
-		//fmt.Printf("role: %s, permission: %s\n", v.(map[string]interface{})["role"], v.(map[string]interface{})["permissions"])
-		b, _ := json.MarshalIndent(s, "", "  ")
-		fmt.Println(string(b))
-	}
+
+	return structs.Segments(segments)
 }

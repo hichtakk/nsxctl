@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"net/http"
 	"log"
+	"net/http"
 
 	"github.com/hichtakk/nsxctl/structs"
 )
@@ -123,17 +123,26 @@ func (c *NsxtClient) GetTransportZone() {
 	}
 }
 
-func (c *NsxtClient) GetPolicyTransportZone(ep_path string) *[]structs.TransportZone {
-	path := "/policy/api/v1" + ep_path + "/transport-zones"
-	tzs := []structs.TransportZone{}
+func (c *NsxtClient) GetPolicyTransportZone(site string, ep string) *structs.TransportZones {
+	/*
+		path := "/policy/api/v1" + ep_path + "/transport-zones"
+		tzs := []structs.TransportZone{}
+		res := c.Request("GET", path, nil, nil)
+		for _, tz := range res.Body.(map[string]interface{})["results"].([]interface{}) {
+			id := tz.(map[string]interface{})["id"].(string)
+			name := tz.(map[string]interface{})["display_name"].(string)
+			tz_type := tz.(map[string]interface{})["tz_type"].(string)
+			tzs = append(tzs, structs.TransportZone{Id: id, Name: name, Type: tz_type})
+		}
+		return &tzs
+	*/
+	path := "/policy/api/v1/infra/sites/" + site + "/enforcement-points/" + ep + "/transport-zones"
 	res := c.Request("GET", path, nil, nil)
-	for _, tz := range res.Body.(map[string]interface{})["results"].([]interface{}) {
-		id := tz.(map[string]interface{})["id"].(string)
-		name := tz.(map[string]interface{})["display_name"].(string)
-		tz_type := tz.(map[string]interface{})["tz_type"].(string)
-		tzs = append(tzs, structs.TransportZone{Id: id, Name: name, Type: tz_type})
-	}
-	return &tzs
+	zones := structs.TransportZones{}
+	str, _ := json.Marshal(res.Body.(map[string]interface{})["results"].([]interface{}))
+	json.Unmarshal(str, &zones)
+
+	return &zones
 }
 
 func (c *NsxtClient) CreateTransportZone(name string, transportType string) {
@@ -224,24 +233,42 @@ func (c *NsxtClient) PublishFQDN() {
 	_dumpResponse(res)
 }
 
-func (c *NsxtClient) GetTransportNode() {
-	req := c.makeRequest("GET", "/api/v1/transport-nodes")
-	res, err := c.httpClient.Do(req)
-	if err != nil {
-		fmt.Println(err)
+func (c *NsxtClient) GetTransportNode(site string, ep string) structs.TransportNodes {
+	path := "/policy/api/v1/infra/sites/" + site + "/enforcement-points/" + ep + "/host-transport-nodes"
+	params := map[string]string{"node_types": "HostNode"}
+	res := c.Request("GET", path, params, nil)
+	nodes := []structs.TransportNode{}
+	for _, n := range res.Body.(map[string]interface{})["results"].([]interface{}) {
+		str, _ := json.Marshal(n)
+		var node structs.TransportNode
+		json.Unmarshal(str, &node)
+		nodes = append(nodes, node)
 	}
-	defer res.Body.Close()
-	if res.StatusCode != 200 {
-		fmt.Printf("StatusCode=%d\n", res.StatusCode)
-		return
+
+	return nodes
+}
+
+func (c *NsxtClient) GetTransportNodeTunnels(node_id string) structs.TransportNodeTunnels {
+	path := "/api/v1/transport-nodes/" + node_id + "/tunnels"
+	res := c.Request("GET", path, nil, nil)
+	tunnels := []structs.TransportNodeTunnel{}
+	for _, t := range res.Body.(map[string]interface{})["tunnels"].([]interface{}) {
+		str, _ := json.Marshal(t)
+		var tunnel structs.TransportNodeTunnel
+		json.Unmarshal(str, &tunnel)
+		tunnels = append(tunnels, tunnel)
 	}
-	data := readResponseBody(res)
-	gateways := data.(map[string]interface{})["results"]
-	for _, gateway := range gateways.([]interface{}) {
-		//fmt.Printf("role: %s, permission: %s\n", v.(map[string]interface{})["role"], v.(map[string]interface{})["permissions"])
-		b, _ := json.MarshalIndent(gateway, "", "  ")
-		fmt.Println(string(b))
+
+	return structs.TransportNodeTunnels(tunnels)
+}
+
+func (c *NsxtClient) GetTransportNodeStatus(id string) string {
+	path := "/api/v1/transport-nodes/" + id + "/status?source=realtime"
+	res := c.Request("GET", path, nil, nil)
+	if res.Error != nil {
+		return ""
 	}
+	return res.Body.(map[string]interface{})["status"].(string)
 }
 
 func (c *NsxtClient) GetTransportNodeById(uuid string) *structs.TransportNode {
@@ -253,24 +280,13 @@ func (c *NsxtClient) GetTransportNodeById(uuid string) *structs.TransportNode {
 	return &node
 }
 
-func (c *NsxtClient) GetTransportNodeProfile() {
-	req := c.makeRequest("GET", "/api/v1/transport-node-profiles")
-	res, err := c.httpClient.Do(req)
-	if err != nil {
-		fmt.Println(err)
-	}
-	defer res.Body.Close()
-	if res.StatusCode != 200 {
-		fmt.Printf("StatusCode=%d\n", res.StatusCode)
-		return
-	}
-	data := readResponseBody(res)
-	gateways := data.(map[string]interface{})["results"]
-	for _, gateway := range gateways.([]interface{}) {
-		//fmt.Printf("role: %s, permission: %s\n", v.(map[string]interface{})["role"], v.(map[string]interface{})["permissions"])
-		b, _ := json.MarshalIndent(gateway, "", "  ")
-		fmt.Println(string(b))
-	}
+func (c *NsxtClient) GetTransportNodeProfile() *structs.TransportNodeProfiles {
+	path := "/policy/api/v1/infra/host-transport-node-profiles"
+	res := c.Request("GET", path, nil, nil)
+	str, _ := json.Marshal(res.Body.(map[string]interface{})["results"].([]interface{}))
+	var profiles structs.TransportNodeProfiles
+	json.Unmarshal(str, &profiles)
+	return &profiles
 }
 
 func (c *NsxtClient) GetEdgeCluster() *[]structs.EdgeCluster {
@@ -287,14 +303,10 @@ func (c *NsxtClient) GetEdgeCluster() *[]structs.EdgeCluster {
 }
 
 func (c *NsxtClient) CreateEdge(name string, template_name string, address string, root_password string, admin_password string) {
-	path := "/api/v1/transport-nodes/"
-	res := c.Request("GET", path, nil, nil)
-	edges := []structs.TransportNode{}
-	for _, e := range res.Body.(map[string]interface{})["results"].([]interface{}) {
-		str, _ := json.Marshal(e)
-		var edge structs.TransportNode
-		json.Unmarshal(str, &edge)
-		edges = append(edges, edge)
+	edges := c.GetEdge()
+	if edges == nil {
+		log.Fatal("template edge not found")
+		return
 	}
 
 	var template_edge structs.TransportNode
@@ -317,7 +329,22 @@ func (c *NsxtClient) CreateEdge(name string, template_name string, address strin
 		return
 	}
 
+	path := "/api/v1/transport-nodes"
 	var resp *Response
 	resp = c.Request("POST", path, nil, jsonObj)
 	fmt.Println(resp)
+}
+
+func (c *NsxtClient) GetEdge() []structs.TransportNode {
+	path := "/api/v1/transport-nodes?node_types=EdgeNode"
+	res := c.Request("GET", path, nil, nil)
+	edges := []structs.TransportNode{}
+	for _, e := range res.Body.(map[string]interface{})["results"].([]interface{}) {
+		str, _ := json.Marshal(e)
+		var edge structs.TransportNode
+		json.Unmarshal(str, &edge)
+		edges = append(edges, edge)
+	}
+
+	return edges
 }

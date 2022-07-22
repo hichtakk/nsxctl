@@ -8,7 +8,6 @@ import (
 	"os"
 
 	ac "github.com/hichtakk/nsxctl/nsxalb"
-	"github.com/hichtakk/nsxctl/structs"
 	"github.com/spf13/cobra"
 )
 
@@ -65,23 +64,11 @@ func NewCmdShowAlbVirtualService() *cobra.Command {
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			vss := albclient.ShowVirtualService()
-			clouds := map[string]structs.Cloud{}
-			segs := map[string]structs.ServiceEngineGroup{}
 
 			w := tabwriter.NewWriter(os.Stdout, 0, 1, 3, ' ', 0)
 			w.Write([]byte(strings.Join([]string{"ID", "Name", "VIP", "Port", "Cloud", "SEGroup"}, "\t") + "\n"))
 			for _, vs := range vss {
-				cloudId := vs.GetCloudId()
-				cloud, ok := clouds[cloudId]
-				if ok != true {
-					cloud = albclient.GetCloudById(cloudId)
-				}
-				segId := vs.GetSegId()
-				seg, ok := segs[segId]
-				if ok != true {
-					seg = albclient.GetSeGroupById(segId)
-				}
-				vs.Print(cloud.Name, seg.Name, w)
+				vs.Print(w)
 			}
 			w.Flush()
 		},

@@ -64,6 +64,7 @@ func (c *NsxAlbClient) Request(method string, path string, query_param map[strin
 	if c.Token != "" {
 		req.Header.Set("X-CSRFToken", c.Token)
 	}
+	req.Header.Set("X-Avi-Version", c.Version)
 	req.Header.Set("Referer", c.BaseUrl)
 	if len(query_param) > 0 {
 		params := req.URL.Query()

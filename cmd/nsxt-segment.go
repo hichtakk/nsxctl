@@ -28,7 +28,8 @@ func NewCmdShowSegment() *cobra.Command {
 			return nil
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			nsxtclient.GetSegment()
+			segments := nsxtclient.GetSegment()
+			segments.Print()
 		},
 	}
 

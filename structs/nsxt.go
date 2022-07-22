@@ -3,19 +3,15 @@ package structs
 import (
 	"fmt"
 	"net/netip"
+	"os"
 	"strconv"
 	"strings"
+	"text/tabwriter"
 )
 
 type EnforcementPoint struct {
 	Id   string
 	Path string
-}
-
-type TransportZone struct {
-	Id   string
-	Name string
-	Type string
 }
 
 type EdgeClusterMember struct {
@@ -185,6 +181,16 @@ func (res *RouteEntries) Print() {
 	fmt.Println()
 }
 
+type BgpConfig struct {
+	Id              string `json:"id"`
+	Name            string `json:"display_name"`
+	Ecmp            bool   `json:"ecmp"`
+	Enabled         bool   `json:"enabled"`
+	GracefulRestart bool   `json:"graceful_restart"`
+	InterSrRouting  bool   `json:"inter_sr_ibgp"`
+	Asn             string `json:"local_as_num"`
+}
+
 type BgpAdvRouteEntry struct {
 	AsPath    string `json:"as_path"`
 	LocalPref int    `json:"local_pref"`
@@ -266,26 +272,87 @@ type ComputeManagerStatus struct {
 	Registration string
 }
 
+type TransportZones []TransportZone
+
+func (tzs *TransportZones) Print() {
+	w := tabwriter.NewWriter(os.Stdout, 0, 1, 3, ' ', 0)
+	w.Write([]byte(strings.Join([]string{"ID", "Name", "Type"}, "\t") + "\n"))
+	for _, tz := range *tzs {
+		w.Write([]byte(strings.Join([]string{tz.Id, tz.Name, tz.Type}, "\t") + "\n"))
+	}
+	w.Flush()
+}
+
+type TransportZone struct {
+	Id   string `json:"id"`
+	Name string `json:"display_name"`
+	Type string `json:"tz_type"`
+}
+
+type TransportNodes []TransportNode
+
+func (tns *TransportNodes) Print() {
+	w := tabwriter.NewWriter(os.Stdout, 0, 1, 3, ' ', 0)
+	w.Write([]byte(strings.Join([]string{"ID", "Name", "IP", "Tunnel"}, "\t") + "\n"))
+	for _, tn := range *tns {
+		ip := strings.Join(tn.EdgeNodeDeploymentInfo.IPAddress, ",")
+		numTun := fmt.Sprintf("%v", len(tn.Tunnels))
+		w.Write([]byte(strings.Join([]string{tn.Id, tn.Name, ip, numTun}, "\t") + "\n"))
+	}
+	w.Flush()
+}
+
 type TransportNode struct {
 	Id                     string                 `json:"id"`
 	Name                   string                 `json:"display_name"`
 	HostSwitchSpec         HostSwitchSpec         `json:"host_switch_spec"`
 	EdgeNodeDeploymentInfo EdgeNodeDeploymentInfo `json:"node_deployment_info"`
 	ResourceType           string                 `json:"resource_type"`
+	Tunnels                TransportNodeTunnels
+}
+
+type TransportNodeTunnels []TransportNodeTunnel
+
+type TransportNodeTunnel struct {
+	Name            string `json:"name"`
+	Status          string `json:"status"`
+	Encapsulation   string `json:"encap"`
+	EgressInterface string `json:"egress_interface"`
+	LocalIp         string `json:"local_ip"`
+	RemoteIp        string `json:"remote_ip"`
+	RemoteNodeName  string `json:"remote_node_display_name"`
+	RemoteNodeId    string `json:"remote_node_id"`
+}
+
+type TransportNodeProfiles []TransportNodeProfile
+
+func (tnps *TransportNodeProfiles) Print() {
+	w := tabwriter.NewWriter(os.Stdout, 0, 1, 3, ' ', 0)
+	w.Write([]byte(strings.Join([]string{"ID", "Name"}, "\t") + "\n"))
+	for _, tnp := range *tnps {
+		w.Write([]byte(strings.Join([]string{tnp.Id, tnp.Name}, "\t") + "\n"))
+	}
+	w.Flush()
+}
+
+type TransportNodeProfile struct {
+	Id             string         `json:"id"`
+	Name           string         `json:"display_name"`
+	HostSwitchSpec HostSwitchSpec `json:"host_switch_spec"`
 }
 
 type HostSwitchSpec struct {
-	HostSwitches           []HostSwitch           `json:"host_switches"`
-	ResourceType           string                 `json:"resource_type"`
+	HostSwitches []HostSwitch `json:"host_switches"`
+	ResourceType string       `json:"resource_type"`
 }
 
 type HostSwitch struct {
-	Mode                   string              `json:"host_switch_mode"`
-	Name                   string              `json:"host_switch_name"`
-	UplinkProfiles         []map[string]string `json:"host_switch_profile_ids"`
-	Type                   string              `json:"host_switch_type"`
-	IPAssignment           IpAssignmentSpec    `json:"ip_assignment_spec"`
-	Pnics                  []map[string]string `json:"pnics"`
+	Mode                   string                   `json:"host_switch_mode"`
+	Name                   string                   `json:"host_switch_name"`
+	UplinkProfiles         []map[string]string      `json:"host_switch_profile_ids"`
+	Type                   string                   `json:"host_switch_type"`
+	IPAssignment           IpAssignmentSpec         `json:"ip_assignment_spec"`
+	Pnics                  []map[string]string      `json:"pnics"`
 	TransportZoneEndpoints []TransportZoneEndpoints `json:"transport_zone_endpoints"`
 }
 
@@ -295,62 +362,62 @@ type TransportZoneEndpoints struct {
 }
 
 type IpAssignmentSpec struct {
-	ResourceType           string               `json:"resource_type"`
-	IpPoolId               string               `json:"ip_pool_id,omitempty"`
+	ResourceType string `json:"resource_type"`
+	IpPoolId     string `json:"ip_pool_id,omitempty"`
 }
 
 type EdgeNodeDeploymentInfo struct {
-	Name                   string               `json:"display_name"`
-	IPAddress              []string             `json:"ip_addresses"`
-	EdgeDeploymentConfig   EdgeDeploymentConfig `json:"deployment_config"`
-	NodeSettings           NodeSettings         `json:"node_settings"`
-	ResourceType           string                 `json:"resource_type"`
+	Name                 string               `json:"display_name"`
+	IPAddress            []string             `json:"ip_addresses"`
+	EdgeDeploymentConfig EdgeDeploymentConfig `json:"deployment_config"`
+	NodeSettings         NodeSettings         `json:"node_settings"`
+	ResourceType         string               `json:"resource_type"`
 }
 
 type EdgeDeploymentConfig struct {
-	Size                   string               `json:"form_factor"`
-	Users                  map[string]string    `json:"node_user_settings"`
-	VMDeploymentConfig     VMDeploymentConfig   `json:"vm_deployment_config"`
+	Size               string             `json:"form_factor"`
+	Users              map[string]string  `json:"node_user_settings"`
+	VMDeploymentConfig VMDeploymentConfig `json:"vm_deployment_config"`
 }
 
 type VMDeploymentConfig struct {
-	ComputeId              string               `json:"compute_id"`
-	DataNetworkIds         []string             `json:"data_network_ids"`
-	DefaultGateway         []string             `json:"default_gateway_addresses"`
-	ManagementNetworkId    string               `json:"management_network_id"`
-	ManagementPortSubnets  []Subnet             `json:"management_port_subnets"`
-	ReservationInfo        ReservationInfo      `json:"reservation_info"`
-	StorageId              string               `json:"storage_id"`
-	VcId                   string               `json:"vc_id"`
-	PlacementType          string               `json:"placement_type"`
+	ComputeId             string          `json:"compute_id"`
+	DataNetworkIds        []string        `json:"data_network_ids"`
+	DefaultGateway        []string        `json:"default_gateway_addresses"`
+	ManagementNetworkId   string          `json:"management_network_id"`
+	ManagementPortSubnets []Subnet        `json:"management_port_subnets"`
+	ReservationInfo       ReservationInfo `json:"reservation_info"`
+	StorageId             string          `json:"storage_id"`
+	VcId                  string          `json:"vc_id"`
+	PlacementType         string          `json:"placement_type"`
 }
 
 type Subnet struct {
-	IPAddresses            []string             `json:"ip_addresses"`
-	PrefixLength           int                  `json:"prefix_length"`
+	IPAddresses  []string `json:"ip_addresses"`
+	PrefixLength int      `json:"prefix_length"`
 }
 
 type ReservationInfo struct {
-	Cpu                    CpuReservationInfo    `json:"cpu_reservation"`
-	Memory                 MemoryReservationInfo `json:"memory_reservation"`
+	Cpu    CpuReservationInfo    `json:"cpu_reservation"`
+	Memory MemoryReservationInfo `json:"memory_reservation"`
 }
 
 type CpuReservationInfo struct {
-	MHz                    uint64               `json:"reservation_in_mhz"`
-	Priority               string               `json:"reservation_in_shares"`
+	MHz      uint64 `json:"reservation_in_mhz"`
+	Priority string `json:"reservation_in_shares"`
 }
 
 type MemoryReservationInfo struct {
-	Percentage             int                  `json:"reservation_percentage"`
+	Percentage int `json:"reservation_percentage"`
 }
 
 type NodeSettings struct {
-	AllowSshRootLogin      bool                 `json:"allow_ssh_root_login"`
-	DnsServers             []string             `json:"dns_servers"`
-	EnableSsh              bool                 `json:"enable_ssh"`
-	Hostname               string               `json:"hostname"`
-	NtpServers             []string             `json:"ntp_servers"`
-	SearchDomains          []string             `json:"search_domains"`
+	AllowSshRootLogin bool     `json:"allow_ssh_root_login"`
+	DnsServers        []string `json:"dns_servers"`
+	EnableSsh         bool     `json:"enable_ssh"`
+	Hostname          string   `json:"hostname"`
+	NtpServers        []string `json:"ntp_servers"`
+	SearchDomains     []string `json:"search_domains"`
 }
 
 type PerNodeStatisticsRx struct {
@@ -411,10 +478,18 @@ type Gateway interface {
 }
 
 type Tier0Gateway struct {
-	Id           string `json:"id"`
-	HaMode       string `json:"ha_mode"`
-	Name         string `json:"display_name"`
-	FailoverMode string `json:"failover_mode"`
+	Id            string `json:"id"`
+	HaMode        string `json:"ha_mode"`
+	Name          string `json:"display_name"`
+	FailoverMode  string `json:"failover_mode"`
+	RealizationId string `json:"realization_id"`
+}
+
+func (gw *Tier0Gateway) Print() {
+	fmt.Printf("ID:   %v\n", gw.Id)
+	fmt.Printf("Name: %v\n", gw.Name)
+	fmt.Printf("HA Mode: %v\n", gw.HaMode)
+	fmt.Printf("Failover Mode: %v\n", gw.FailoverMode)
 }
 
 type Tier0Gateways []Tier0Gateway
@@ -431,10 +506,18 @@ func (gws *Tier0Gateways) Print(output string) {
 }
 
 type Tier1Gateway struct {
-	Id           string `json:"id"`
-	HaMode       string `json:"ha_mode"`
-	Name         string `json:"display_name"`
-	FailoverMode string `json:"failover_mode"`
+	Id            string `json:"id"`
+	HaMode        string `json:"ha_mode"`
+	Name          string `json:"display_name"`
+	FailoverMode  string `json:"failover_mode"`
+	RealizationId string `json:"realization_id"`
+}
+
+func (gw *Tier1Gateway) Print() {
+	fmt.Printf("ID:   %v\n", gw.Id)
+	fmt.Printf("Name: %v\n", gw.Name)
+	fmt.Printf("HA Mode: %v\n", gw.HaMode)
+	fmt.Printf("Failover Mode: %v\n", gw.FailoverMode)
 }
 
 type Tier1Gateways []Tier1Gateway
@@ -447,7 +530,6 @@ func (gws *Tier1Gateways) Print(output string) {
 			fmt.Printf("%-8s	%8s	%8s	%8s\n", gw.Id, gw.Name, gw.HaMode, gw.FailoverMode)
 		}
 	}
-
 }
 
 type BgpNeighbor struct {
@@ -457,4 +539,83 @@ type BgpNeighbor struct {
 	Path    string   `json:"path"`
 	Asn     string   `json:"remote_as_num"`
 	Source  []string `json:"source_addresses"`
+}
+
+type Segments []Segment
+
+func (segs *Segments) Print() {
+	w := tabwriter.NewWriter(os.Stdout, 0, 1, 3, ' ', 0)
+	w.Write([]byte(strings.Join([]string{"ID", "Name", "Gateway", "Subnet", "State"}, "\t") + "\n"))
+	for _, seg := range *segs {
+		gw := seg.Connectivity
+		if gw == "" {
+			gw = "-"
+		} else {
+			gw = strings.Split(gw, "/")[2]
+		}
+		subnets := []string{}
+		for _, subnet := range seg.Subnets {
+			subnets = append(subnets, subnet.Gateway)
+		}
+		subnetStr := ""
+		if len(subnets) > 0 {
+			subnetStr = strings.Join(subnets, ",")
+		} else {
+			subnetStr = "-"
+		}
+		w.Write([]byte(strings.Join([]string{seg.Id, seg.Name, gw, subnetStr, seg.AdminState}, "\t") + "\n"))
+	}
+	w.Flush()
+}
+
+type Segment struct {
+	Name              string                 `json:"display_name"`
+	Id                string                 `json:"id"`
+	AdminState        string                 `json:"admin_state"`
+	AdvancedConifg    map[string]interface{} `json:"advanced_config"`
+	Connectivity      string                 `json:"connectivity_path"`
+	ReplicationMode   string                 `json:"replication_mode"`
+	Subnets           []SegmentSubnet        `json:"subnets"`
+	TransportZonePath string                 `json:"transport_zone_path"`
+}
+
+type SegmentSubnet struct {
+	Gateway string `json:"gateway_address"`
+	Network string `json:"network"`
+}
+
+type IpBlocks []IpBlock
+
+func (bs *IpBlocks) Print() {
+	w := tabwriter.NewWriter(os.Stdout, 0, 1, 3, ' ', 0)
+	w.Write([]byte(strings.Join([]string{"ID", "Name", "CIDR"}, "\t") + "\n"))
+	for _, b := range *bs {
+		w.Write([]byte(strings.Join([]string{b.Id, b.Name, b.Cidr}, "\t") + "\n"))
+	}
+	w.Flush()
+}
+
+type IpBlock struct {
+	Name string `json:"display_name"`
+	Id   string `json:"id"`
+	Cidr string `json:"cidr"`
+	Path string `json:"path"`
+}
+
+type IpPools []IpPool
+
+func (ps *IpPools) Print() {
+	w := tabwriter.NewWriter(os.Stdout, 0, 1, 3, ' ', 0)
+	w.Write([]byte(strings.Join([]string{"ID", "Name", "Usage(allocated/available)"}, "\t") + "\n"))
+	for _, p := range *ps {
+		usage := fmt.Sprintf("%v/%v", p.Usage["allocated_ip_allocations"], p.Usage["available_ips"])
+		w.Write([]byte(strings.Join([]string{p.Id, p.Name, usage}, "\t") + "\n"))
+	}
+	w.Flush()
+}
+
+type IpPool struct {
+	Name  string         `json:"display_name"`
+	Id    string         `json:"id"`
+	Usage map[string]int `json:"pool_usage"`
 }

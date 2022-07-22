@@ -32,7 +32,7 @@ func NewCmdShowGateway() *cobra.Command {
 			if err != nil {
 				log.Fatal(err)
 			}
-			nsxtclient.Login(site.GetCredential())
+			err = nsxtclient.Login(site.GetCredential())
 			if tier < 0 || tier > 1 {
 				log.Fatalf("gateway tier must be specified by flag -t/--tier with value of 0 or 1.\n")
 			}
@@ -46,16 +46,40 @@ func NewCmdShowGateway() *cobra.Command {
 			var gwId string
 			if len(args) > 0 {
 				gwId = args[0]
+				switch tier {
+				case 0:
+					gws := nsxtclient.GetTier0Gateway(gwId)
+					gw := []structs.Tier0Gateway(gws)[0]
+					locale_service_id := nsxtclient.GetLocaleService(gw.Id)
+					interfaces := nsxtclient.GetInterface(gw.Id, locale_service_id[0])
+					gw.Print()
+					fmt.Println()
+					fmt.Println("# Interface")
+					for _, intf := range interfaces {
+						fmt.Printf("Name: %v\n", intf["name"])
+						fmt.Printf("Segment: %v\n", intf["segment_path"])
+					}
+					bgp := nsxtclient.GetBgpConfig(gw.Id, locale_service_id[0])
+					fmt.Println()
+					fmt.Println("# BGP")
+					fmt.Printf("Enabled: %v\n", bgp.Enabled)
+					fmt.Printf("ASN: %v\n", bgp.Asn)
+					fmt.Printf("Inter SR iBGP: %v\n", bgp.InterSrRouting)
+				case 1:
+					gws := nsxtclient.GetTier1Gateway(gwId)
+					gw := []structs.Tier1Gateway(gws)[0]
+					gw.Print()
+				}
 			} else {
 				gwId = ""
-			}
-			switch tier {
-			case 0:
-				gws := nsxtclient.GetTier0Gateway(gwId)
-				gws.Print(output)
-			case 1:
-				gws := nsxtclient.GetTier1Gateway(gwId)
-				gws.Print(output)
+				switch tier {
+				case 0:
+					gws := nsxtclient.GetTier0Gateway(gwId)
+					gws.Print(output)
+				case 1:
+					gws := nsxtclient.GetTier1Gateway(gwId)
+					gws.Print(output)
+				}
 			}
 		},
 	}

@@ -182,6 +182,17 @@ func (c *NsxtClient) GetRoutingTable(tier0Id string) []structs.EdgeRoute {
 	return entries
 }
 
+func (c *NsxtClient) GetBgpConfig(tier0Id string, locale string) structs.BgpConfig {
+	var path string
+	path = "/policy/api/v1/infra/tier-0s/" + tier0Id + "/locale-services/" + locale + "/bgp"
+	res := c.Request("GET", path, nil, nil)
+	bgpConfig := structs.BgpConfig{}
+	body, _ := res.BodyBytes()
+	json.Unmarshal(body, &bgpConfig)
+
+	return bgpConfig
+}
+
 func (c *NsxtClient) GetBgpNeighbors(tier0Id string, locale string) []structs.BgpNeighbor {
 	var path string
 	path = "/policy/api/v1/infra/tier-0s/" + tier0Id + "/locale-services/" + locale + "/bgp/neighbors"
@@ -212,4 +223,27 @@ func (c *NsxtClient) GetBgpNeighborsAdvRoutes(path string) []structs.EdgeBgpAdvR
 	}
 
 	return edges
+}
+
+func (c *NsxtClient) GetGatewayAggregateInfo(gw_realization_id string) []map[string]string {
+	path := "/api/v1/ui-controller/l3/logical-routers/" + gw_realization_id + "/status/aggregate-info?source=realtime"
+	res := c.Request("GET", path, nil, nil)
+	if res == nil {
+		return nil
+	}
+
+	per_node_status := res.Body.(map[string]interface{})["status"].(map[string]interface{})["per_node_status"]
+	if per_node_status == nil {
+		//if a tier-0 is created but interface isn't set, per_node_status will be empty
+		return nil
+	}
+
+	result := []map[string]string{}
+	for _, st := range per_node_status.([]interface{}) {
+		str, _ := json.Marshal(st)
+		var status map[string]string
+		json.Unmarshal(str, &status)
+		result = append(result, status)
+	}
+	return result
 }
