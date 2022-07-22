@@ -313,6 +313,23 @@ type TransportNodeTunnel struct {
 	RemoteNodeId    string `json:"remote_node_id"`
 }
 
+type TransportNodeProfiles []TransportNodeProfile
+
+func (tnps *TransportNodeProfiles) Print() {
+	w := tabwriter.NewWriter(os.Stdout, 0, 1, 3, ' ', 0)
+	w.Write([]byte(strings.Join([]string{"ID", "Name"}, "\t") + "\n"))
+	for _, tnp := range *tnps {
+		w.Write([]byte(strings.Join([]string{tnp.Id, tnp.Name}, "\t") + "\n"))
+	}
+	w.Flush()
+}
+
+type TransportNodeProfile struct {
+	Id             string         `json:"id"`
+	Name           string         `json:"display_name"`
+	HostSwitchSpec HostSwitchSpec `json:"host_switch_spec"`
+}
+
 type HostSwitchSpec struct {
 	HostSwitches []HostSwitch `json:"host_switches"`
 	ResourceType string       `json:"resource_type"`

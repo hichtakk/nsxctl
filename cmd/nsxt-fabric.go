@@ -268,7 +268,8 @@ func NewCmdShowTransportNodeProfile() *cobra.Command {
 			return nil
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			nsxtclient.GetTransportNodeProfile()
+			profiles := nsxtclient.GetTransportNodeProfile()
+			profiles.Print()
 		},
 	}
 
