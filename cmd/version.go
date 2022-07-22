@@ -28,52 +28,42 @@ func NewCmdShowVersion() *cobra.Command {
 	versionCmd := &cobra.Command{
 		Use:     "version",
 		Aliases: aliases,
-		Short:   fmt.Sprintf("show version of NSX-T [%s]", strings.Join(aliases, ",")),
+		Short:   fmt.Sprintf("show version of NSX-T/ALB [%s]", strings.Join(aliases, ",")),
 		PreRunE: func(c *cobra.Command, args []string) error {
-			site, err := conf.NsxT.GetCurrentSite()
-			if err != nil {
-				log.Fatal(err)
+			if alb != true {
+				site, err := conf.NsxT.GetCurrentSite()
+				if err != nil {
+					log.Fatal(err)
+				}
+				nsxtclient.Login(site.GetCredential())
+			} else {
+				albclient = ac.NewNsxAlbClient(false, debug)
+				albsite, err := conf.NsxAlb.GetCurrentSite()
+				if err != nil {
+					log.Fatal(err)
+				}
+				albclient.BaseUrl = albsite.Endpoint
+				albclient.Login(albsite.GetCredential())
 			}
-			nsxtclient.Login(site.GetCredential())
 			return nil
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println(nsxtclient.GetVersion())
-		},
-		PostRunE: func(c *cobra.Command, args []string) error {
-			nsxtclient.Logout()
-			return nil
-		},
-	}
-
-	return versionCmd
-}
-
-// show ALB version
-func NewCmdShowAlbVersion() *cobra.Command {
-	aliases := []string{"av"}
-	versionCmd := &cobra.Command{
-		Use:     "alb-version",
-		Aliases: aliases,
-		Short:   fmt.Sprintf("show version of ALB [%s]", strings.Join(aliases, ",")),
-		PreRunE: func(c *cobra.Command, args []string) error {
-			albclient = ac.NewNsxAlbClient(false, debug)
-			albsite, err := conf.NsxAlb.GetCurrentSite()
-			if err != nil {
-				log.Fatal(err)
+			if alb != true {
+				fmt.Println(nsxtclient.GetVersion())
+			} else {
+				fmt.Println(albclient.Version)
 			}
-			albclient.BaseUrl = albsite.Endpoint
-			albclient.Login(albsite.GetCredential())
-			return nil
-		},
-		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println(albclient.Version)
 		},
 		PostRunE: func(c *cobra.Command, args []string) error {
-			albclient.Logout()
+			if alb != true {
+				nsxtclient.Logout()
+			} else {
+				albclient.Logout()
+			}
 			return nil
 		},
 	}
+	versionCmd.PersistentFlags().BoolVarP(&alb, "alb", "", false, "show NSX ALB version")
 
 	return versionCmd
 }
