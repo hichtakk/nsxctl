@@ -104,3 +104,19 @@ func (c *NsxAlbClient) DownloadSeImage() {
 
 	return
 }
+
+func (c *NsxAlbClient) GetServiceEngine() []structs.ServiceEngineInventory {
+	path := "/api/serviceengine-inventory/?&sort=name&include=config,faults,health_score,runtime&include_name=true"
+	resp := c.Request("GET", path, nil, nil)
+	var results structs.SEResult
+	resByte, _ := resp.BodyBytes()
+	json.Unmarshal(resByte, &results)
+	var ses []structs.ServiceEngineInventory
+	for _, se := range results.ServiceEngineInventories {
+		ses = append(ses, se)
+	}
+
+	return ses
+}
+
+

@@ -48,6 +48,7 @@ func NewCmdShow() *cobra.Command {
 		NewCmdShowBgpAdvRoutes(),
 		NewCmdShowAlbCloud(),
 		NewCmdShowAlbVirtualService(),
+		NewCmdShowAlbServiceEngine(),
 	)
 
 	return showCmd
