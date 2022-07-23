@@ -90,12 +90,14 @@ type VSResult struct {
 
 type VirtualServiceInventory struct {
 	Config  VirtualService `json:"config"`
+	Health  map[string]int `json:"heal`
 	Runtime VSRuntime      `json:"runtime"`
 }
 
 type VSRuntime struct {
 	PersentSEsUp int          `json:"percent_ses_up"`
 	VipSummary   []VipSummary `json:"vip_summary"`
+	Status       VirtualServiceStatus `json:"oper_status"`
 }
 
 type VipSummary struct {
@@ -113,6 +115,11 @@ type VirtualService struct {
 	CloudRef    string   `json:"cloud_ref"`
 	SeGroupRef  string   `json:"se_group_ref"`
 	Vips        []Vip    `json:"vip"`
+}
+
+type VirtualServiceStatus struct {
+	State        string              `json:"state"`
+	Reason       []string            `json:"reason"`
 }
 
 func (v *VirtualServiceInventory) Print(w *tabwriter.Writer) {
@@ -133,7 +140,9 @@ func (v *VirtualServiceInventory) Print(w *tabwriter.Writer) {
 	}
 	cloud := strings.Split(v.Config.CloudRef, "#")
 	segroup := strings.Split(v.Config.SeGroupRef, "#")
-	w.Write([]byte(strings.Join([]string{v.Config.UUID, v.Config.Name, vips, ports, cloud[1], segroup[1]}, "\t") + "\n"))
+	status := strings.Split(v.Runtime.Status.State, "_")[1]
+	// reason := strings.Join(v.Runtime.Status.Reason, "\n")
+	w.Write([]byte(strings.Join([]string{v.Config.UUID, v.Config.Name, vips, ports, cloud[1], segroup[1], status}, "\t") + "\n"))
 }
 
 func (v *VirtualService) GetCloudId() string {

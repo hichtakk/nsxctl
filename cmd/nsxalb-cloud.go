@@ -66,7 +66,7 @@ func NewCmdShowAlbVirtualService() *cobra.Command {
 			vss := albclient.ShowVirtualService()
 
 			w := tabwriter.NewWriter(os.Stdout, 0, 1, 3, ' ', 0)
-			w.Write([]byte(strings.Join([]string{"ID", "Name", "VIP", "Port", "Cloud", "SEGroup"}, "\t") + "\n"))
+			w.Write([]byte(strings.Join([]string{"ID", "Name", "VIP", "Port", "Cloud", "SEGroup", "Status"}, "\t") + "\n"))
 			for _, vs := range vss {
 				vs.Print(w)
 			}
