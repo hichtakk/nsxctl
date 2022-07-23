@@ -89,31 +89,28 @@ func NewCmdShowGateway() *cobra.Command {
 	return gatewayCmd
 }
 
+func GetTier0GatewayNames (cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	if len(args) != 0 {
+		return nil, cobra.ShellCompDirectiveNoFileComp
+	}
+	Login()
+	t0gw_names := []string{}
+	gws := nsxtclient.GetTier0Gateway("")
+	for _, gw := range gws {
+		t0gw_names = append(t0gw_names, gw.Name)
+	}
+	return t0gw_names, cobra.ShellCompDirectiveNoFileComp
+}
+
 func NewCmdShowRoutingTable() *cobra.Command {
 	var ipv6 bool
 	aliases := []string{"rt"}
 	gatewayCmd := &cobra.Command{
-		Use:     "routes -g/--gateway ${TIER_0_GATEWAY_NAME}",
+		Use:     "routes ${TIER_0_GATEWAY_NAME}",
 		Aliases: aliases,
 		Short:   fmt.Sprintf("show routing table of specified tier-0 gateways [%s]", strings.Join(aliases, ",")),
 		Args:    cobra.ExactArgs(1),
-		PreRunE: func(c *cobra.Command, args []string) error {
-			site, err := conf.NsxT.GetCurrentSite()
-			if err != nil {
-				log.Fatal(err)
-			}
-			nsxtclient.Login(site.GetCredential())
-			/*
-				if tier < 0 || tier > 1 {
-					log.Fatalf("gateway tier must be specified by flag -t/--tier with value of 0 or 1.\n")
-				}
-			*/
-			return nil
-		},
-		PostRunE: func(c *cobra.Command, args []string) error {
-			nsxtclient.Logout()
-			return nil
-		},
+		ValidArgsFunction: GetTier0GatewayNames,
 		Run: func(cmd *cobra.Command, args []string) {
 			ecs := nsxtclient.GetEdgeCluster()
 			ecss := structs.EdgeClusters(*ecs)
@@ -141,22 +138,11 @@ func NewCmdShowRoutingTable() *cobra.Command {
 func NewCmdShowBgpAdvRoutes() *cobra.Command {
 	aliases := []string{"adv"}
 	gatewayCmd := &cobra.Command{
-		Use:     "bgp-adv-routes -g/--gateway ${TIER_0_GATEWAY_NAME}",
+		Use:     "bgp-adv-routes ${TIER_0_GATEWAY_NAME}",
 		Aliases: aliases,
 		Short:   fmt.Sprintf("show bgp advertise routes of specified tier-0 gateways [%s]", strings.Join(aliases, ",")),
 		Args:    cobra.ExactArgs(1),
-		PreRunE: func(c *cobra.Command, args []string) error {
-			site, err := conf.NsxT.GetCurrentSite()
-			if err != nil {
-				log.Fatal(err)
-			}
-			nsxtclient.Login(site.GetCredential())
-			return nil
-		},
-		PostRunE: func(c *cobra.Command, args []string) error {
-			nsxtclient.Logout()
-			return nil
-		},
+		ValidArgsFunction: GetTier0GatewayNames,
 		Run: func(cmd *cobra.Command, args []string) {
 			locale := "default"
 			neighbors := nsxtclient.GetBgpNeighbors(args[0], locale)
@@ -177,6 +163,18 @@ func NewCmdShowBgpAdvRoutes() *cobra.Command {
 	return gatewayCmd
 }
 
+func GetGatewayNames (cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	tier, err := cmd.Flags().GetInt16("tier")
+	if err != nil {
+		log.Fatal(err)
+		return nil, cobra.ShellCompDirectiveNoFileComp
+	}
+	if tier == 0 {
+		return GetTier0GatewayNames(cmd, args, toComplete)
+	}
+	return nil, cobra.ShellCompDirectiveNoFileComp
+}
+
 func NewCmdTopGateway() *cobra.Command {
 	var tier int16
 	var interval int
@@ -186,18 +184,7 @@ func NewCmdTopGateway() *cobra.Command {
 		Aliases: aliases,
 		Short:   fmt.Sprintf("monitor logical gateways [%s]", strings.Join(aliases, ",")),
 		Args:    cobra.MaximumNArgs(1),
-		PreRunE: func(c *cobra.Command, args []string) error {
-			site, err := conf.NsxT.GetCurrentSite()
-			if err != nil {
-				log.Fatal(err)
-			}
-			nsxtclient.Login(site.GetCredential())
-			return nil
-		},
-		PostRunE: func(c *cobra.Command, args []string) error {
-			nsxtclient.Logout()
-			return nil
-		},
+		ValidArgsFunction: GetGatewayNames,
 		Run: func(cmd *cobra.Command, args []string) {
 			highlight_row = 0
 			if tier == 0 {

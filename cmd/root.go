@@ -1,8 +1,11 @@
 package cmd
 
 import (
+	"encoding/json"
+	"io/ioutil"
 	"os"
 
+	"github.com/hichtakk/nsxctl/client"
 	c "github.com/hichtakk/nsxctl/client"
 	"github.com/hichtakk/nsxctl/config"
 	ac "github.com/hichtakk/nsxctl/nsxalb"
@@ -50,6 +53,26 @@ func newCmd() *cobra.Command {
 
 func GetCmdRoot() *cobra.Command {
 	return newCmd()
+}
+
+func Login() error {
+	file, _ := ioutil.ReadFile(configfile)
+	json.Unmarshal(file, &conf)
+	nsxtclient = client.NewNsxtClient(false, debug)
+
+	var site config.NsxTSite
+	var err error
+	if useSite != "" {
+		site, err = conf.NsxT.GetSite(useSite)
+	} else {
+		site, err = conf.NsxT.GetCurrentSite()
+	}
+	if err != nil {
+		return err
+	}
+	nsxtclient.BaseUrl = site.Endpoint
+	nsxtclient.Login(site.GetCredential())
+	return nil
 }
 
 /*
