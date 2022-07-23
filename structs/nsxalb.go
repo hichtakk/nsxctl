@@ -22,6 +22,50 @@ type ServiceEngineGroup struct {
 	SE           []ServiceEngine
 }
 
+type SEResult struct {
+	ServiceEngineInventories []ServiceEngineInventory `json:"results"`
+}
+
+type ServiceEngineInventory struct {
+	Config       ServiceEngineConfig   `json:"config"`
+	Health       map[string]int        `json:"health_score"`
+	Runtime      ServiceEngineRuntime  `json:"runtime"`
+}
+
+func (sei *ServiceEngineInventory) Print(w *tabwriter.Writer) {
+	id := sei.Config.UUID
+	name := sei.Config.Name
+	ip := sei.Config.Address["addr"]
+	// health := sei.Health["health_score"]
+	status := strings.Split(sei.Runtime.Status.State, "_")[1]
+	// reason := strings.Join(sei.Runtime.Status.Reason, "\n")
+	cloud := (strings.Split(sei.Config.CloudRef, "#"))[1]
+	segroup := (strings.Split(sei.Config.SEGroupRef, "#"))[1]
+
+	w.Write([]byte(strings.Join([]string{id, name, ip, cloud, segroup, status}, "\t") + "\n"))
+}
+
+type ServiceEngineConfig struct {
+	CloudRef     string              `json:"cloud_ref"`
+	Address      map[string]string   `json:"mgmt_ip_address"`
+	Name         string              `json:"name"`
+	SEGroupRef   string              `json:"se_group_ref"`
+	TenantRef    string              `json:"tenant_ref"`
+	UUID         string              `json:"uuid"`
+}
+
+type ServiceEngineRuntime struct {
+	GatewayUp    bool                `json:"gateway_up"`
+	MigrateState string              `json:"migrate_state"`
+	PowerState   string              `json:"power_state"`
+	Status       ServiceEngineStatus `json:"oper_status"`
+}
+
+type ServiceEngineStatus struct {
+	State        string              `json:"state"`
+	Reason       []string            `json:"reason"`
+}
+
 type ServiceEngine struct {
 	Primary    bool              `json:"is_primary"`
 	Secondary  bool              `json:"is_secondary"`
