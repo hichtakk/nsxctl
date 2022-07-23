@@ -102,7 +102,7 @@ func NewCmdShowAlbServiceEngine() *cobra.Command {
 			ses := albclient.GetServiceEngine()
 
 			w := tabwriter.NewWriter(os.Stdout, 0, 1, 3, ' ', 0)
-			w.Write([]byte(strings.Join([]string{"ID", "Name", "IP", "Cloud", "SEGroup", "Health", "Status", "Reason"}, "\t") + "\n"))
+			w.Write([]byte(strings.Join([]string{"ID", "Name", "IP", "Cloud", "SEGroup", "Status"}, "\t") + "\n"))
 			for _, se := range ses {
 				se.Print(w)
 			}

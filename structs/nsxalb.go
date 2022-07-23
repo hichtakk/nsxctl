@@ -2,7 +2,6 @@ package structs
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 	"text/tabwriter"
 )
@@ -37,13 +36,13 @@ func (sei *ServiceEngineInventory) Print(w *tabwriter.Writer) {
 	id := sei.Config.UUID
 	name := sei.Config.Name
 	ip := sei.Config.Address["addr"]
-	health := sei.Health["health_score"]
-	status := sei.Runtime.Status.State
-	reason := strings.Join(sei.Runtime.Status.Reason, "\n")
+	// health := sei.Health["health_score"]
+	status := strings.Split(sei.Runtime.Status.State, "_")[1]
+	// reason := strings.Join(sei.Runtime.Status.Reason, "\n")
 	cloud := (strings.Split(sei.Config.CloudRef, "#"))[1]
 	segroup := (strings.Split(sei.Config.SEGroupRef, "#"))[1]
 
-	w.Write([]byte(strings.Join([]string{id, name, ip, cloud, segroup, strconv.Itoa(health), status, reason}, "\t") + "\n"))
+	w.Write([]byte(strings.Join([]string{id, name, ip, cloud, segroup, status}, "\t") + "\n"))
 }
 
 type ServiceEngineConfig struct {
