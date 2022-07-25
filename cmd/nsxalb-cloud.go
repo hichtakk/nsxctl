@@ -2,12 +2,10 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"strings"
 	"text/tabwriter"
 
-	ac "github.com/hichtakk/nsxctl/nsxalb"
 	"github.com/spf13/cobra"
 )
 
@@ -19,14 +17,7 @@ func NewCmdShowAlbCloud() *cobra.Command {
 		Short:   fmt.Sprintf("show ALB Cloud [%s]", strings.Join(aliases, ",")),
 		Args:    cobra.MaximumNArgs(1),
 		PreRunE: func(c *cobra.Command, args []string) error {
-			albclient = ac.NewNsxAlbClient(false, debug)
-			albsite, err := conf.NsxAlb.GetCurrentSite()
-			if err != nil {
-				log.Fatal(err)
-			}
-			albclient.BaseUrl = albsite.Endpoint
-			albclient.Login(albsite.GetCredential())
-			return nil
+			return LoginALB()
 		},
 		PostRunE: func(c *cobra.Command, args []string) error {
 			albclient.Logout()
@@ -49,14 +40,7 @@ func NewCmdShowAlbVirtualService() *cobra.Command {
 		Short:   fmt.Sprintf("show ALB VirtualService [%s]", strings.Join(aliases, ",")),
 		Args:    cobra.MaximumNArgs(1),
 		PreRunE: func(c *cobra.Command, args []string) error {
-			albclient = ac.NewNsxAlbClient(false, debug)
-			albsite, err := conf.NsxAlb.GetCurrentSite()
-			if err != nil {
-				log.Fatal(err)
-			}
-			albclient.BaseUrl = albsite.Endpoint
-			albclient.Login(albsite.GetCredential())
-			return nil
+			return LoginALB()
 		},
 		PostRunE: func(c *cobra.Command, args []string) error {
 			albclient.Logout()
@@ -85,14 +69,7 @@ func NewCmdShowAlbServiceEngine() *cobra.Command {
 		Short:   fmt.Sprintf("show ALB ServiceEngine [%s]", strings.Join(aliases, ",")),
 		Args:    cobra.MaximumNArgs(1),
 		PreRunE: func(c *cobra.Command, args []string) error {
-			albclient = ac.NewNsxAlbClient(false, debug)
-			albsite, err := conf.NsxAlb.GetCurrentSite()
-			if err != nil {
-				log.Fatal(err)
-			}
-			albclient.BaseUrl = albsite.Endpoint
-			albclient.Login(albsite.GetCredential())
-			return nil
+			return LoginALB()
 		},
 		PostRunE: func(c *cobra.Command, args []string) error {
 			albclient.Logout()
