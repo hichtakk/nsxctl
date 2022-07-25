@@ -78,6 +78,19 @@ func Login() error {
 	return nil
 }
 
+func LoginALB() error {
+	file, _ := ioutil.ReadFile(configfile)
+	json.Unmarshal(file, &conf)
+	albclient = ac.NewNsxAlbClient(false, debug)
+	albsite, err := conf.NsxAlb.GetCurrentSite()
+	if err != nil {
+		return err
+	}
+	albclient.BaseUrl = albsite.Endpoint
+	albclient.Login(albsite.GetCredential())
+	return nil
+}
+
 /*
 func NewCmdTest() *cobra.Command {
 	var testCmd = &cobra.Command{

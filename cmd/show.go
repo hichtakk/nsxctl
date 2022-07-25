@@ -10,10 +10,17 @@ func NewCmdShow() *cobra.Command {
 		Use:   "show",
 		Short: "Show resources",
 		PersistentPreRunE: func(c *cobra.Command, args []string) error {
-			return Login()
+			if alb != true {
+				return Login()
+			}
+			return LoginALB()
 		},
 		PersistentPostRun: func(c *cobra.Command, args []string) {
-			nsxtclient.Logout()
+			if alb != true {
+				nsxtclient.Logout()
+				return
+			}
+			albclient.Logout()
 		},
 	}
 	showCmd.AddCommand(
