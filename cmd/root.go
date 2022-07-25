@@ -71,7 +71,10 @@ func Login() error {
 		return err
 	}
 	nsxtclient.BaseUrl = site.Endpoint
-	nsxtclient.Login(site.GetCredential())
+	err = nsxtclient.Login(site.GetCredential())
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

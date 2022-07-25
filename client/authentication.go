@@ -18,8 +18,7 @@ func (c *NsxtClient) Login(cred url.Values) error {
 	}
 	defer res.Body.Close()
 	if res.StatusCode != 200 {
-		//log.Printf("StatusCode=%d\n", res.StatusCode)
-		return fmt.Errorf("request failed")
+		return fmt.Errorf("authentication failed")
 	}
 	c.Token = res.Header.Get("X-Xsrf-Token")
 	if c.Token == "" {
