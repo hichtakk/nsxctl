@@ -17,6 +17,7 @@ type EnforcementPoint struct {
 type EdgeClusterMember struct {
 	Index int    `json:"member_index"`
 	Id    string `json:"transport_node_id"`
+	Name  string
 }
 
 type EdgeCluster struct {
@@ -28,6 +29,20 @@ type EdgeCluster struct {
 }
 
 type EdgeClusters []EdgeCluster
+
+func (ecs *EdgeClusters) Print(edgeName map[string]string) {
+	w := tabwriter.NewWriter(os.Stdout, 0, 1, 3, ' ', 0)
+	w.Write([]byte(strings.Join([]string{"ID", "Name", "EdgeNode"}, "\t") + "\n"))
+	for _, ec := range *ecs {
+		edge := []string{}
+		for _, e := range ec.Members {
+			edge = append(edge, edgeName[e.Id])
+		}
+		edgeStr := strings.Join(edge, ",")
+		w.Write([]byte(strings.Join([]string{ec.Id, ec.Name, edgeStr}, "\t") + "\n"))
+	}
+	w.Flush()
+}
 
 func (ecs *EdgeClusters) GetClusterById(Id string) *EdgeCluster {
 	for _, ec := range *ecs {

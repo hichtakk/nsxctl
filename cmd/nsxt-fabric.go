@@ -404,3 +404,39 @@ func NewCmdShowEdge() *cobra.Command {
 
 	return edgeCmd
 }
+
+func NewCmdShowEdgeCluster() *cobra.Command {
+	aliases := []string{"ec"}
+	tpnCmd := &cobra.Command{
+		Use:     "edge-cluster",
+		Aliases: aliases,
+		Short:   fmt.Sprintf("show edge clusters [%s]", strings.Join(aliases, ",")),
+		Args:    cobra.MaximumNArgs(1),
+		PreRunE: func(c *cobra.Command, args []string) error {
+			site, err := conf.NsxT.GetCurrentSite()
+			if err != nil {
+				log.Fatal(err)
+			}
+			nsxtclient.Login(site.GetCredential())
+			return nil
+		},
+		PostRunE: func(c *cobra.Command, args []string) error {
+			nsxtclient.Logout()
+			return nil
+		},
+		Run: func(cmd *cobra.Command, args []string) {
+			ec := nsxtclient.GetEdgeCluster()
+			ecs := structs.EdgeClusters(*ec)
+			edgeName := map[string]string{}
+			for _, ec := range ecs {
+				for _, m := range ec.Members {
+					node := nsxtclient.GetTransportNodeById(m.Id)
+					edgeName[node.Id] = node.Name
+				}
+			}
+			ecs.Print(edgeName)
+		},
+	}
+
+	return tpnCmd
+}

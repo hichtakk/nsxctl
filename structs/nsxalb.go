@@ -27,9 +27,9 @@ type SEResult struct {
 }
 
 type ServiceEngineInventory struct {
-	Config       ServiceEngineConfig   `json:"config"`
-	Health       map[string]int        `json:"health_score"`
-	Runtime      ServiceEngineRuntime  `json:"runtime"`
+	Config  ServiceEngineConfig  `json:"config"`
+	Health  map[string]int       `json:"health_score"`
+	Runtime ServiceEngineRuntime `json:"runtime"`
 }
 
 func (sei *ServiceEngineInventory) Print(w *tabwriter.Writer) {
@@ -46,12 +46,12 @@ func (sei *ServiceEngineInventory) Print(w *tabwriter.Writer) {
 }
 
 type ServiceEngineConfig struct {
-	CloudRef     string              `json:"cloud_ref"`
-	Address      map[string]string   `json:"mgmt_ip_address"`
-	Name         string              `json:"name"`
-	SEGroupRef   string              `json:"se_group_ref"`
-	TenantRef    string              `json:"tenant_ref"`
-	UUID         string              `json:"uuid"`
+	CloudRef   string            `json:"cloud_ref"`
+	Address    map[string]string `json:"mgmt_ip_address"`
+	Name       string            `json:"name"`
+	SEGroupRef string            `json:"se_group_ref"`
+	TenantRef  string            `json:"tenant_ref"`
+	UUID       string            `json:"uuid"`
 }
 
 type ServiceEngineRuntime struct {
@@ -62,8 +62,8 @@ type ServiceEngineRuntime struct {
 }
 
 type ServiceEngineStatus struct {
-	State        string              `json:"state"`
-	Reason       []string            `json:"reason"`
+	State  string   `json:"state"`
+	Reason []string `json:"reason"`
 }
 
 type ServiceEngine struct {
@@ -95,8 +95,8 @@ type VirtualServiceInventory struct {
 }
 
 type VSRuntime struct {
-	PersentSEsUp int          `json:"percent_ses_up"`
-	VipSummary   []VipSummary `json:"vip_summary"`
+	PersentSEsUp int                  `json:"percent_ses_up"`
+	VipSummary   []VipSummary         `json:"vip_summary"`
 	Status       VirtualServiceStatus `json:"oper_status"`
 }
 
@@ -107,19 +107,19 @@ type VipSummary struct {
 }
 
 type VirtualService struct {
-	Type        string   `json:"type"`
-	UUID        string   `json:"uuid"`
-	Tenant      string   `json:"tenant_ref"`
-	Name        string   `json:"name"`
-	Ports       []VSPort `json:"services"`
-	CloudRef    string   `json:"cloud_ref"`
-	SeGroupRef  string   `json:"se_group_ref"`
-	Vips        []Vip    `json:"vip"`
+	Type       string   `json:"type"`
+	UUID       string   `json:"uuid"`
+	Tenant     string   `json:"tenant_ref"`
+	Name       string   `json:"name"`
+	Ports      []VSPort `json:"services"`
+	CloudRef   string   `json:"cloud_ref"`
+	SeGroupRef string   `json:"se_group_ref"`
+	Vips       []Vip    `json:"vip"`
 }
 
 type VirtualServiceStatus struct {
-	State        string              `json:"state"`
-	Reason       []string            `json:"reason"`
+	State  string   `json:"state"`
+	Reason []string `json:"reason"`
 }
 
 func (v *VirtualServiceInventory) Print(w *tabwriter.Writer) {
