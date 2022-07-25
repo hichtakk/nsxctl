@@ -15,18 +15,6 @@ func NewCmdShowIpPool() *cobra.Command {
 		Aliases: aliases,
 		Short:   fmt.Sprintf("show ip address pools [%s]", strings.Join(aliases, ",")),
 		Args:    cobra.MaximumNArgs(1),
-		PreRunE: func(c *cobra.Command, args []string) error {
-			site, err := conf.NsxT.GetCurrentSite()
-			if err != nil {
-				log.Fatal(err)
-			}
-			nsxtclient.Login(site.GetCredential())
-			return nil
-		},
-		PostRunE: func(c *cobra.Command, args []string) error {
-			nsxtclient.Logout()
-			return nil
-		},
 		Run: func(cmd *cobra.Command, args []string) {
 			pools := nsxtclient.GetIpPool()
 			pools.Print()
@@ -43,18 +31,6 @@ func NewCmdShowIpBlock() *cobra.Command {
 		Aliases: aliases,
 		Short:   fmt.Sprintf("show ip address blocks [%s]", strings.Join(aliases, ",")),
 		Args:    cobra.MaximumNArgs(1),
-		PreRunE: func(c *cobra.Command, args []string) error {
-			site, err := conf.NsxT.GetCurrentSite()
-			if err != nil {
-				log.Fatal(err)
-			}
-			nsxtclient.Login(site.GetCredential())
-			return nil
-		},
-		PostRunE: func(c *cobra.Command, args []string) error {
-			nsxtclient.Logout()
-			return nil
-		},
 		Run: func(cmd *cobra.Command, args []string) {
 			blocks := nsxtclient.GetIpBlock()
 			blocks.Print()

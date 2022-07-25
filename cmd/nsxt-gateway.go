@@ -28,18 +28,9 @@ func NewCmdShowGateway() *cobra.Command {
 		Short:   fmt.Sprintf("show logical gateways [%s]", strings.Join(aliases, ",")),
 		Args:    cobra.MaximumNArgs(1),
 		PreRunE: func(c *cobra.Command, args []string) error {
-			site, err := conf.NsxT.GetCurrentSite()
-			if err != nil {
-				log.Fatal(err)
-			}
-			err = nsxtclient.Login(site.GetCredential())
 			if tier < 0 || tier > 1 {
 				log.Fatalf("gateway tier must be specified by flag -t/--tier with value of 0 or 1.\n")
 			}
-			return nil
-		},
-		PostRunE: func(c *cobra.Command, args []string) error {
-			nsxtclient.Logout()
 			return nil
 		},
 		Run: func(cmd *cobra.Command, args []string) {
@@ -89,7 +80,7 @@ func NewCmdShowGateway() *cobra.Command {
 	return gatewayCmd
 }
 
-func GetTier0GatewayNames (cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+func GetTier0GatewayNames(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 	if len(args) != 0 {
 		return nil, cobra.ShellCompDirectiveNoFileComp
 	}
@@ -106,10 +97,10 @@ func NewCmdShowRoutingTable() *cobra.Command {
 	var ipv6 bool
 	aliases := []string{"rt"}
 	gatewayCmd := &cobra.Command{
-		Use:     "routes ${TIER_0_GATEWAY_NAME}",
-		Aliases: aliases,
-		Short:   fmt.Sprintf("show routing table of specified tier-0 gateways [%s]", strings.Join(aliases, ",")),
-		Args:    cobra.ExactArgs(1),
+		Use:               "routes ${TIER_0_GATEWAY_NAME}",
+		Aliases:           aliases,
+		Short:             fmt.Sprintf("show routing table of specified tier-0 gateways [%s]", strings.Join(aliases, ",")),
+		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: GetTier0GatewayNames,
 		Run: func(cmd *cobra.Command, args []string) {
 			ecs := nsxtclient.GetEdgeCluster()
@@ -138,10 +129,10 @@ func NewCmdShowRoutingTable() *cobra.Command {
 func NewCmdShowBgpAdvRoutes() *cobra.Command {
 	aliases := []string{"adv"}
 	gatewayCmd := &cobra.Command{
-		Use:     "bgp-adv-routes ${TIER_0_GATEWAY_NAME}",
-		Aliases: aliases,
-		Short:   fmt.Sprintf("show bgp advertise routes of specified tier-0 gateways [%s]", strings.Join(aliases, ",")),
-		Args:    cobra.ExactArgs(1),
+		Use:               "bgp-adv-routes ${TIER_0_GATEWAY_NAME}",
+		Aliases:           aliases,
+		Short:             fmt.Sprintf("show bgp advertise routes of specified tier-0 gateways [%s]", strings.Join(aliases, ",")),
+		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: GetTier0GatewayNames,
 		Run: func(cmd *cobra.Command, args []string) {
 			locale := "default"
@@ -163,7 +154,7 @@ func NewCmdShowBgpAdvRoutes() *cobra.Command {
 	return gatewayCmd
 }
 
-func GetGatewayNames (cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+func GetGatewayNames(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 	tier, err := cmd.Flags().GetInt16("tier")
 	if err != nil {
 		log.Fatal(err)
@@ -180,10 +171,10 @@ func NewCmdTopGateway() *cobra.Command {
 	var interval int
 	aliases := []string{"gw"}
 	gatewayCmd := &cobra.Command{
-		Use:     "gateway",
-		Aliases: aliases,
-		Short:   fmt.Sprintf("monitor logical gateways [%s]", strings.Join(aliases, ",")),
-		Args:    cobra.MaximumNArgs(1),
+		Use:               "gateway",
+		Aliases:           aliases,
+		Short:             fmt.Sprintf("monitor logical gateways [%s]", strings.Join(aliases, ",")),
+		Args:              cobra.MaximumNArgs(1),
 		ValidArgsFunction: GetGatewayNames,
 		Run: func(cmd *cobra.Command, args []string) {
 			highlight_row = 0

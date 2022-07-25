@@ -18,18 +18,6 @@ func NewCmdShowComputeManager() *cobra.Command {
 		Aliases: []string{"cm"},
 		Short:   fmt.Sprintf("show compute managers [%s]", strings.Join(aliases, ",")),
 		Args:    cobra.MaximumNArgs(1),
-		PreRunE: func(c *cobra.Command, args []string) error {
-			site, err := conf.NsxT.GetCurrentSite()
-			if err != nil {
-				log.Fatal(err)
-			}
-			nsxtclient.Login(site.GetCredential())
-			return nil
-		},
-		PostRunE: func(c *cobra.Command, args []string) error {
-			nsxtclient.Logout()
-			return nil
-		},
 		Run: func(cmd *cobra.Command, args []string) {
 			cms := nsxtclient.GetComputeManager()
 			for _, cm := range *cms {
@@ -122,18 +110,6 @@ func NewCmdShowTransportZone() *cobra.Command {
 		Aliases: aliases,
 		Short:   fmt.Sprintf("show transport zones [%s]", strings.Join(aliases, ",")),
 		Args:    cobra.MaximumNArgs(1),
-		PreRunE: func(c *cobra.Command, args []string) error {
-			site, err := conf.NsxT.GetCurrentSite()
-			if err != nil {
-				log.Fatal(err)
-			}
-			nsxtclient.Login(site.GetCredential())
-			return nil
-		},
-		PostRunE: func(c *cobra.Command, args []string) error {
-			nsxtclient.Logout()
-			return nil
-		},
 		Run: func(cmd *cobra.Command, args []string) {
 			sites := nsxtclient.GetSite()
 			eps := nsxtclient.GetEnforcementPoint(sites[0])
@@ -214,18 +190,6 @@ func NewCmdShowTransportNode() *cobra.Command {
 		Aliases: aliases,
 		Short:   fmt.Sprintf("show transport nodes [%s]", strings.Join(aliases, ",")),
 		Args:    cobra.MaximumNArgs(1),
-		PreRunE: func(c *cobra.Command, args []string) error {
-			site, err := conf.NsxT.GetCurrentSite()
-			if err != nil {
-				log.Fatal(err)
-			}
-			nsxtclient.Login(site.GetCredential())
-			return nil
-		},
-		PostRunE: func(c *cobra.Command, args []string) error {
-			nsxtclient.Logout()
-			return nil
-		},
 		Run: func(cmd *cobra.Command, args []string) {
 			sites := nsxtclient.GetSite()
 			eps := nsxtclient.GetEnforcementPoint(sites[0])
@@ -252,18 +216,6 @@ func NewCmdShowTransportNodeProfile() *cobra.Command {
 		Aliases: aliases,
 		Short:   fmt.Sprintf("show transport node profiles [%s]", strings.Join(aliases, ",")),
 		Args:    cobra.MaximumNArgs(1),
-		PreRunE: func(c *cobra.Command, args []string) error {
-			site, err := conf.NsxT.GetCurrentSite()
-			if err != nil {
-				log.Fatal(err)
-			}
-			nsxtclient.Login(site.GetCredential())
-			return nil
-		},
-		PostRunE: func(c *cobra.Command, args []string) error {
-			nsxtclient.Logout()
-			return nil
-		},
 		Run: func(cmd *cobra.Command, args []string) {
 			profiles := nsxtclient.GetTransportNodeProfile()
 			profiles.Print()
@@ -324,14 +276,6 @@ func NewCmdShowEdge() *cobra.Command {
 		Use:     "edge",
 		Aliases: aliases,
 		Short:   fmt.Sprintf("show edges [%s]", strings.Join(aliases, ",")),
-		PreRunE: func(c *cobra.Command, args []string) error {
-			site, err := conf.NsxT.GetCurrentSite()
-			if err != nil {
-				log.Fatal(err)
-			}
-			nsxtclient.Login(site.GetCredential())
-			return nil
-		},
 		Run: func(cmd *cobra.Command, args []string) {
 			w := tabwriter.NewWriter(os.Stdout, 0, 1, 3, ' ', 0)
 			if verbose {
@@ -395,10 +339,6 @@ func NewCmdShowEdge() *cobra.Command {
 			}
 			w.Flush()
 		},
-		PostRunE: func(c *cobra.Command, args []string) error {
-			nsxtclient.Logout()
-			return nil
-		},
 	}
 	edgeCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "display gateway placement")
 
@@ -412,18 +352,6 @@ func NewCmdShowEdgeCluster() *cobra.Command {
 		Aliases: aliases,
 		Short:   fmt.Sprintf("show edge clusters [%s]", strings.Join(aliases, ",")),
 		Args:    cobra.MaximumNArgs(1),
-		PreRunE: func(c *cobra.Command, args []string) error {
-			site, err := conf.NsxT.GetCurrentSite()
-			if err != nil {
-				log.Fatal(err)
-			}
-			nsxtclient.Login(site.GetCredential())
-			return nil
-		},
-		PostRunE: func(c *cobra.Command, args []string) error {
-			nsxtclient.Logout()
-			return nil
-		},
 		Run: func(cmd *cobra.Command, args []string) {
 			ec := nsxtclient.GetEdgeCluster()
 			ecs := structs.EdgeClusters(*ec)
