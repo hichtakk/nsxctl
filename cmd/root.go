@@ -82,7 +82,14 @@ func LoginALB() error {
 	file, _ := ioutil.ReadFile(configfile)
 	json.Unmarshal(file, &conf)
 	albclient = ac.NewNsxAlbClient(false, debug)
-	albsite, err := conf.NsxAlb.GetCurrentSite()
+
+	var albsite config.NsxAlbSite
+	var err error
+	if useSite != "" {
+		albsite, err = conf.NsxAlb.GetSite(useSite)
+	} else {
+		albsite, err = conf.NsxAlb.GetCurrentSite()
+	}
 	if err != nil {
 		return err
 	}
