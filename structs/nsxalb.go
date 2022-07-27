@@ -103,7 +103,7 @@ type VSRuntime struct {
 type VipSummary struct {
 	Id     string              `json:"vip_id"`
 	Status map[string]string   `json:"oper_status"`
-	Se     []map[string]string `json:"service_engine"`
+	Se     []map[string]interface{} `json:"service_engine"`
 }
 
 type VirtualService struct {
@@ -122,7 +122,7 @@ type VirtualServiceStatus struct {
 	Reason []string `json:"reason"`
 }
 
-func (v *VirtualServiceInventory) Print(w *tabwriter.Writer) {
+func (v *VirtualServiceInventory) Print(w *tabwriter.Writer, verbose bool) {
 	ports := ""
 	for i, p := range v.Config.Ports {
 		summary := p.GetSummary()
@@ -142,7 +142,23 @@ func (v *VirtualServiceInventory) Print(w *tabwriter.Writer) {
 	segroup := strings.Split(v.Config.SeGroupRef, "#")
 	status := strings.Split(v.Runtime.Status.State, "_")[1]
 	// reason := strings.Join(v.Runtime.Status.Reason, "\n")
-	w.Write([]byte(strings.Join([]string{v.Config.UUID, v.Config.Name, vips, ports, cloud[1], segroup[1], status}, "\t") + "\n"))
+	var seNames []string
+	for _, vip := range v.Runtime.VipSummary {
+		for _, se := range vip.Se {
+			name := strings.Split(se["url"].(string), "#")[1]
+			primary := se["primary"].(bool)
+			// standby := se["standby"].(bool)
+			if primary {
+				name = name + "(p)"
+			}
+			seNames = append(seNames, name)
+		}
+	}
+	if verbose {
+		w.Write([]byte(strings.Join([]string{v.Config.UUID, v.Config.Name, vips, ports, cloud[1], segroup[1], status, strings.Join(seNames, ", ")}, "\t") + "\n"))
+	} else {
+		w.Write([]byte(strings.Join([]string{v.Config.UUID, v.Config.Name, vips, ports, cloud[1], segroup[1], status}, "\t") + "\n"))
+	}
 }
 
 func (v *VirtualService) GetCloudId() string {
