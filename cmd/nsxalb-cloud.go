@@ -33,6 +33,7 @@ func NewCmdShowAlbCloud() *cobra.Command {
 }
 
 func NewCmdShowAlbVirtualService() *cobra.Command {
+	var verbose bool
 	aliases := []string{"alb-vs", "vs"}
 	cloudCmd := &cobra.Command{
 		Use:     "alb-virtualservice",
@@ -50,13 +51,18 @@ func NewCmdShowAlbVirtualService() *cobra.Command {
 			vss := albclient.ShowVirtualService()
 
 			w := tabwriter.NewWriter(os.Stdout, 0, 1, 3, ' ', 0)
-			w.Write([]byte(strings.Join([]string{"ID", "Name", "VIP", "Port", "Cloud", "SEGroup", "Status"}, "\t") + "\n"))
+			if verbose {
+				w.Write([]byte(strings.Join([]string{"ID", "Name", "VIP", "Port", "Cloud", "SEGroup", "Status", "ServiceEngines"}, "\t") + "\n"))
+			} else {
+				w.Write([]byte(strings.Join([]string{"ID", "Name", "VIP", "Port", "Cloud", "SEGroup", "Status"}, "\t") + "\n"))
+			}
 			for _, vs := range vss {
-				vs.Print(w)
+				vs.Print(w, verbose)
 			}
 			w.Flush()
 		},
 	}
+	cloudCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "display serviceengine placement")
 
 	return cloudCmd
 }
