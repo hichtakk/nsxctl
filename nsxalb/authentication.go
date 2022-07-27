@@ -18,7 +18,7 @@ func (c *NsxAlbClient) Login(cred map[string]string) error {
 	req.Header.Set("Content-Type", "application/json")
 	res, err := c.httpClient.Do(req)
 	if err != nil {
-		log.Println(err)
+		return err
 	}
 	defer res.Body.Close()
 	if res.StatusCode != 200 {
