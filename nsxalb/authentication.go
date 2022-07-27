@@ -11,7 +11,7 @@ import (
 	"os"
 )
 
-func (c *NsxAlbClient) Login(cred map[string]string) {
+func (c *NsxAlbClient) Login(cred map[string]string) error {
 	target_url := c.BaseUrl + "/login"
 	credJson, _ := json.Marshal(cred)
 	req, _ := http.NewRequest("POST", target_url, bytes.NewBuffer(credJson))
@@ -22,12 +22,14 @@ func (c *NsxAlbClient) Login(cred map[string]string) {
 	}
 	defer res.Body.Close()
 	if res.StatusCode != 200 {
-		log.Printf("StatusCode=%d\n", res.StatusCode)
-		log.Println(req)
-		log.Println(res)
-		data := readResponseBody(res)
-		log.Println(data)
-		return
+		if c.Debug {
+			log.Printf("StatusCode=%d\n", res.StatusCode)
+			log.Println(req)
+			log.Println(res)
+			data := readResponseBody(res)
+			log.Println(data)
+		}
+		return fmt.Errorf("authentication failed")
 	}
 	url, _ := url.Parse(target_url)
 	cookies := c.httpClient.Jar.Cookies(url)
@@ -46,6 +48,8 @@ func (c *NsxAlbClient) Login(cred map[string]string) {
 	versionData := data.(map[string]interface{})["version"]
 	version := versionData.(map[string]interface{})["Version"]
 	c.Version = version.(string)
+
+	return nil
 }
 
 func (c *NsxAlbClient) Logout() {

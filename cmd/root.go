@@ -87,7 +87,10 @@ func LoginALB() error {
 		return err
 	}
 	albclient.BaseUrl = albsite.Endpoint
-	albclient.Login(albsite.GetCredential())
+	err = albclient.Login(albsite.GetCredential())
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

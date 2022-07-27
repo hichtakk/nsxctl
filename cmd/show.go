@@ -1,6 +1,9 @@
 package cmd
 
 import (
+	"fmt"
+	"os"
+
 	"github.com/spf13/cobra"
 )
 
@@ -11,9 +14,17 @@ func NewCmdShow() *cobra.Command {
 		Short: "Show resources",
 		PersistentPreRunE: func(c *cobra.Command, args []string) error {
 			if alb != true {
-				return Login()
+				if err := Login(); err != nil {
+					fmt.Println(err)
+					os.Exit(1)
+				}
+				return nil
 			}
-			return LoginALB()
+			if err := LoginALB(); err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+			return nil
 		},
 		PersistentPostRun: func(c *cobra.Command, args []string) {
 			if alb != true {
