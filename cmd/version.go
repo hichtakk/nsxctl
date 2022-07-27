@@ -2,7 +2,9 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 	"strings"
+	"text/tabwriter"
 
 	"github.com/spf13/cobra"
 )
@@ -31,7 +33,20 @@ func NewCmdShowVersion() *cobra.Command {
 			if alb != true {
 				fmt.Println(nsxtclient.GetVersion())
 			} else {
-				fmt.Println(albclient.Version)
+				c := albclient.GetSystemConfiguration()
+				tier := c.LicenseTier
+				license := albclient.GetLicensingLedger()
+				usage := "-/-/-"
+				for _, l := range license.TierUsages {
+					if l.Tier == tier {
+						usage = fmt.Sprintf("%v/%v/%v", l.Usage["consumed"], l.Usage["available"], l.Usage["remaining"])
+						break
+					}
+				}
+				w := tabwriter.NewWriter(os.Stdout, 0, 1, 3, ' ', 0)
+				w.Write([]byte(strings.Join([]string{"Version", "Tier", "TierUsage(Consumed/Capacity/Remain)"}, "\t") + "\n"))
+				w.Write([]byte(strings.Join([]string{albclient.Version, c.LicenseTier, usage}, "\t") + "\n"))
+				w.Flush()
 			}
 		},
 	}

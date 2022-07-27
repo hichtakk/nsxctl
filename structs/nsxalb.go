@@ -101,8 +101,8 @@ type VSRuntime struct {
 }
 
 type VipSummary struct {
-	Id     string              `json:"vip_id"`
-	Status map[string]string   `json:"oper_status"`
+	Id     string                   `json:"vip_id"`
+	Status map[string]string        `json:"oper_status"`
 	Se     []map[string]interface{} `json:"service_engine"`
 }
 
@@ -200,4 +200,29 @@ func (p *VSPort) GetSummary() string {
 	}
 
 	return summary
+}
+
+type LicensingLedger struct {
+	Id         string      `json:"uuid"`
+	SeInfos    []SeInfo    `json:"se_infos"`
+	TierUsages []TierUsage `json:"tier_usages"`
+}
+
+type SeInfo struct {
+	Id           string `json:"uuid"`
+	LastUpdated  int    `json:"last_updated"`
+	ServiceCores int    `json:"service_cores"`
+	TenantUUID   string `json:"tenant_uuid"`
+	Tier         string `json:"tier"`
+}
+
+type TierUsage struct {
+	Tier  string         `json:"tier"`
+	Usage map[string]int `json:"usage"`
+}
+
+type SystemConfiguration struct {
+	Id          string `json:"uuid"`
+	LicenseTier string `json:"default_license_tier"`
+	TierUsage   TierUsage
 }
