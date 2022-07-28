@@ -105,7 +105,12 @@ func NewCmdShowRoutingTable() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			ecs := nsxtclient.GetEdgeCluster()
 			ecss := structs.EdgeClusters(*ecs)
-			routes := nsxtclient.GetRoutingTable(args[0])
+			gw, err := nsxtclient.GetTier0GatewayFromName(args[0])
+			if err != nil {
+				log.Fatal(err)
+				return
+			}
+			routes := nsxtclient.GetRoutingTable(gw.Id)
 			for _, er := range routes {
 				ec := ecss.GetClusterById(er.GetEdgeClusterId())
 				idx := er.GetEdgeClusterNodeIdx()
@@ -136,7 +141,12 @@ func NewCmdShowBgpAdvRoutes() *cobra.Command {
 		ValidArgsFunction: GetTier0GatewayNames,
 		Run: func(cmd *cobra.Command, args []string) {
 			locale := "default"
-			neighbors := nsxtclient.GetBgpNeighbors(args[0], locale)
+			gw, err := nsxtclient.GetTier0GatewayFromName(args[0])
+			if err != nil {
+				log.Fatal(err)
+				return
+			}
+			neighbors := nsxtclient.GetBgpNeighbors(gw.Id, locale)
 			for _, nb := range neighbors {
 				fmt.Printf("BGP neighbor: %v, Remote ASN: %v\n", nb.Address, nb.Asn)
 				nb_edges := nsxtclient.GetBgpNeighborsAdvRoutes(nb.Path)
@@ -179,16 +189,15 @@ func NewCmdTopGateway() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			highlight_row = 0
 			if tier == 0 {
-				gws := nsxtclient.GetTier0Gateway(args[0])
-				if len(gws) < 1 {
-					log.Fatalln("Tier-0 gateway not found")
-				} else if len(gws) > 1 {
-					log.Fatalln("found multiple Tier-0 gateways")
+				gw, err := nsxtclient.GetTier0GatewayFromName(args[0])
+				if err != nil {
+					log.Fatal(err)
+					return
 				}
 				if interval < 3 {
 					log.Fatalln("interval must be greater than 3 second")
 				}
-				runTop(gws[0], interval)
+				runTop(gw, interval)
 			} else if tier == 1 {
 				log.Fatalln("top tier-1 gateway is not implemented yet.")
 			} else {
