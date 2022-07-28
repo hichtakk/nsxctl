@@ -247,3 +247,13 @@ func (c *NsxtClient) GetGatewayAggregateInfo(gw_realization_id string) []map[str
 	}
 	return result
 }
+
+func (c *NsxtClient) GetTier0GatewayFromName(name string) (structs.Tier0Gateway, error) {
+	gws := c.GetTier0Gateway("")
+	for _, gw := range gws {
+		if gw.Name == name {
+			return gw, nil
+		}
+	}
+	return structs.Tier0Gateway{}, fmt.Errorf("Error: Tier-0 gateway '%s' is not found", name)
+}
