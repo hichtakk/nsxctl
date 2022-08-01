@@ -2,6 +2,7 @@ package structs
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"text/tabwriter"
 )
@@ -225,4 +226,43 @@ type SystemConfiguration struct {
 	Id          string `json:"uuid"`
 	LicenseTier string `json:"default_license_tier"`
 	TierUsage   TierUsage
+}
+
+type Gslb struct {
+	Id                string              `json:"uuid"`
+	Domains           []map[string]string `json:"dns_configs"`
+	Name              string              `json:"name"`
+	ReplicationPolicy map[string]string   `json:"replication_policy"`
+	GslbSites         []GslbSite          `json:"sites"`
+	ThirdPartySites   []ThirdPartySite    `json:"third_party_sites"`
+	LeaderUuid        string              `json:"leader_cluster_uuid"`
+}
+
+func (g *Gslb) Print() {
+	w := tabwriter.NewWriter(os.Stdout, 0, 1, 3, ' ', 0)
+	w.Write([]byte(strings.Join([]string{"Name", "Type", "IP Address"}, "\t") + "\n"))
+	for _, s := range g.GslbSites {
+		w.Write([]byte(strings.Join([]string{s.Name, s.Type, s.Address[0]["addr"]}, "\t") + "\n"))
+	}
+	w.Flush()
+}
+
+type GslbSite struct {
+	Id      string              `json:"cluster_uuid"`
+	Name    string              `json:"name"`
+	Enabled bool                `json:"enabled"`
+	Address []map[string]string `json:"ip_addresses"`
+	Type    string              `json:"member_type"`
+	DnsVs   []DnsVs             `json:"dns_vses"`
+}
+
+type ThirdPartySite struct {
+	Id      string `json:"cluster_uuid"`
+	Name    string `json:"name"`
+	Enabled bool   `json:"enabled"`
+}
+
+type DnsVs struct {
+	Id      string   `json:"dns_vs_uuid"`
+	Domains []string `json:"domain_names"`
 }
