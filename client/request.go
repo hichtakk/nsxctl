@@ -94,7 +94,6 @@ func (c *NsxtClient) Request(method string, path string, query_param map[string]
 	req, _ := http.NewRequest(method, c.BaseUrl+path, bytes.NewBuffer(req_data))
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("X-Xsrf-Token", c.Token)
-	req.Header.Set("Accept-Language", "ja-JP")
 	if len(query_param) > 0 {
 		params := req.URL.Query()
 		for k, v := range query_param {
