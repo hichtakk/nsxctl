@@ -91,7 +91,7 @@ type VSResult struct {
 
 type VirtualServiceInventory struct {
 	Config  VirtualService `json:"config"`
-	Health  map[string]int `json:"heal`
+	Health  map[string]int `json:"heal"`
 	Runtime VSRuntime      `json:"runtime"`
 }
 

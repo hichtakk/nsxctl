@@ -49,6 +49,8 @@ func NewCmdShow() *cobra.Command {
 		NewCmdShowSegment(),
 		NewCmdShowRoutingTable(),
 		NewCmdShowBgpAdvRoutes(),
+		NewCmdShowDfwPolicies(),
+		NewCmdShowDfwRules(),
 		NewCmdShowAlbCloud(),
 		NewCmdShowAlbVirtualService(),
 		NewCmdShowAlbServiceEngine(),

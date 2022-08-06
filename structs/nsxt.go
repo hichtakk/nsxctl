@@ -1,9 +1,12 @@
 package structs
 
 import (
+	"encoding/csv"
 	"fmt"
+	"log"
 	"net/netip"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"text/tabwriter"
@@ -633,4 +636,102 @@ type IpPool struct {
 	Name  string         `json:"display_name"`
 	Id    string         `json:"id"`
 	Usage map[string]int `json:"pool_usage"`
+}
+
+type DfwPolicies struct {
+	Policies []DfwPolicy `json:"results"`
+	Count    int         `json:"result_count"`
+}
+
+type DfwPolicy struct {
+	Path       string    `json:"path"`
+	Name       string    `json:"display_name"`
+	Id         string    `json:"id"`
+	Seq        int64     `json:"sequence_number"`
+	Scope      []string  `json:"scope"`
+	Stateful   bool      `json:"stateful"`
+	TcpStrict  bool      `json:"tcp_strict"`
+	RuleCount  int       `json:"rule_count"`
+	Category   string    `json:"category"`
+	Rules      []DfwRule `json:"rules"`
+}
+
+type DfwRules struct {
+	Rules    []DfwRule   `json:"results"`
+	Count    int         `json:"result_count"`
+}
+
+type DfwRule struct {
+	Name                   string    `json:"display_name"`
+	Id                     string    `json:"id"`
+	RuleId                 int       `json:"rule_id"`
+	Sources                []string  `json:"source_groups"`
+	SourcesExcluded        bool      `json:"sources_excluded"`
+	Destinations           []string  `json:"destination_groups"`
+	DestinationsExcluded   bool      `json:"destinations_excluded"`
+	Services               []string  `json:"services"`
+	Profiles               []string  `json:"profiles"`
+	Scope                  []string  `json:"scope"`
+	Action                 string    `json:"action"`
+	Direction              string    `json:"direction"`
+	IpProtocol             string    `json:"ip_protocol"`
+	Logged                 bool      `json:"logged"`
+}
+
+func (r *DfwRule) Print(w *tabwriter.Writer, policy DfwPolicy) {
+	cr := len(r.Sources)
+	cd := len(r.Destinations)
+	cs := len(r.Services)
+	cp := len(r.Profiles)
+	ca := len(r.Scope)
+	i := 0
+	for (cr > i) || (cd > i) || (cs > i) || (cp > i) || (ca > i) || (i < 1) {
+		src := ""
+		dest := ""
+		srv := ""
+		prof := ""
+		scope := ""
+		if cr > i {
+			src = filepath.Base(r.Sources[i])
+		}
+		if cd > i {
+			dest = filepath.Base(r.Destinations[i])
+		}
+		if cs > i {
+			srv = filepath.Base(r.Services[i])
+		}
+		if cp > i {
+			prof = filepath.Base(r.Profiles[i])
+		}
+		if ca > i {
+			scope = filepath.Base(r.Scope[i])
+		}
+		if i == 0 {
+			w.Write([]byte(strings.Join([]string{policy.Name, r.Name, strconv.Itoa(r.RuleId), src, dest, srv, prof, scope, r.Action, r.Direction, r.IpProtocol, strconv.FormatBool(r.Logged)}, "\t")+ "\n"))
+		} else {
+			w.Write([]byte(strings.Join([]string{"", "", "", src, dest, srv, prof, scope, "", "", "", ""}, "\t")+ "\n"))
+		}
+		i = i + 1
+	}
+}
+
+func GetSummary(paths []string) string {
+	var basenames []string
+	for _, p := range paths {
+		basenames = append(basenames, filepath.Base(p))
+	}
+	return strings.Join(basenames, "\n")
+}
+
+func (r *DfwRule) PrintCsv(w *csv.Writer, policy DfwPolicy) {
+	src := GetSummary(r.Sources)
+	dest := GetSummary(r.Destinations)
+	srv := GetSummary(r.Services)
+	prof := GetSummary(r.Profiles)
+	scope := GetSummary(r.Scope)
+	err := w.Write([]string{policy.Name, r.Name, strconv.Itoa(r.RuleId), src, dest, srv, prof, scope, r.Action, r.Direction, r.IpProtocol, strconv.FormatBool(r.Logged)})
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
 }
