@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"log"
+	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -156,4 +157,65 @@ func NewCmdDeleteIpBlock() *cobra.Command {
 	}
 
 	return ipPoolCmd
+}
+
+func NewCmdCreateSegment() *cobra.Command {
+	var transportzone string
+	var vlan_ids string              // CSV format
+	var gateway string
+	var interface_address string     // CIDR format
+	segmentCmd := &cobra.Command{
+		Use: "segment",
+		Short: fmt.Sprintf("create a new segment"),
+		Args: cobra.ExactArgs(1),
+		PreRunE: func(c *cobra.Command, args []string) error {
+			if err := Login(); err != nil {
+				log.Fatal(err)
+				os.Exit(1)
+			}
+			return nil
+		},
+		PostRunE: func(c *cobra.Command, args []string) error {
+			nsxtclient.Logout()
+			return nil
+		},
+		Run: func(cmd *cobra.Command, args []string) {
+			segment_name := args[0]
+			err := nsxtclient.CreateSegment(segment_name, transportzone, vlan_ids, gateway, interface_address)
+			if err != nil {
+				log.Fatal(err)
+			}
+		},
+	}
+	segmentCmd.Flags().StringVarP(&interface_address, "interface-address", "", "", "interface address (CIDR format) to connect specified gateway")
+	segmentCmd.Flags().StringVarP(&gateway, "gateway", "", "", "gateway name to connect")
+	segmentCmd.Flags().StringVarP(&transportzone, "transportzone", "", "", "transportzone name")
+	segmentCmd.Flags().StringVarP(&vlan_ids, "vlan-ids", "", "", "vlan ids (CSV format)")
+	segmentCmd.RegisterFlagCompletionFunc("gateway", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		Login()
+		gw_names := []string{}
+		gws0 := nsxtclient.GetTier0Gateway("")
+		gws1 := nsxtclient.GetTier1Gateway("")
+		for _, gw := range gws0 {
+			gw_names = append(gw_names, gw.Name)
+		}
+		for _, gw := range gws1 {
+			gw_names = append(gw_names, gw.Name)
+		}
+		return gw_names, cobra.ShellCompDirectiveNoFileComp
+	})
+	segmentCmd.RegisterFlagCompletionFunc("transportzone", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		Login()
+		sites := nsxtclient.GetSite()
+		endpoints := nsxtclient.GetEnforcementPoint(sites[0])
+		transport_zones := nsxtclient.GetPolicyTransportZone(sites[0], (*endpoints)[0].Id)
+		var tz_names []string
+		for _, tz := range *transport_zones {
+			tz_names = append(tz_names, tz.Name)
+		}
+		return tz_names, cobra.ShellCompDirectiveNoFileComp
+	})
+
+
+	return segmentCmd
 }
