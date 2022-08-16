@@ -305,6 +305,7 @@ type TransportZone struct {
 	Id   string `json:"id"`
 	Name string `json:"display_name"`
 	Type string `json:"tz_type"`
+	Path string `json:"path"`
 }
 
 type TransportNodes []TransportNode
@@ -501,6 +502,7 @@ type Tier0Gateway struct {
 	Name          string `json:"display_name"`
 	FailoverMode  string `json:"failover_mode"`
 	RealizationId string `json:"realization_id"`
+	Path          string `json:"path"`
 }
 
 func (gw *Tier0Gateway) Print() {
@@ -529,6 +531,7 @@ type Tier1Gateway struct {
 	Name          string `json:"display_name"`
 	FailoverMode  string `json:"failover_mode"`
 	RealizationId string `json:"realization_id"`
+	Path          string `json:"path"`
 }
 
 func (gw *Tier1Gateway) Print() {
@@ -589,17 +592,18 @@ func (segs *Segments) Print() {
 type Segment struct {
 	Name              string                 `json:"display_name"`
 	Id                string                 `json:"id"`
-	AdminState        string                 `json:"admin_state"`
-	AdvancedConifg    map[string]interface{} `json:"advanced_config"`
-	Connectivity      string                 `json:"connectivity_path"`
-	ReplicationMode   string                 `json:"replication_mode"`
-	Subnets           []SegmentSubnet        `json:"subnets"`
-	TransportZonePath string                 `json:"transport_zone_path"`
+	AdminState        string                 `json:"admin_state,omitempty"`
+	AdvancedConifg    map[string]interface{} `json:"advanced_config,omitempty"`
+	Connectivity      string                 `json:"connectivity_path,omitempty"`
+	ReplicationMode   string                 `json:"replication_mode,omitempty"`
+	Subnets           []SegmentSubnet        `json:"subnets,omitempty"`
+	TransportZonePath string                 `json:"transport_zone_path,omitempty"`
+	Vlans             []string               `json:"vlan_ids"`
 }
 
 type SegmentSubnet struct {
-	Gateway string `json:"gateway_address"`
-	Network string `json:"network"`
+	Gateway string `json:"gateway_address,omitempty"`
+	Network string `json:"network,omitempty"`
 }
 
 type IpBlocks []IpBlock
