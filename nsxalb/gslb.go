@@ -14,3 +14,12 @@ func (c *NsxAlbClient) GetGslbSites() structs.Gslb {
 
 	return results[0]
 }
+
+func (c *NsxAlbClient) GetGslbServices() structs.GslbServices {
+	res := c.Request("GET", "/api/gslbservice", map[string]string{}, nil)
+	var results structs.GslbServices
+	str, _ := json.Marshal(res.Body.(map[string]interface{})["results"].([]interface{}))
+	json.Unmarshal(str, &results)
+
+	return results
+}
