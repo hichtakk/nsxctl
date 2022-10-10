@@ -56,6 +56,7 @@ func NewCmdShow() *cobra.Command {
 		NewCmdShowAlbServiceEngine(),
 		NewCmdShowAlbGslb(),
 		NewCmdShowAlbPool(),
+		NewCmdShowAlbGslbService(),
 	)
 
 	return showCmd

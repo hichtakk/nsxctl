@@ -29,3 +29,27 @@ func NewCmdShowAlbGslb() *cobra.Command {
 
 	return cloudCmd
 }
+
+func NewCmdShowAlbGslbService() *cobra.Command {
+	aliases := []string{}
+	cloudCmd := &cobra.Command{
+		Use:     "gslb-service",
+		Aliases: aliases,
+		Short:   fmt.Sprintf("show ALB GSLB Service[%s]", strings.Join(aliases, ",")),
+		Args:    cobra.MaximumNArgs(1),
+		PreRunE: func(c *cobra.Command, args []string) error {
+			return LoginALB()
+		},
+		PostRunE: func(c *cobra.Command, args []string) error {
+			albclient.Logout()
+			return nil
+		},
+		Run: func(cmd *cobra.Command, args []string) {
+			hm := albclient.GetHealthMonitors()
+			gSvc := albclient.GetGslbServices()
+			gSvc.Print(hm)
+		},
+	}
+
+	return cloudCmd
+}

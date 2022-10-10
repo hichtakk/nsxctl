@@ -257,3 +257,13 @@ func (c *NsxtClient) GetTier0GatewayFromName(name string) (structs.Tier0Gateway,
 	}
 	return structs.Tier0Gateway{}, fmt.Errorf("Error: Tier-0 gateway '%s' is not found", name)
 }
+
+func (c *NsxtClient) GetTier1GatewayFromName(name string) (structs.Tier1Gateway, error) {
+	gws := c.GetTier1Gateway("")
+	for _, gw := range gws {
+		if gw.Name == name {
+			return gw, nil
+		}
+	}
+	return structs.Tier1Gateway{}, fmt.Errorf("Error: Tier-1 gateway '%s' is not found", name)
+}

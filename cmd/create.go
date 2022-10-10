@@ -39,6 +39,7 @@ func NewCmdCreate() *cobra.Command {
 		NewCmdCreateIpPool(),
 		NewCmdCreateIpBlock(),
 		NewCmdCreateEdge(),
+		NewCmdCreateSegment(),
 	)
 
 	return showCmd

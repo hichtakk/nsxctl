@@ -279,9 +279,9 @@ func NewCmdShowEdge() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			w := tabwriter.NewWriter(os.Stdout, 0, 1, 3, ' ', 0)
 			if verbose {
-				w.Write([]byte(strings.Join([]string{"Id", "Name", "IP", "EdgeCluster", "Status", "Gatways"}, "\t") + "\n"))
+				w.Write([]byte(strings.Join([]string{"Id", "Name", "IP", "Size", "EdgeCluster", "Status", "Gatways"}, "\t") + "\n"))
 			} else {
-				w.Write([]byte(strings.Join([]string{"Id", "Name", "IP", "EdgeCluster", "Status"}, "\t") + "\n"))
+				w.Write([]byte(strings.Join([]string{"Id", "Name", "IP", "Size", "EdgeCluster", "Status"}, "\t") + "\n"))
 			}
 
 			edges := nsxtclient.GetEdge()
@@ -295,7 +295,7 @@ func NewCmdShowEdge() *cobra.Command {
 					per_node_status := nsxtclient.GetGatewayAggregateInfo(gw.RealizationId)
 					for _, st := range per_node_status {
 						eid := st["transport_node_id"]
-						ha := st["high_availability_status"]
+						ha := st["high_availability_status"][:1]
 						val, ok := edge_gw_map[eid]
 						if !ok {
 							val = []string{}
@@ -308,7 +308,7 @@ func NewCmdShowEdge() *cobra.Command {
 					per_node_status := nsxtclient.GetGatewayAggregateInfo(gw.RealizationId)
 					for _, st := range per_node_status {
 						eid := st["transport_node_id"]
-						ha := st["high_availability_status"]
+						ha := st["high_availability_status"][:1]
 						val, ok := edge_gw_map[eid]
 						if !ok {
 							val = []string{}
@@ -330,11 +330,12 @@ func NewCmdShowEdge() *cobra.Command {
 				}
 				ip := strings.Join(e.EdgeNodeDeploymentInfo.IPAddress, ",")
 				status := nsxtclient.GetTransportNodeStatus(e.Id)
+				size := e.EdgeNodeDeploymentInfo.EdgeDeploymentConfig.Size
 				if verbose {
 					gws := strings.Join(edge_gw_map[e.Id], ",")
-					w.Write([]byte(strings.Join([]string{e.Id, e.Name, ip, edgeCluster.Name, status, gws}, "\t") + "\n"))
+					w.Write([]byte(strings.Join([]string{e.Id, e.Name, ip, size, edgeCluster.Name, status, gws}, "\t") + "\n"))
 				} else {
-					w.Write([]byte(strings.Join([]string{e.Id, e.Name, ip, edgeCluster.Name, status}, "\t") + "\n"))
+					w.Write([]byte(strings.Join([]string{e.Id, e.Name, ip, size, edgeCluster.Name, status}, "\t") + "\n"))
 				}
 			}
 			w.Flush()

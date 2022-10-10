@@ -231,45 +231,6 @@ type SystemConfiguration struct {
 	TierUsage   TierUsage
 }
 
-type Gslb struct {
-	Id                string              `json:"uuid"`
-	Domains           []map[string]string `json:"dns_configs"`
-	Name              string              `json:"name"`
-	ReplicationPolicy map[string]string   `json:"replication_policy"`
-	GslbSites         []GslbSite          `json:"sites"`
-	ThirdPartySites   []ThirdPartySite    `json:"third_party_sites"`
-	LeaderUuid        string              `json:"leader_cluster_uuid"`
-}
-
-func (g *Gslb) Print() {
-	w := tabwriter.NewWriter(os.Stdout, 0, 1, 3, ' ', 0)
-	w.Write([]byte(strings.Join([]string{"Name", "Type", "IP Address"}, "\t") + "\n"))
-	for _, s := range g.GslbSites {
-		w.Write([]byte(strings.Join([]string{s.Name, s.Type, s.Address[0]["addr"]}, "\t") + "\n"))
-	}
-	w.Flush()
-}
-
-type GslbSite struct {
-	Id      string              `json:"cluster_uuid"`
-	Name    string              `json:"name"`
-	Enabled bool                `json:"enabled"`
-	Address []map[string]string `json:"ip_addresses"`
-	Type    string              `json:"member_type"`
-	DnsVs   []DnsVs             `json:"dns_vses"`
-}
-
-type ThirdPartySite struct {
-	Id      string `json:"cluster_uuid"`
-	Name    string `json:"name"`
-	Enabled bool   `json:"enabled"`
-}
-
-type DnsVs struct {
-	Id      string   `json:"dns_vs_uuid"`
-	Domains []string `json:"domain_names"`
-}
-
 type PoolResult struct {
 	PoolInventories []PoolInventory `json:"results"`
 }
@@ -343,4 +304,118 @@ func (p *Pool) Print() {
 		w.Write([]byte(strings.Join([]string{m.HostName, m.Ip["addr"], strconv.Itoa(m.Port), strconv.FormatBool(m.Enabled), strconv.Itoa(m.Ratio), network}, "\t") + "\n"))
 	}
 	w.Flush()
+}
+
+type Gslb struct {
+	Id                string              `json:"uuid"`
+	Domains           []map[string]string `json:"dns_configs"`
+	Name              string              `json:"name"`
+	ReplicationPolicy map[string]string   `json:"replication_policy"`
+	GslbSites         []GslbSite          `json:"sites"`
+	ThirdPartySites   []ThirdPartySite    `json:"third_party_sites"`
+	LeaderUuid        string              `json:"leader_cluster_uuid"`
+}
+
+func (g *Gslb) Print() {
+	w := tabwriter.NewWriter(os.Stdout, 0, 1, 3, ' ', 0)
+	w.Write([]byte(strings.Join([]string{"Name", "Type", "IP Address"}, "\t") + "\n"))
+	for _, s := range g.GslbSites {
+		w.Write([]byte(strings.Join([]string{s.Name, s.Type, s.Address[0]["addr"]}, "\t") + "\n"))
+	}
+	w.Flush()
+}
+
+type GslbSite struct {
+	Id      string              `json:"cluster_uuid"`
+	Name    string              `json:"name"`
+	Enabled bool                `json:"enabled"`
+	Address []map[string]string `json:"ip_addresses"`
+	Type    string              `json:"member_type"`
+	DnsVs   []DnsVs             `json:"dns_vses"`
+}
+
+type ThirdPartySite struct {
+	Id      string `json:"cluster_uuid"`
+	Name    string `json:"name"`
+	Enabled bool   `json:"enabled"`
+}
+
+type DnsVs struct {
+	Id      string   `json:"dns_vs_uuid"`
+	Domains []string `json:"domain_names"`
+}
+
+type GslbServices []GslbService
+
+func (gs *GslbServices) Print(hm HealthMonitors) {
+	w := tabwriter.NewWriter(os.Stdout, 0, 1, 3, ' ', 0)
+	w.Write([]byte(strings.Join([]string{"Name", "FQDN", "HealthMonitor"}, "\t") + "\n"))
+	for _, s := range *gs {
+		monitors := []string{}
+		for _, hmr := range s.HealthMonitorRef {
+			elm := strings.Split(hmr, "/")
+			m := hm.GetHealthMonitorById(elm[len(elm)-1])
+			if m != nil {
+				monitors = append(monitors, m.Name)
+			}
+		}
+		w.Write([]byte(strings.Join([]string{s.Name, strings.Join(s.Fqdn, ","), strings.Join(monitors, ",")}, "\t") + "\n"))
+	}
+	w.Flush()
+}
+
+type GslbService struct {
+	Id                            string            `json:"uuid"`
+	Name                          string            `json:"name"`
+	Fqdn                          []string          `json:"domain_names"`
+	ControllerHealthStatusEnabled bool              `json:"controller_health_status_enabled"`
+	DownResponse                  map[string]string `json:"down_response"`
+	Enabled                       bool              `json:"enabled"`
+	HealthMonitorRef              []string          `json:"health_monitor_refs"`
+	HealthMonitorScope            string            `json:"health_monitor_scope"`
+	PoolAlgorithm                 string            `json:"pool_algorithm"`
+	ResolveCname                  bool              `json:"resolve_cname"`
+	SitePersistenceEnabled        bool              `json:"site_persistence_enabled"`
+	UseEdnsClientSubnet           bool              `json:"use_edns_client_subnet"`
+	Groups                        []GslbPool        `json:"groups"`
+}
+
+type GslbPool struct {
+	Name      string           `json:"name"`
+	Priority  int              `json:"priority"`
+	Enabled   bool             `json:"enabled"`
+	Algorithm string           `json:"algorithm"`
+	Members   []GslbPoolMember `json:"members"`
+}
+
+type GslbPoolMember struct {
+	Id              string            `json:"cluster_uuid"`
+	Enabled         bool              `json:"enabled"`
+	Ip              map[string]string `json:"ip"`
+	Ratio           int               `json:"ratio"`
+	ResolveFqdnToV6 bool              `json:"resolve_fqdn_to_v6"`
+	VsId            string            `json:"vs_uuid"`
+}
+
+type HealthMonitors []HealthMonitor
+
+func (hms *HealthMonitors) GetHealthMonitorById(id string) *HealthMonitor {
+	for _, hm := range *hms {
+		if hm.Id == id {
+			return &hm
+		}
+	}
+
+	return nil
+}
+
+type HealthMonitor struct {
+	Id              string `json:"uuid"`
+	Name            string `json:"name"`
+	Type            string `json:"type"`
+	SuccessfulCheck int    `json:"successful_checks"`
+	FailedCheck     int    `json:"failed_checks"`
+	Interval        int    `json:"send_interval"`
+	Timeout         int    `json:"receive_timeout"`
+	Federated       bool   `json:"is_federated"`
 }
