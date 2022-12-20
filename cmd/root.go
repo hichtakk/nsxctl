@@ -21,7 +21,7 @@ var (
 	debug      bool
 )
 
-const version = "v0.0.1"
+const version = "v0.1.1"
 
 var revision = ""
 

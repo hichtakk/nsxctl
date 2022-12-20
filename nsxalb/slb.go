@@ -18,3 +18,27 @@ func (c *NsxAlbClient) ShowVirtualService() []structs.VirtualServiceInventory {
 
 	return vss
 }
+
+func (c *NsxAlbClient) GetPools() []structs.PoolInventory {
+	path := "/api/pool-inventory?include_name=true"
+	resp := c.Request("GET", path, nil, nil)
+	var results structs.PoolResult
+	resByte, _ := resp.BodyBytes()
+	json.Unmarshal(resByte, &results)
+	var pools []structs.PoolInventory
+	for _, p := range results.PoolInventories {
+		pools = append(pools, p)
+	}
+
+	return pools
+}
+
+func (c *NsxAlbClient) GetPool(id string) structs.Pool {
+	path := "/api/pool/" + id + "?include_name=true"
+	resp := c.Request("GET", path, nil, nil)
+	var pool structs.Pool
+	resByte, _ := resp.BodyBytes()
+	json.Unmarshal(resByte, &pool)
+
+	return pool
+}

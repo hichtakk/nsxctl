@@ -6,6 +6,7 @@ import (
 	"strings"
 	"text/tabwriter"
 
+	"github.com/hichtakk/nsxctl/structs"
 	"github.com/spf13/cobra"
 )
 
@@ -94,4 +95,58 @@ func NewCmdShowAlbServiceEngine() *cobra.Command {
 	}
 
 	return cloudCmd
+}
+
+func NewCmdShowAlbPool() *cobra.Command {
+	aliases := []string{"pool"}
+	cloudCmd := &cobra.Command{
+		Use:     "alb-pool",
+		Aliases: aliases,
+		Short:   fmt.Sprintf("show ALB Pool [%s]", strings.Join(aliases, ",")),
+		Args:    cobra.MaximumNArgs(1),
+		ValidArgsFunction: GetPoolNames,
+		PreRunE: func(c *cobra.Command, args []string) error {
+			return LoginALB()
+		},
+		PostRunE: func(c *cobra.Command, args []string) error {
+			albclient.Logout()
+			return nil
+		},
+		Run: func(cmd *cobra.Command, args []string) {
+			pools := albclient.GetPools()
+
+			if len(args) > 0 {
+				var pool structs.Pool
+				for _, p := range pools {
+					if p.Config.Name == args[0] {
+						pool = albclient.GetPool(p.Config.UUID)
+					}
+				}
+				pool.Print()
+				return
+			}
+
+			w := tabwriter.NewWriter(os.Stdout, 0, 1, 3, ' ', 0)
+			w.Write([]byte(strings.Join([]string{"ID", "Name", "VirtualService", "Ready", "Status", "Cloud"}, "\t") + "\n"))
+			for _, p := range pools {
+				p.Print(w)
+			}
+			w.Flush()
+		},
+	}
+
+	return cloudCmd
+}
+
+func GetPoolNames(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	if len(args) != 0 {
+		return nil, cobra.ShellCompDirectiveNoFileComp
+	}
+	LoginALB()
+	pool_names := []string{}
+	pools := albclient.GetPools()
+	for _, p := range pools {
+		pool_names = append(pool_names, p.Config.Name)
+	}
+	return pool_names, cobra.ShellCompDirectiveNoFileComp
 }

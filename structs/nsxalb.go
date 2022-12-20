@@ -3,6 +3,7 @@ package structs
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"text/tabwriter"
 )
@@ -93,6 +94,7 @@ type VirtualServiceInventory struct {
 	Config  VirtualService `json:"config"`
 	Health  map[string]int `json:"heal"`
 	Runtime VSRuntime      `json:"runtime"`
+	Pools   []string       `json:"pools"`
 }
 
 type VSRuntime struct {
@@ -116,6 +118,7 @@ type VirtualService struct {
 	CloudRef   string   `json:"cloud_ref"`
 	SeGroupRef string   `json:"se_group_ref"`
 	Vips       []Vip    `json:"vip"`
+	PoolRef    string   `json:"pool_ref"`
 }
 
 type VirtualServiceStatus struct {
@@ -226,6 +229,81 @@ type SystemConfiguration struct {
 	Id          string `json:"uuid"`
 	LicenseTier string `json:"default_license_tier"`
 	TierUsage   TierUsage
+}
+
+type PoolResult struct {
+	PoolInventories []PoolInventory `json:"results"`
+}
+
+type PoolInventory struct {
+	Config          Pool         `json:"config"`
+	Runtime         PoolRuntime  `json:"runtime"`
+	VirtualService  []string     `json:"virtualservices"`
+}
+
+func (pi *PoolInventory) Print(w *tabwriter.Writer) {
+	cloud := strings.Split(pi.Config.CloudRef, "#")[1]
+	var vs_names []string
+	for _, vs := range pi.VirtualService {
+		vs_names = append(vs_names, strings.Split(vs, "#")[1])
+	}
+	servers := fmt.Sprintf("%d/%d", pi.Runtime.NumServersUp, pi.Runtime.NumServers)
+	status := strings.Split(pi.Runtime.Status["state"], "_")[1]
+	w.Write([]byte(strings.Join([]string{pi.Config.UUID, pi.Config.Name, strings.Join(vs_names, ","), servers, status, cloud}, "\t") + "\n"))
+}
+
+type Pool struct {
+	CloudRef     string       `json:"cloud_ref"`
+	DefaultPort  int          `json:"default_server_port"`
+	Enabled      bool         `json:"enabled"`
+	Name         string       `json:"name"`
+	TenantRef    string       `json:"tenant_ref"`
+	UUID         string       `json:"uuid"`
+	VrfRef       string       `json:"vrf_ref"`
+	Servers      []PoolMember `json:"servers"`  // It does not exist if the Pool is a child element of a PoolInventory
+}
+
+type PoolRuntime struct {
+	NumServers         int               `json:"num_servers"`
+	NumServersEnabled  int               `json:"num_servers_enabled"`
+	NumServersUp       int               `json:"num_servers_up"`
+	Status             map[string]string `json:"oper_status"`
+}
+
+type PoolMember struct {
+	Enabled      bool                `json:"enabled"`
+	HostName     string              `json:"hostname"`
+	Port         int                 `json:"port"`
+	Ip           map[string]string   `json:"ip"`
+	Ratio        int                 `json:"ratio"`
+	Networks     []DiscoveredNetwork `json:"discovered_networks"`
+}
+
+type DiscoveredNetwork struct {
+	NetworkRef    string    `json:"network_ref"`
+}
+
+func (p *Pool) Print() {
+	w := tabwriter.NewWriter(os.Stdout, 0, 1, 3, ' ', 0)
+
+	cloud := strings.Split(p.CloudRef, "#")[1]
+	tenant := strings.Split(p.TenantRef, "#")[1]
+	vrf := strings.Split(p.VrfRef, "#")[1]
+
+	w.Write([]byte(strings.Join([]string{"ID", "Name", "Cloud", "Tenant", "VRF"}, "\t") + "\n"))
+	w.Write([]byte(strings.Join([]string{p.UUID, p.Name, cloud, tenant, vrf}, "\t") + "\n\n"))
+	w.Flush()
+
+	w.Write([]byte(strings.Join([]string{"Name", "Ip", "Port", "Enabled", "Ratio", "Networks"}, "\t") + "\n"))
+	for _, m := range p.Servers {
+		var network_names []string
+		for _, n := range m.Networks {
+			network_names = append(network_names, strings.Split(n.NetworkRef, "#")[1])
+		}
+		network := strings.Join(network_names, ",")
+		w.Write([]byte(strings.Join([]string{m.HostName, m.Ip["addr"], strconv.Itoa(m.Port), strconv.FormatBool(m.Enabled), strconv.Itoa(m.Ratio), network}, "\t") + "\n"))
+	}
+	w.Flush()
 }
 
 type Gslb struct {
