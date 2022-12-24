@@ -13,6 +13,9 @@ import (
 
 func (c *NsxAlbClient) ShowCloud() {
 	resp := c.Request("GET", "/api/cloud", map[string]string{}, nil)
+	if resp.Error != nil {
+		log.Fatal(resp.Error)
+	}
 	resByte, _ := resp.BodyBytes()
 	var res interface{}
 	json.Unmarshal(resByte, &res)
@@ -108,6 +111,9 @@ func (c *NsxAlbClient) DownloadSeImage() {
 func (c *NsxAlbClient) GetServiceEngine() []structs.ServiceEngineInventory {
 	path := "/api/serviceengine-inventory/?&sort=name&include=config,faults,health_score,runtime&include_name=true"
 	resp := c.Request("GET", path, nil, nil)
+	if resp.Error != nil {
+		log.Fatal(resp.Error)
+	}
 	var results structs.SEResult
 	resByte, _ := resp.BodyBytes()
 	json.Unmarshal(resByte, &results)

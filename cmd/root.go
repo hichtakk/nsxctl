@@ -70,6 +70,9 @@ func Login() error {
 	if err != nil {
 		return err
 	}
+	if site.Name == "" {
+		return nil
+	}
 	nsxtclient.BaseUrl = site.Endpoint
 	err = nsxtclient.Login(site.GetCredential())
 	if err != nil {
@@ -92,6 +95,9 @@ func LoginALB() error {
 	}
 	if err != nil {
 		return err
+	}
+	if albsite.Name == "" {
+		return nil
 	}
 	albclient.BaseUrl = albsite.Endpoint
 	err = albclient.Login(albsite.GetCredential())

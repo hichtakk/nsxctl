@@ -12,7 +12,10 @@ import (
 func (c *NsxtClient) GetDfwPolicies(domain string, name string) ([]structs.DfwPolicy, error) {
 	path := "/policy/api/v1/infra/domains/" + domain + "/security-policies?include_rule_count=true"
 	res := c.Request("GET", path, nil, nil)
-
+	if res.Error != nil {
+		log.Fatal(res.Error)
+	}
+	
 	body, err := res.BodyBytes()
 	if err != nil {
 		return nil, err
@@ -37,6 +40,9 @@ func (c *NsxtClient) GetDfwRules(policy structs.DfwPolicy) []structs.DfwRule {
 	parent_path := "*security-policies*" + policy.Id
 	path := "/policy/api/v1/search/query?query=resource_type:Rule%20AND%20parent_path:" + url.PathEscape(parent_path)
 	res := c.Request("GET", path, nil, nil)
+	if res.Error != nil {
+		log.Fatal(res.Error)
+	}
 
 	body, err := res.BodyBytes()
 	if err != nil {
