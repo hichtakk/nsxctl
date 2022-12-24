@@ -38,6 +38,9 @@ func (c *NsxtClient) Login(cred url.Values) error {
 }
 
 func (c *NsxtClient) Logout() {
+	if c.Token == "" {
+		return
+	}
 	target_url := c.BaseUrl + "/api/session/destroy"
 	req, _ := http.NewRequest("POST", target_url, nil)
 	req.Header.Set("X-Xsrf-Token", c.Token)

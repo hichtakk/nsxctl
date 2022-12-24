@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/tls"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -41,6 +42,9 @@ func readResponseBody(res *http.Response) interface{} {
 }
 
 func (c *NsxAlbClient) Request(method string, path string, query_param map[string]string, req_data []byte) *client.Response {
+	if c.Token == "" {
+		return &client.Response{nil, nil, errors.New("You must be logged in to the ALB Controller (Unauthorized)")}
+	}
 	// validate path
 	err := func() error {
 		var match bool

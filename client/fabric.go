@@ -14,6 +14,9 @@ import (
 func (c *NsxtClient) GetComputeManager() *[]structs.ComputeManager {
 	path := "/api/v1/fabric/compute-managers"
 	res := c.Request("GET", path, nil, nil)
+	if res.Error != nil {
+		log.Fatal(res.Error)
+	}
 	res_cms := res.Body.(map[string]interface{})["results"]
 	cms := []structs.ComputeManager{}
 	for _, res_cm := range res_cms.([]interface{}) {
@@ -253,9 +256,6 @@ func (c *NsxtClient) GetTransportNodeTunnels(node_id string) structs.TransportNo
 func (c *NsxtClient) GetTransportNodeStatus(id string) string {
 	path := "/api/v1/transport-nodes/" + id + "/status?source=realtime"
 	res := c.Request("GET", path, nil, nil)
-	if res.Error != nil {
-		return ""
-	}
 	return res.Body.(map[string]interface{})["status"].(string)
 }
 
@@ -280,6 +280,9 @@ func (c *NsxtClient) GetTransportNodeProfile() *structs.TransportNodeProfiles {
 func (c *NsxtClient) GetEdgeCluster() *[]structs.EdgeCluster {
 	path := "/api/v1/edge-clusters/"
 	res := c.Request("GET", path, nil, nil)
+	if res.Error != nil {
+		log.Fatal(res.Error)
+	}
 	edgeClusters := []structs.EdgeCluster{}
 	for _, ec := range res.Body.(map[string]interface{})["results"].([]interface{}) {
 		str, _ := json.Marshal(ec)
@@ -318,14 +321,17 @@ func (c *NsxtClient) CreateEdge(name string, template_name string, address strin
 	}
 
 	path := "/api/v1/transport-nodes"
-	var resp *Response
-	resp = c.Request("POST", path, nil, jsonObj)
-	fmt.Println(resp)
+	var res *Response
+	res = c.Request("POST", path, nil, jsonObj)
+	fmt.Println(res)
 }
 
 func (c *NsxtClient) GetEdge() []structs.TransportNode {
 	path := "/api/v1/transport-nodes?node_types=EdgeNode"
 	res := c.Request("GET", path, nil, nil)
+	if res.Error != nil {
+		log.Fatal(res.Error)
+	}
 	edges := []structs.TransportNode{}
 	for _, e := range res.Body.(map[string]interface{})["results"].([]interface{}) {
 		str, _ := json.Marshal(e)

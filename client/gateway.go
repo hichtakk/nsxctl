@@ -16,6 +16,9 @@ func (c *NsxtClient) GetTier0Gateway(gwId string) structs.Tier0Gateways {
 		path = path + "/" + gwId
 	}
 	res := c.Request("GET", path, nil, nil)
+	if res.Error != nil {
+		log.Fatal(res.Error)
+	}
 	var gateways interface{}
 	gws := structs.Tier0Gateways{}
 	if gwId != "" {
@@ -43,6 +46,9 @@ func (c *NsxtClient) GetTier1Gateway(gwId string) structs.Tier1Gateways {
 		path = path + "/" + gwId
 	}
 	res := c.Request("GET", path, nil, nil)
+	if res.Error != nil {
+		log.Fatal(res.Error)
+	}
 	var gateways interface{}
 	gws := structs.Tier1Gateways{}
 	if gwId != "" {

@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"crypto/tls"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -74,6 +75,9 @@ func (c *NsxtClient) makeRequest(method string, path string) *http.Request {
 }
 
 func (c *NsxtClient) Request(method string, path string, query_param map[string]string, req_data []byte) *Response {
+	if c.Token == "" {
+		return &Response{nil, nil, errors.New("You must be logged in to the NSX-T Manager (Unauthorized)")}
+	}
 	// validate path
 	err := func() error {
 		var match bool

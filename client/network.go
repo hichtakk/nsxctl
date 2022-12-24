@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/hichtakk/nsxctl/structs"
@@ -12,6 +13,9 @@ import (
 func (c *NsxtClient) GetIpPool() structs.IpPools {
 	path := "/policy/api/v1/infra/ip-pools"
 	res := c.Request("GET", path, nil, nil)
+	if res.Error != nil {
+		log.Fatal(res.Error)
+	}
 	ipps := structs.IpPools{}
 	str, _ := json.Marshal(res.Body.(map[string]interface{})["results"].([]interface{}))
 	json.Unmarshal(str, &ipps)
@@ -22,6 +26,9 @@ func (c *NsxtClient) GetIpPool() structs.IpPools {
 func (c *NsxtClient) GetIpBlock() structs.IpBlocks {
 	path := "/policy/api/v1/infra/ip-blocks"
 	res := c.Request("GET", path, nil, nil)
+	if res.Error != nil {
+		log.Fatal(res.Error)
+	}
 	ipbs := structs.IpBlocks{}
 	for _, b := range res.Body.(map[string]interface{})["results"].([]interface{}) {
 		str, _ := json.Marshal(b)

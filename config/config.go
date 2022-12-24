@@ -18,6 +18,9 @@ type NsxTConfig struct {
 }
 
 func (t *NsxTConfig) GetCurrentSite() (NsxTSite, error) {
+	if t.CurrentSite == "" {
+		return NsxTSite{}, nil
+	}
 	for _, s := range t.Sites {
 		if s.Name == t.CurrentSite {
 			return s, nil
@@ -41,6 +44,9 @@ type NsxAlbConfig struct {
 }
 
 func (a *NsxAlbConfig) GetCurrentSite() (NsxAlbSite, error) {
+	if a.CurrentSite == "" {
+		return NsxAlbSite{}, nil
+	}
 	for _, s := range a.Sites {
 		if s.Name == a.CurrentSite {
 			return s, nil

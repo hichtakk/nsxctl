@@ -14,6 +14,9 @@ import (
 func (c *NsxtClient) GetSegment() structs.Segments {
 	path := "/policy/api/v1/infra/segments"
 	res := c.Request("GET", path, nil, nil)
+	if res.Error != nil {
+		log.Fatal(res.Error)
+	}
 	segments := []structs.Segment{}
 	body, _ := res.BodyBytes()
 	json.Unmarshal(body, &segments)

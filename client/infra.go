@@ -2,22 +2,16 @@ package client
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/hichtakk/nsxctl/structs"
 )
 
 func (c *NsxtClient) GetSite() []string {
-	req := c.makeRequest("GET", "/policy/api/v1/infra/sites")
-	res, err := c.httpClient.Do(req)
-	if err != nil {
-		fmt.Println(err)
+	res := c.Request("GET", "/policy/api/v1/infra/sites", nil, nil)
+	if res.Error != nil {
+		log.Fatal(res.Error)
 	}
-	defer res.Body.Close()
-	if res.StatusCode != 200 {
-		fmt.Printf("StatusCode=%d\n", res.StatusCode)
-		return make([]string, 0, 0)
-	}
-	//data := readResponseBody(res)
 	/*
 		        gateways := data.(map[string]interface{})["results"]
 				for _, gateway := range gateways.([]interface{}) {
@@ -36,6 +30,9 @@ func (c *NsxtClient) GetEnforcementPoint(site_id string) *[]structs.EnforcementP
 	path := "/policy/api/v1/infra/sites/" + site_id + "/enforcement-points"
 	eps := []structs.EnforcementPoint{}
 	res := c.Request("GET", path, nil, nil)
+	if res.Error != nil {
+		log.Fatal(res.Error)
+	}
 	for _, ep := range res.Body.(map[string]interface{})["results"].([]interface{}) {
 		id := ep.(map[string]interface{})["id"].(string)
 		path := ep.(map[string]interface{})["path"].(string)
@@ -79,5 +76,8 @@ func (c *NsxtClient) GetEdgeClusterUnderEnforcementPoint(site_id string, ep_id s
 func (c *NsxtClient) GetVersion() string {
 	path := "/api/v1/node/version"
 	res := c.Request("GET", path, nil, nil)
+	if res.Error != nil {
+		log.Fatal(res.Error)
+	}
 	return res.Body.(map[string]interface{})["product_version"].(string)
 }
