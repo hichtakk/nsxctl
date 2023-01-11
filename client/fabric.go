@@ -256,7 +256,11 @@ func (c *NsxtClient) GetTransportNodeStatus(id string) string {
 	if res.Error != nil {
 		return ""
 	}
-	return res.Body.(map[string]interface{})["status"].(string)
+	status := res.Body.(map[string]interface{})["status"]
+	if status != nil {
+			return status.(string)
+	}
+	return "UNKNOWN"
 }
 
 func (c *NsxtClient) GetTransportNodeById(uuid string) *structs.TransportNode {

@@ -265,7 +265,14 @@ func NewCmdCreateEdge() *cobra.Command {
 	edgeCmd.MarkFlagRequired("address")
 	edgeCmd.MarkFlagRequired("root_password")
 	edgeCmd.MarkFlagRequired("admin_password")
-
+	edgeCmd.RegisterFlagCompletionFunc("template", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		Login()
+		edge_names := []string{}
+		for _, e := range nsxtclient.GetEdge() {
+			edge_names = append(edge_names, e.Name)
+		}
+		return edge_names, cobra.ShellCompDirectiveNoFileComp
+	})
 	return edgeCmd
 }
 

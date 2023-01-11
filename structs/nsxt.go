@@ -327,7 +327,7 @@ type TransportNode struct {
 	HostSwitchSpec         HostSwitchSpec         `json:"host_switch_spec"`
 	EdgeNodeDeploymentInfo EdgeNodeDeploymentInfo `json:"node_deployment_info"`
 	ResourceType           string                 `json:"resource_type"`
-	Tunnels                TransportNodeTunnels
+	Tunnels                TransportNodeTunnels   `json:",omitempty"`
 }
 
 type TransportNodeTunnels []TransportNodeTunnel
