@@ -119,6 +119,7 @@ type VirtualService struct {
 	SeGroupRef string   `json:"se_group_ref"`
 	Vips       []Vip    `json:"vip"`
 	PoolRef    string   `json:"pool_ref"`
+	VrfRef     string   `json:"vrf_context_ref"`
 }
 
 type VirtualServiceStatus struct {
@@ -136,13 +137,35 @@ func (v *VirtualServiceInventory) Print(w *tabwriter.Writer, verbose bool) {
 		}
 	}
 	vips := ""
+	var network_names []string
 	for i, vip := range v.Config.Vips {
 		vips += vip.Address["addr"]
 		if i != len(v.Config.Vips)-1 {
 			ports += ","
 		}
+
+		for _, n := range vip.PlacementNetworks {
+			network_names = append(network_names, strings.Split(n.NetworkRef, "#")[1])
+		}
+		for _, n := range vip.DiscoveredNetworks {
+			network_names = append(network_names, strings.Split(n.NetworkRef, "#")[1])
+		}
+		for _, n := range vip.IpamNetworks {
+			network_names = append(network_names, strings.Split(n.NetworkRef, "#")[1])
+		}
+		test := make(map[string]bool)
+		network_names_uniq := []string{}
+		for _, n := range network_names {
+			if !test[n] {
+				network_names_uniq = append(network_names_uniq, n)
+				test[n] = true
+			}
+		}
+		network_names = network_names_uniq
 	}
+	networks := strings.Join(network_names, ",")
 	cloud := strings.Split(v.Config.CloudRef, "#")
+	vrf := strings.Split(v.Config.VrfRef, "#")[1]
 	segroup := strings.Split(v.Config.SeGroupRef, "#")
 	status := strings.Split(v.Runtime.Status.State, "_")[1]
 	// reason := strings.Join(v.Runtime.Status.Reason, "\n")
@@ -159,9 +182,9 @@ func (v *VirtualServiceInventory) Print(w *tabwriter.Writer, verbose bool) {
 		}
 	}
 	if verbose {
-		w.Write([]byte(strings.Join([]string{v.Config.UUID, v.Config.Name, vips, ports, cloud[1], segroup[1], status, strings.Join(seNames, ", ")}, "\t") + "\n"))
+		w.Write([]byte(strings.Join([]string{v.Config.UUID, v.Config.Name, vips, ports, networks, cloud[1], segroup[1], vrf, status, strings.Join(seNames, ", ")}, "\t") + "\n"))
 	} else {
-		w.Write([]byte(strings.Join([]string{v.Config.UUID, v.Config.Name, vips, ports, cloud[1], segroup[1], status}, "\t") + "\n"))
+		w.Write([]byte(strings.Join([]string{v.Config.UUID, v.Config.Name, vips, ports, networks, cloud[1], segroup[1], vrf, status}, "\t") + "\n"))
 	}
 }
 
@@ -180,6 +203,9 @@ func (v *VirtualService) GetSegId() string {
 type Vip struct {
 	Id      string            `json:"vip_id"`
 	Address map[string]string `json:"ip_address"`
+	PlacementNetworks  []Network `json:"placement_networks"`
+	DiscoveredNetworks []Network `json:"discovered_networks"`
+	IpamNetworks       []Network `json:"ipam_network_subnet"`
 }
 
 type VipRuntime struct {
