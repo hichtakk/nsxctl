@@ -6,6 +6,8 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"strings"
+	"text/tabwriter"
 
 	"github.com/hichtakk/nsxctl/config"
 	"github.com/spf13/cobra"
@@ -25,6 +27,7 @@ func NewCmdConfig() *cobra.Command {
 		NewCmdConfigSetSite(),
 		NewCmdConfigUseSite(),
 		NewCmdConfigRemoveSite(),
+		NewCmdConfigGetSites(),
 	)
 
 	return configCmd
@@ -290,3 +293,44 @@ func writeConfig() error {
 	}
 	return nil
 }
+
+func NewCmdConfigGetSites() *cobra.Command {
+	var alb bool
+	getSitesCmd := &cobra.Command{
+		Use:   "get-sites",
+		Short: "get nsx-t/alb sites",
+		Run: func(cmd *cobra.Command, args []string) {
+			file, err := ioutil.ReadFile(configfile)
+			if err != nil {
+				log.Fatal(err)
+			}
+			json.Unmarshal(file, &conf)
+
+			w := tabwriter.NewWriter(os.Stdout, 0, 1, 3, ' ', 0)
+			w.Write([]byte(strings.Join([]string{"Current", "Name", "Endpoint", "User"}, "\t") + "\n"))
+
+			if alb == false {
+				for _, s := range conf.NsxT.Sites {
+					current := ""
+					if s.Name == conf.NsxT.CurrentSite {
+						current = "*"
+					}
+					w.Write([]byte(strings.Join([]string{current, s.Name, s.Endpoint, s.User}, "\t") + "\n"))
+				}
+			} else {
+				for _, s := range conf.NsxAlb.Sites {
+					current := ""
+					if s.Name == conf.NsxAlb.CurrentSite {
+						current = "*"
+					}
+					w.Write([]byte(strings.Join([]string{current, s.Name, s.Endpoint, s.User}, "\t") + "\n"))
+				}
+			}
+			w.Flush()
+		},
+	}
+	getSitesCmd.Flags().BoolVarP(&alb, "alb", "", false, "NSX ALB config")
+
+	return getSitesCmd
+}
+
