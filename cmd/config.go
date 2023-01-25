@@ -141,12 +141,27 @@ func NewCmdConfigUseSite() *cobra.Command {
 	useSiteCmd := &cobra.Command{
 		Use:   "use-site ${SITE_NAME}",
 		Short: "set current nsx-t/alb site",
-		Args: func(cmd *cobra.Command, args []string) error {
-			if len(args) < 1 {
-				cmd.Help()
-				return fmt.Errorf("argument for site name is required")
+		Args: cobra.ExactArgs(1),
+		ValidArgsFunction: func (cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+			if len(args) != 0 {
+				return nil, cobra.ShellCompDirectiveNoFileComp
 			}
-			return nil
+			file, err := ioutil.ReadFile(configfile)
+			if err != nil {
+				log.Fatal(err)
+			}
+			json.Unmarshal(file, &conf)
+			site_names := []string{}
+			if alb == false {
+				for _, s := range conf.NsxT.Sites {
+					site_names = append(site_names, s.Name)
+				}	
+			} else {
+				for _, s := range conf.NsxAlb.Sites {
+					site_names = append(site_names, s.Name)
+				}	
+			}
+			return site_names, cobra.ShellCompDirectiveNoFileComp
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			name := args[0]
