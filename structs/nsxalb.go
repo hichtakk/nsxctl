@@ -261,6 +261,7 @@ type Pool struct {
 	UUID         string       `json:"uuid"`
 	VrfRef       string       `json:"vrf_ref"`
 	Servers      []PoolMember `json:"servers"`  // It does not exist if the Pool is a child element of a PoolInventory
+	PlacementNetworks  []PoolNetwork `json:"placement_networks"`
 }
 
 type PoolRuntime struct {
@@ -276,10 +277,10 @@ type PoolMember struct {
 	Port         int                 `json:"port"`
 	Ip           map[string]string   `json:"ip"`
 	Ratio        int                 `json:"ratio"`
-	Networks     []DiscoveredNetwork `json:"discovered_networks"`
+	DiscoveredNetworks []PoolNetwork `json:"discovered_networks"`
 }
 
-type DiscoveredNetwork struct {
+type PoolNetwork struct {
 	NetworkRef    string    `json:"network_ref"`
 }
 
@@ -297,7 +298,10 @@ func (p *Pool) Print() {
 	w.Write([]byte(strings.Join([]string{"Name", "Ip", "Port", "Enabled", "Ratio", "Networks"}, "\t") + "\n"))
 	for _, m := range p.Servers {
 		var network_names []string
-		for _, n := range m.Networks {
+		for _, n := range m.DiscoveredNetworks {
+			network_names = append(network_names, strings.Split(n.NetworkRef, "#")[1])
+		}
+		for _, n := range p.PlacementNetworks {
 			network_names = append(network_names, strings.Split(n.NetworkRef, "#")[1])
 		}
 		network := strings.Join(network_names, ",")
