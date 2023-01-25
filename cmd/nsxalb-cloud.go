@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"strings"
 	"text/tabwriter"
@@ -121,6 +122,10 @@ func NewCmdShowAlbPool() *cobra.Command {
 					if p.Config.Name == args[0] {
 						pool = albclient.GetPool(p.Config.UUID)
 					}
+				}
+				if pool.Name == "" {
+					log.Fatal("pool not found.")
+					return
 				}
 				pool.Print()
 				return

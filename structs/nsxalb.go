@@ -261,7 +261,7 @@ type Pool struct {
 	UUID         string       `json:"uuid"`
 	VrfRef       string       `json:"vrf_ref"`
 	Servers      []PoolMember `json:"servers"`  // It does not exist if the Pool is a child element of a PoolInventory
-	PlacementNetworks  []PoolNetwork `json:"placement_networks"`
+	PlacementNetworks  []Network `json:"placement_networks"`
 }
 
 type PoolRuntime struct {
@@ -277,10 +277,10 @@ type PoolMember struct {
 	Port         int                 `json:"port"`
 	Ip           map[string]string   `json:"ip"`
 	Ratio        int                 `json:"ratio"`
-	DiscoveredNetworks []PoolNetwork `json:"discovered_networks"`
+	DiscoveredNetworks []Network     `json:"discovered_networks"`
 }
 
-type PoolNetwork struct {
+type Network struct {
 	NetworkRef    string    `json:"network_ref"`
 }
 
@@ -304,7 +304,15 @@ func (p *Pool) Print() {
 		for _, n := range p.PlacementNetworks {
 			network_names = append(network_names, strings.Split(n.NetworkRef, "#")[1])
 		}
-		network := strings.Join(network_names, ",")
+		test := make(map[string]bool)
+		network_names_uniq := []string{}
+		for _, n := range network_names {
+			if !test[n] {
+				network_names_uniq = append(network_names_uniq, n)
+				test[n] = true
+			}
+		}
+		network := strings.Join(network_names_uniq, ",")
 		w.Write([]byte(strings.Join([]string{m.HostName, m.Ip["addr"], strconv.Itoa(m.Port), strconv.FormatBool(m.Enabled), strconv.Itoa(m.Ratio), network}, "\t") + "\n"))
 	}
 	w.Flush()
