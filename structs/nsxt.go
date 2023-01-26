@@ -696,10 +696,16 @@ func (r *DfwRule) Print(w *tabwriter.Writer, policy DfwPolicy) {
 		prof := ""
 		scope := ""
 		if cr > i {
-			src = filepath.Base(r.Sources[i])
+			src = r.Sources[i]
+			if strings.HasPrefix(r.Sources[i], "/infra/") {
+				src = filepath.Base(r.Sources[i])
+			}
 		}
 		if cd > i {
-			dest = filepath.Base(r.Destinations[i])
+			dest = r.Destinations[i]
+			if strings.HasPrefix(r.Destinations[i], "/infra/") {
+				dest = filepath.Base(r.Destinations[i])
+			}
 		}
 		if cs > i {
 			srv = filepath.Base(r.Services[i])
