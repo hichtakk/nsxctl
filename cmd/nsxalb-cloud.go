@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"strings"
 	"text/tabwriter"
@@ -53,9 +54,9 @@ func NewCmdShowAlbVirtualService() *cobra.Command {
 
 			w := tabwriter.NewWriter(os.Stdout, 0, 1, 3, ' ', 0)
 			if verbose {
-				w.Write([]byte(strings.Join([]string{"ID", "Name", "VIP", "Port", "Cloud", "SEGroup", "Status", "ServiceEngines"}, "\t") + "\n"))
+				w.Write([]byte(strings.Join([]string{"ID", "Name", "VIP", "Port", "Network", "Cloud", "SEGroup", "VRF", "Status", "ServiceEngines"}, "\t") + "\n"))
 			} else {
-				w.Write([]byte(strings.Join([]string{"ID", "Name", "VIP", "Port", "Cloud", "SEGroup", "Status"}, "\t") + "\n"))
+				w.Write([]byte(strings.Join([]string{"ID", "Name", "VIP", "Port", "Network", "Cloud", "SEGroup", "VRF", "Status"}, "\t") + "\n"))
 			}
 			for _, vs := range vss {
 				vs.Print(w, verbose)
@@ -121,6 +122,10 @@ func NewCmdShowAlbPool() *cobra.Command {
 					if p.Config.Name == args[0] {
 						pool = albclient.GetPool(p.Config.UUID)
 					}
+				}
+				if pool.Name == "" {
+					log.Fatal("pool not found.")
+					return
 				}
 				pool.Print()
 				return

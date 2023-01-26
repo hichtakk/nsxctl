@@ -119,6 +119,7 @@ type VirtualService struct {
 	SeGroupRef string   `json:"se_group_ref"`
 	Vips       []Vip    `json:"vip"`
 	PoolRef    string   `json:"pool_ref"`
+	VrfRef     string   `json:"vrf_context_ref"`
 }
 
 type VirtualServiceStatus struct {
@@ -136,13 +137,35 @@ func (v *VirtualServiceInventory) Print(w *tabwriter.Writer, verbose bool) {
 		}
 	}
 	vips := ""
+	var network_names []string
 	for i, vip := range v.Config.Vips {
 		vips += vip.Address["addr"]
 		if i != len(v.Config.Vips)-1 {
 			ports += ","
 		}
+
+		for _, n := range vip.PlacementNetworks {
+			network_names = append(network_names, strings.Split(n.NetworkRef, "#")[1])
+		}
+		for _, n := range vip.DiscoveredNetworks {
+			network_names = append(network_names, strings.Split(n.NetworkRef, "#")[1])
+		}
+		for _, n := range vip.IpamNetworks {
+			network_names = append(network_names, strings.Split(n.NetworkRef, "#")[1])
+		}
+		test := make(map[string]bool)
+		network_names_uniq := []string{}
+		for _, n := range network_names {
+			if !test[n] {
+				network_names_uniq = append(network_names_uniq, n)
+				test[n] = true
+			}
+		}
+		network_names = network_names_uniq
 	}
+	networks := strings.Join(network_names, ",")
 	cloud := strings.Split(v.Config.CloudRef, "#")
+	vrf := strings.Split(v.Config.VrfRef, "#")[1]
 	segroup := strings.Split(v.Config.SeGroupRef, "#")
 	status := strings.Split(v.Runtime.Status.State, "_")[1]
 	// reason := strings.Join(v.Runtime.Status.Reason, "\n")
@@ -159,9 +182,9 @@ func (v *VirtualServiceInventory) Print(w *tabwriter.Writer, verbose bool) {
 		}
 	}
 	if verbose {
-		w.Write([]byte(strings.Join([]string{v.Config.UUID, v.Config.Name, vips, ports, cloud[1], segroup[1], status, strings.Join(seNames, ", ")}, "\t") + "\n"))
+		w.Write([]byte(strings.Join([]string{v.Config.UUID, v.Config.Name, vips, ports, networks, cloud[1], segroup[1], vrf, status, strings.Join(seNames, ", ")}, "\t") + "\n"))
 	} else {
-		w.Write([]byte(strings.Join([]string{v.Config.UUID, v.Config.Name, vips, ports, cloud[1], segroup[1], status}, "\t") + "\n"))
+		w.Write([]byte(strings.Join([]string{v.Config.UUID, v.Config.Name, vips, ports, networks, cloud[1], segroup[1], vrf, status}, "\t") + "\n"))
 	}
 }
 
@@ -180,6 +203,9 @@ func (v *VirtualService) GetSegId() string {
 type Vip struct {
 	Id      string            `json:"vip_id"`
 	Address map[string]string `json:"ip_address"`
+	PlacementNetworks  []Network `json:"placement_networks"`
+	DiscoveredNetworks []Network `json:"discovered_networks"`
+	IpamNetworks       []Network `json:"ipam_network_subnet"`
 }
 
 type VipRuntime struct {
@@ -261,6 +287,7 @@ type Pool struct {
 	UUID         string       `json:"uuid"`
 	VrfRef       string       `json:"vrf_ref"`
 	Servers      []PoolMember `json:"servers"`  // It does not exist if the Pool is a child element of a PoolInventory
+	PlacementNetworks  []Network `json:"placement_networks"`
 }
 
 type PoolRuntime struct {
@@ -276,10 +303,10 @@ type PoolMember struct {
 	Port         int                 `json:"port"`
 	Ip           map[string]string   `json:"ip"`
 	Ratio        int                 `json:"ratio"`
-	Networks     []DiscoveredNetwork `json:"discovered_networks"`
+	DiscoveredNetworks []Network     `json:"discovered_networks"`
 }
 
-type DiscoveredNetwork struct {
+type Network struct {
 	NetworkRef    string    `json:"network_ref"`
 }
 
@@ -297,10 +324,21 @@ func (p *Pool) Print() {
 	w.Write([]byte(strings.Join([]string{"Name", "Ip", "Port", "Enabled", "Ratio", "Networks"}, "\t") + "\n"))
 	for _, m := range p.Servers {
 		var network_names []string
-		for _, n := range m.Networks {
+		for _, n := range m.DiscoveredNetworks {
 			network_names = append(network_names, strings.Split(n.NetworkRef, "#")[1])
 		}
-		network := strings.Join(network_names, ",")
+		for _, n := range p.PlacementNetworks {
+			network_names = append(network_names, strings.Split(n.NetworkRef, "#")[1])
+		}
+		test := make(map[string]bool)
+		network_names_uniq := []string{}
+		for _, n := range network_names {
+			if !test[n] {
+				network_names_uniq = append(network_names_uniq, n)
+				test[n] = true
+			}
+		}
+		network := strings.Join(network_names_uniq, ",")
 		w.Write([]byte(strings.Join([]string{m.HostName, m.Ip["addr"], strconv.Itoa(m.Port), strconv.FormatBool(m.Enabled), strconv.Itoa(m.Ratio), network}, "\t") + "\n"))
 	}
 	w.Flush()
