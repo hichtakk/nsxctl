@@ -31,13 +31,13 @@ build-linux-arm64: ## build ARM64 linux binary
 build-darwin-amd64: ## build AMD64 darwin binary
 	@$(MAKE) build GOOS=darwin GOARCH=amd64
 
-build-darwin-arm64: ## build AMD64 darwin binary
+build-darwin-arm64: ## build ARM64 darwin binary
 	@$(MAKE) build GOOS=darwin GOARCH=arm64
 
 build-windows-amd64: ## build AMD64 windows binary
 	@$(MAKE) build GOOS=windows GOARCH=amd64
 
-build-windows-arm64: ## build AMD64 windows binary
+build-windows-arm64: ## build ARM64 windows binary
 	@$(MAKE) build GOOS=windows GOARCH=arm64
 
 $(RELEASE_DIR)/nsxctl_$(GOOS)_$(GOARCH): ## Build nsx command-line client
