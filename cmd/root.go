@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"os"
+	"runtime"
 
 	"github.com/hichtakk/nsxctl/client"
 	c "github.com/hichtakk/nsxctl/client"
@@ -44,6 +45,9 @@ func newCmd() *cobra.Command {
 		//NewCmdTest(),
 	)
 	homedir := os.Getenv("HOME")
+	if homedir == "" && runtime.GOOS == "windows" {
+		homedir = os.Getenv("USERPROFILE")
+	}
 	rootCmd.PersistentFlags().BoolVarP(&debug, "debug", "", false, "enable debug mode")
 	rootCmd.PersistentFlags().StringVarP(&configfile, "config", "c", homedir+"/.config/nsxctl.json", "path to nsxctl config file")
 	rootCmd.PersistentFlags().StringVarP(&useSite, "site", "", "", "specify site name")
