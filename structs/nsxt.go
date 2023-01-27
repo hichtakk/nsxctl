@@ -503,6 +503,7 @@ type Tier0Gateway struct {
 	FailoverMode  string `json:"failover_mode"`
 	RealizationId string `json:"realization_id"`
 	Path          string `json:"path"`
+	Firewall      bool   `json:"disable_firewall"`
 }
 
 func (gw *Tier0Gateway) Print() {
@@ -517,12 +518,13 @@ type Tier0Gateways []Tier0Gateway
 func (gws *Tier0Gateways) Print(output string) {
 	if output == "json" {
 	} else {
-		fmt.Printf("%-8s	%-8s	%-8s	%-8s\n", "ID", "Name", "HA Mode", "Failover Mode")
+		w := tabwriter.NewWriter(os.Stdout, 0, 1, 3, ' ', 0)
+		w.Write([]byte(strings.Join([]string{"ID", "Name", "HA Mode", "Failover Mode", "FW Enabled"}, "\t")+ "\n"))
 		for _, gw := range *gws {
-			fmt.Printf("%-8s	%8s	%8s	%8s\n", gw.Id, gw.Name, gw.HaMode, gw.FailoverMode)
+			w.Write([]byte(strings.Join([]string{gw.Id, gw.Name, gw.HaMode, gw.FailoverMode, strconv.FormatBool(!gw.Firewall)}, "\t")+ "\n"))
 		}
+		w.Flush()
 	}
-
 }
 
 type Tier1Gateway struct {
@@ -532,6 +534,7 @@ type Tier1Gateway struct {
 	FailoverMode  string `json:"failover_mode"`
 	RealizationId string `json:"realization_id"`
 	Path          string `json:"path"`
+	Firewall      bool   `json:"disable_firewall"`
 }
 
 func (gw *Tier1Gateway) Print() {
@@ -546,10 +549,12 @@ type Tier1Gateways []Tier1Gateway
 func (gws *Tier1Gateways) Print(output string) {
 	if output == "json" {
 	} else {
-		fmt.Printf("%-8s	%-8s	%-8s	%-8s\n", "ID", "Name", "HA Mode", "Failover Mode")
+		w := tabwriter.NewWriter(os.Stdout, 0, 1, 3, ' ', 0)
+		w.Write([]byte(strings.Join([]string{"ID", "Name", "HA Mode", "Failover Mode", "FW Enabled"}, "\t")+ "\n"))
 		for _, gw := range *gws {
-			fmt.Printf("%-8s	%8s	%8s	%8s\n", gw.Id, gw.Name, gw.HaMode, gw.FailoverMode)
+			w.Write([]byte(strings.Join([]string{gw.Id, gw.Name, gw.HaMode, gw.FailoverMode, strconv.FormatBool(!gw.Firewall)}, "\t")+ "\n"))
 		}
+		w.Flush()
 	}
 }
 

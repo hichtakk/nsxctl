@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
+	"text/tabwriter"
 	"time"
 
 	"github.com/gdamore/tcell/v2"
@@ -28,7 +30,7 @@ func NewCmdShowGateway() *cobra.Command {
 		Short:   fmt.Sprintf("show logical gateways [%s]", strings.Join(aliases, ",")),
 		Args:    cobra.MaximumNArgs(1),
 		PreRunE: func(c *cobra.Command, args []string) error {
-			if tier < 0 || tier > 1 {
+			if tier != -1 && (tier < 0 || tier > 1) {
 				log.Fatalf("gateway tier must be specified by flag -t/--tier with value of 0 or 1.\n")
 			}
 			return nil
@@ -70,12 +72,25 @@ func NewCmdShowGateway() *cobra.Command {
 				case 1:
 					gws := nsxtclient.GetTier1Gateway(gwId)
 					gws.Print(output)
+				default:
+					w := tabwriter.NewWriter(os.Stdout, 0, 1, 3, ' ', 0)
+					w.Write([]byte(strings.Join([]string{"Tier", "ID", "Name", "HA Mode", "Failover Mode", "FW Enabled"}, "\t")+ "\n"))
+					gws0 := nsxtclient.GetTier0Gateway(gwId)
+					sort.Slice(gws0, func(i, j int) bool { return gws0[i].Name > gws0[i].Name })
+					for _, gw := range gws0 {
+						w.Write([]byte(strings.Join([]string{"Tier-0", gw.Id, gw.Name, gw.HaMode, gw.FailoverMode, strconv.FormatBool(!gw.Firewall)}, "\t")+ "\n"))
+					}
+					gws1 := nsxtclient.GetTier1Gateway(gwId)
+					sort.Slice(gws1, func(i, j int) bool { return gws1[i].Name > gws1[i].Name })
+					for _, gw := range gws1 {
+						w.Write([]byte(strings.Join([]string{"Tier-1", gw.Id, gw.Name, "ACTIVE_STANDBY", gw.FailoverMode, strconv.FormatBool(!gw.Firewall)}, "\t")+ "\n"))
+					}
+					w.Flush()
 				}
 			}
 		},
 	}
 	gatewayCmd.Flags().Int16VarP(&tier, "tier", "t", -1, "gateway tier type (0 or 1)")
-	gatewayCmd.MarkFlagRequired("tier")
 
 	return gatewayCmd
 }
