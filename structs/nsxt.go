@@ -566,7 +566,7 @@ type Segments []Segment
 
 func (segs *Segments) Print() {
 	w := tabwriter.NewWriter(os.Stdout, 0, 1, 3, ' ', 0)
-	w.Write([]byte(strings.Join([]string{"ID", "Name", "Gateway", "Subnet", "State"}, "\t") + "\n"))
+	w.Write([]byte(strings.Join([]string{"ID", "Name", "Gateway", "Subnet", "Vlans", "Teaming", "AdminState", "Connected"}, "\t") + "\n"))
 	for _, seg := range *segs {
 		gw := seg.Connectivity
 		if gw == "" {
@@ -584,7 +584,15 @@ func (segs *Segments) Print() {
 		} else {
 			subnetStr = "-"
 		}
-		w.Write([]byte(strings.Join([]string{seg.Id, seg.Name, gw, subnetStr, seg.AdminState}, "\t") + "\n"))
+		vlans := strings.Join(seg.Vlans, ",")
+		if vlans == "" {
+			vlans = "-"
+		}
+		teaming := seg.AdvancedConifg.TeamingPolicy
+		if teaming == "" {
+			teaming = "-"
+		}
+		w.Write([]byte(strings.Join([]string{seg.Id, seg.Name, gw, subnetStr, vlans, teaming, seg.AdminState, seg.AdvancedConifg.Connectivity}, "\t") + "\n"))
 	}
 	w.Flush()
 }
@@ -593,7 +601,7 @@ type Segment struct {
 	Name              string                 `json:"display_name"`
 	Id                string                 `json:"id"`
 	AdminState        string                 `json:"admin_state,omitempty"`
-	AdvancedConifg    map[string]interface{} `json:"advanced_config,omitempty"`
+	AdvancedConifg    SegmentAdvancedConfig  `json:"advanced_config,omitempty"`
 	Connectivity      string                 `json:"connectivity_path,omitempty"`
 	ReplicationMode   string                 `json:"replication_mode,omitempty"`
 	Subnets           []SegmentSubnet        `json:"subnets,omitempty"`
@@ -604,6 +612,13 @@ type Segment struct {
 type SegmentSubnet struct {
 	Gateway string `json:"gateway_address,omitempty"`
 	Network string `json:"network,omitempty"`
+}
+
+type SegmentAdvancedConfig struct {
+	Multicast         bool                   `json:"multicast"`
+	UrpfMode          string                 `json:"urpf_mode"`
+	Connectivity      string                 `json:"connectivity"`
+	TeamingPolicy     string                 `json:"uplink_teaming_policy_name"`
 }
 
 type IpBlocks []IpBlock
