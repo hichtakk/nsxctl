@@ -572,7 +572,7 @@ func (segs *Segments) Print() {
 		if gw == "" {
 			gw = "-"
 		} else {
-			gw = strings.Split(gw, "/")[2]
+			gw = strings.Split(gw, "/")[3]
 		}
 		subnets := []string{}
 		for _, subnet := range seg.Subnets {
@@ -615,10 +615,10 @@ type SegmentSubnet struct {
 }
 
 type SegmentAdvancedConfig struct {
-	Multicast         bool                   `json:"multicast"`
-	UrpfMode          string                 `json:"urpf_mode"`
-	Connectivity      string                 `json:"connectivity"`
-	TeamingPolicy     string                 `json:"uplink_teaming_policy_name"`
+	Multicast         bool                   `json:"multicast,omitempty"`
+	UrpfMode          string                 `json:"urpf_mode,omitempty"`
+	Connectivity      string                 `json:"connectivity,omitempty"`
+	TeamingPolicy     string                 `json:"uplink_teaming_policy_name,omitempty"`
 }
 
 type IpBlocks []IpBlock
