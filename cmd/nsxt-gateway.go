@@ -29,6 +29,31 @@ func NewCmdShowGateway() *cobra.Command {
 		Aliases: aliases,
 		Short:   fmt.Sprintf("show logical gateways [%s]", strings.Join(aliases, ",")),
 		Args:    cobra.MaximumNArgs(1),
+		ValidArgsFunction: func (cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+			if len(args) != 0 {
+				return nil, cobra.ShellCompDirectiveNoFileComp
+			}
+			Login()
+			gw_names := []string{}
+			switch tier {
+			case 0:
+				for _, gw := range nsxtclient.GetTier0Gateway("") {
+					gw_names = append(gw_names, gw.Name)
+				}
+			case 1:
+				for _, gw := range nsxtclient.GetTier1Gateway("") {
+					gw_names = append(gw_names, gw.Name)
+				}
+			default:
+				for _, gw := range nsxtclient.GetTier0Gateway("") {
+					gw_names = append(gw_names, gw.Name)
+				}
+				for _, gw := range nsxtclient.GetTier1Gateway("") {
+					gw_names = append(gw_names, gw.Name)
+				}
+			}
+			return gw_names, cobra.ShellCompDirectiveNoFileComp
+		},
 		PreRunE: func(c *cobra.Command, args []string) error {
 			if tier != -1 && (tier < 0 || tier > 1) {
 				log.Fatalf("gateway tier must be specified by flag -t/--tier with value of 0 or 1.\n")
@@ -36,54 +61,59 @@ func NewCmdShowGateway() *cobra.Command {
 			return nil
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			var gwId string
 			if len(args) > 0 {
-				gwId = args[0]
+				gwName := args[0]
 				switch tier {
 				case 0:
-					gws := nsxtclient.GetTier0Gateway(gwId)
-					gw := []structs.Tier0Gateway(gws)[0]
+					gw, err := nsxtclient.GetTier0GatewayFromName(gwName)
+					if err != nil {
+						log.Fatal(err)
+					}
 					locale_service_id := nsxtclient.GetLocaleService(gw.Id)
 					interfaces := nsxtclient.GetInterface(gw.Id, locale_service_id[0])
-					gw.Print()
-					fmt.Println()
-					fmt.Println("# Interface")
-					for _, intf := range interfaces {
-						fmt.Printf("Name: %v\n", intf["name"])
-						fmt.Printf("Segment: %v\n", intf["segment_path"])
-					}
 					bgp := nsxtclient.GetBgpConfig(gw.Id, locale_service_id[0])
-					fmt.Println()
-					fmt.Println("# BGP")
-					fmt.Printf("Enabled: %v\n", bgp.Enabled)
-					fmt.Printf("ASN: %v\n", bgp.Asn)
-					fmt.Printf("Inter SR iBGP: %v\n", bgp.InterSrRouting)
+					gw.Print(interfaces, bgp)
 				case 1:
-					gws := nsxtclient.GetTier1Gateway(gwId)
-					gw := []structs.Tier1Gateway(gws)[0]
+					gw, err := nsxtclient.GetTier1GatewayFromName(gwName)
+					if err != nil {
+						log.Fatal(err)
+					}
 					gw.Print()
+				default:
+					gw0, err := nsxtclient.GetTier0GatewayFromName(gwName)
+					if err != nil {
+						gw1, err := nsxtclient.GetTier1GatewayFromName(gwName)
+						if err != nil {
+							log.Fatal(fmt.Sprintf("Error: Tier-0 or Tier-1 gateway '%s' is not found", gwName))
+						}
+						gw1.Print()
+						return
+					}
+					locale_service_id := nsxtclient.GetLocaleService(gw0.Id)
+					interfaces := nsxtclient.GetInterface(gw0.Id, locale_service_id[0])
+					bgp := nsxtclient.GetBgpConfig(gw0.Id, locale_service_id[0])
+					gw0.Print(interfaces, bgp)
 				}
 			} else {
-				gwId = ""
 				switch tier {
 				case 0:
-					gws := nsxtclient.GetTier0Gateway(gwId)
+					gws := nsxtclient.GetTier0Gateway("")
 					gws.Print(output)
 				case 1:
-					gws := nsxtclient.GetTier1Gateway(gwId)
+					gws := nsxtclient.GetTier1Gateway("")
 					gws.Print(output)
 				default:
 					w := tabwriter.NewWriter(os.Stdout, 0, 1, 3, ' ', 0)
 					w.Write([]byte(strings.Join([]string{"Tier", "ID", "Name", "HA Mode", "Failover Mode", "FW Enabled"}, "\t")+ "\n"))
-					gws0 := nsxtclient.GetTier0Gateway(gwId)
+					gws0 := nsxtclient.GetTier0Gateway("")
 					sort.Slice(gws0, func(i, j int) bool { return gws0[i].Name > gws0[i].Name })
 					for _, gw := range gws0 {
-						w.Write([]byte(strings.Join([]string{"Tier-0", gw.Id, gw.Name, gw.HaMode, gw.FailoverMode, strconv.FormatBool(!gw.Firewall)}, "\t")+ "\n"))
+						w.Write([]byte(strings.Join([]string{"0", gw.Id, gw.Name, gw.HaMode, gw.FailoverMode, strconv.FormatBool(!gw.Firewall)}, "\t")+ "\n"))
 					}
-					gws1 := nsxtclient.GetTier1Gateway(gwId)
+					gws1 := nsxtclient.GetTier1Gateway("")
 					sort.Slice(gws1, func(i, j int) bool { return gws1[i].Name > gws1[i].Name })
 					for _, gw := range gws1 {
-						w.Write([]byte(strings.Join([]string{"Tier-1", gw.Id, gw.Name, "ACTIVE_STANDBY", gw.FailoverMode, strconv.FormatBool(!gw.Firewall)}, "\t")+ "\n"))
+						w.Write([]byte(strings.Join([]string{"1", gw.Id, gw.Name, "ACTIVE_STANDBY", gw.FailoverMode, strconv.FormatBool(!gw.Firewall)}, "\t")+ "\n"))
 					}
 					w.Flush()
 				}

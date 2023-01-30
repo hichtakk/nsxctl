@@ -209,6 +209,13 @@ type BgpConfig struct {
 	Asn             string `json:"local_as_num"`
 }
 
+func (bgp *BgpConfig) Print() {
+	fmt.Println("# BGP")
+	fmt.Printf("Enabled: %v\n", bgp.Enabled)
+	fmt.Printf("ASN: %v\n", bgp.Asn)
+	fmt.Printf("Inter SR iBGP: %v\n", bgp.InterSrRouting)
+}
+
 type BgpAdvRouteEntry struct {
 	AsPath    string `json:"as_path"`
 	LocalPref int    `json:"local_pref"`
@@ -506,11 +513,19 @@ type Tier0Gateway struct {
 	Firewall      bool   `json:"disable_firewall"`
 }
 
-func (gw *Tier0Gateway) Print() {
+func (gw *Tier0Gateway) Print(interfaces []map[string]string, bgp BgpConfig) {
 	fmt.Printf("ID:   %v\n", gw.Id)
 	fmt.Printf("Name: %v\n", gw.Name)
 	fmt.Printf("HA Mode: %v\n", gw.HaMode)
 	fmt.Printf("Failover Mode: %v\n", gw.FailoverMode)
+	fmt.Println()
+	fmt.Println("# Interface")
+	for _, intf := range interfaces {
+		fmt.Printf("Name: %v\n", intf["name"])
+		fmt.Printf("Segment: %v\n", intf["segment_path"])
+	}
+	fmt.Println()
+	bgp.Print()
 }
 
 type Tier0Gateways []Tier0Gateway
