@@ -113,7 +113,7 @@ func NewCmdShowGateway() *cobra.Command {
 					gws1 := nsxtclient.GetTier1Gateway("")
 					sort.Slice(gws1, func(i, j int) bool { return gws1[i].Name > gws1[i].Name })
 					for _, gw := range gws1 {
-						w.Write([]byte(strings.Join([]string{"1", gw.Id, gw.Name, "ACTIVE_STANDBY", gw.FailoverMode, strconv.FormatBool(!gw.Firewall)}, "\t")+ "\n"))
+						w.Write([]byte(strings.Join([]string{"1", gw.Id, gw.Name, gw.HaMode, gw.FailoverMode, strconv.FormatBool(!gw.Firewall)}, "\t")+ "\n"))
 					}
 					w.Flush()
 				}
