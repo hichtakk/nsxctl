@@ -3,14 +3,12 @@ package cmd
 import (
 	"bufio"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"strings"
 
 	"github.com/hichtakk/nsxctl/client"
-	"github.com/hichtakk/nsxctl/config"
-	ac "github.com/hichtakk/nsxctl/nsxalb"
 	"github.com/spf13/cobra"
 )
 
@@ -24,36 +22,16 @@ func NewCmdExec() *cobra.Command {
 		Use:   "exec",
 		Short: "call API directly\nYou can find NSX-T REST API reference on https://developer.vmware.com/apis/1163/nsx-t",
 		PersistentPreRunE: func(c *cobra.Command, args []string) error {
-			file, _ := ioutil.ReadFile(configfile)
-			json.Unmarshal(file, &conf)
-			if alb == false {
-				nsxtclient = client.NewNsxtClient(false, debug)
-				var site config.NsxTSite
-				var err error
-				if useSite != "" {
-					site, err = conf.NsxT.GetSite(useSite)
-				} else {
-					site, err = conf.NsxT.GetCurrentSite()
+			if alb != true {
+				if err := Login(); err != nil {
+					fmt.Println(err)
+					os.Exit(1)
 				}
-				if err != nil {
-					log.Fatal(err)
-				}
-				nsxtclient.BaseUrl = site.Endpoint
-				nsxtclient.Login(site.GetCredential())
-			} else {
-				albclient = ac.NewNsxAlbClient(false, debug)
-				var site config.NsxAlbSite
-				var err error
-				if useSite != "" {
-					site, err = conf.NsxAlb.GetSite(useSite)
-				} else {
-					site, err = conf.NsxAlb.GetCurrentSite()
-				}
-				if err != nil {
-					log.Fatal(err)
-				}
-				albclient.BaseUrl = site.Endpoint
-				albclient.Login(site.GetCredential())
+				return nil
+			}
+			if err := LoginALB(); err != nil {
+				fmt.Println(err)
+				os.Exit(1)
 			}
 			return nil
 		},

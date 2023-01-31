@@ -19,6 +19,7 @@ var (
 	conf       config.Config
 	configfile string
 	useSite    string
+	useAlbSite    string
 	debug      bool
 )
 
@@ -50,7 +51,26 @@ func newCmd() *cobra.Command {
 	}
 	rootCmd.PersistentFlags().BoolVarP(&debug, "debug", "", false, "enable debug mode")
 	rootCmd.PersistentFlags().StringVarP(&configfile, "config", "c", homedir+"/.config/nsxctl.json", "path to nsxctl config file")
-	rootCmd.PersistentFlags().StringVarP(&useSite, "site", "", "", "specify site name")
+	rootCmd.PersistentFlags().StringVarP(&useSite, "site", "", "", "specify NSX-T site name (not applicable for alb-* subcommands)")
+	rootCmd.PersistentFlags().StringVarP(&useAlbSite, "alb-site", "", "", "specify ALB site name (applies only to the alb-* subcommand)")
+	rootCmd.RegisterFlagCompletionFunc("site", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		site_names := []string{}
+		file, _ := ioutil.ReadFile(configfile)
+		json.Unmarshal(file, &conf)
+		for _, s := range conf.NsxT.Sites {
+			site_names = append(site_names, s.Name)
+		}
+		return site_names, cobra.ShellCompDirectiveNoFileComp
+	})
+	rootCmd.RegisterFlagCompletionFunc("alb-site", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		site_names := []string{}
+		file, _ := ioutil.ReadFile(configfile)
+		json.Unmarshal(file, &conf)
+		for _, s := range conf.NsxAlb.Sites {
+			site_names = append(site_names, s.Name)
+		}
+		return site_names, cobra.ShellCompDirectiveNoFileComp
+	})
 
 	return rootCmd
 }
@@ -89,8 +109,8 @@ func LoginALB() error {
 
 	var albsite config.NsxAlbSite
 	var err error
-	if useSite != "" {
-		albsite, err = conf.NsxAlb.GetSite(useSite)
+	if useAlbSite != "" {
+		albsite, err = conf.NsxAlb.GetSite(useAlbSite)
 	} else {
 		albsite, err = conf.NsxAlb.GetCurrentSite()
 	}
