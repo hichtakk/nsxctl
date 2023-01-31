@@ -34,7 +34,7 @@ func (c *NsxtClient) GetDfwPolicies(domain string, name string) ([]structs.DfwPo
 func (c *NsxtClient) GetDfwRules(policy structs.DfwPolicy) []structs.DfwRule {
 	// in case of using multi-byte characters that the following API doen't work
 	// GET /policy/api/v1/infra/domains/<domain-id>/security-policies/<security-policy-id>
-	parent_path := "*security-policies*" + policy.Id
+	parent_path := "*security-policies\\/" + policy.Id
 	path := "/policy/api/v1/search/query?query=resource_type:Rule%20AND%20parent_path:" + url.PathEscape(parent_path)
 	res := c.Request("GET", path, nil, nil)
 
