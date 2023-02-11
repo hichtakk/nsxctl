@@ -1,12 +1,9 @@
 package cmd
 
 import (
-	"encoding/json"
-	"io/ioutil"
-	"log"
+	"fmt"
+	"os"
 
-	"github.com/hichtakk/nsxctl/client"
-	"github.com/hichtakk/nsxctl/config"
 	"github.com/spf13/cobra"
 )
 
@@ -16,21 +13,25 @@ func NewCmdDelete() *cobra.Command {
 		Use:   "delete",
 		Short: "delete resources",
 		PersistentPreRunE: func(c *cobra.Command, args []string) error {
-			file, _ := ioutil.ReadFile(configfile)
-			json.Unmarshal(file, &conf)
-			nsxtclient = client.NewNsxtClient(false, debug)
-			var site config.NsxTSite
-			var err error
-			if useSite != "" {
-				site, err = conf.NsxT.GetSite(useSite)
-			} else {
-				site, err = conf.NsxT.GetCurrentSite()
+			if alb != true {
+				if err := Login(); err != nil {
+					fmt.Println(err)
+					os.Exit(1)
+				}
+				return nil
 			}
-			if err != nil {
-				log.Fatal(err)
+			if err := LoginALB(); err != nil {
+				fmt.Println(err)
+				os.Exit(1)
 			}
-			nsxtclient.BaseUrl = site.Endpoint
 			return nil
+		},
+		PersistentPostRun: func(c *cobra.Command, args []string) {
+			if alb != true {
+				nsxtclient.Logout()
+				return
+			}
+			albclient.Logout()
 		},
 	}
 	deleteCmd.AddCommand(
@@ -38,6 +39,7 @@ func NewCmdDelete() *cobra.Command {
 		NewCmdDeleteTransportZone(),
 		NewCmdDeleteIpPool(),
 		NewCmdDeleteIpBlock(),
+		NewCmdDeleteSegment(),
 	)
 
 	return deleteCmd
