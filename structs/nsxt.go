@@ -209,6 +209,13 @@ type BgpConfig struct {
 	Asn             string `json:"local_as_num"`
 }
 
+func (bgp *BgpConfig) Print() {
+	fmt.Println("# BGP")
+	fmt.Printf("Enabled: %v\n", bgp.Enabled)
+	fmt.Printf("ASN: %v\n", bgp.Asn)
+	fmt.Printf("Inter SR iBGP: %v\n", bgp.InterSrRouting)
+}
+
 type BgpAdvRouteEntry struct {
 	AsPath    string `json:"as_path"`
 	LocalPref int    `json:"local_pref"`
@@ -503,13 +510,22 @@ type Tier0Gateway struct {
 	FailoverMode  string `json:"failover_mode"`
 	RealizationId string `json:"realization_id"`
 	Path          string `json:"path"`
+	Firewall      bool   `json:"disable_firewall"`
 }
 
-func (gw *Tier0Gateway) Print() {
+func (gw *Tier0Gateway) Print(interfaces []map[string]string, bgp BgpConfig) {
 	fmt.Printf("ID:   %v\n", gw.Id)
 	fmt.Printf("Name: %v\n", gw.Name)
 	fmt.Printf("HA Mode: %v\n", gw.HaMode)
 	fmt.Printf("Failover Mode: %v\n", gw.FailoverMode)
+	fmt.Println()
+	fmt.Println("# Interface")
+	for _, intf := range interfaces {
+		fmt.Printf("Name: %v\n", intf["name"])
+		fmt.Printf("Segment: %v\n", intf["segment_path"])
+	}
+	fmt.Println()
+	bgp.Print()
 }
 
 type Tier0Gateways []Tier0Gateway
@@ -517,12 +533,13 @@ type Tier0Gateways []Tier0Gateway
 func (gws *Tier0Gateways) Print(output string) {
 	if output == "json" {
 	} else {
-		fmt.Printf("%-8s	%-8s	%-8s	%-8s\n", "ID", "Name", "HA Mode", "Failover Mode")
+		w := tabwriter.NewWriter(os.Stdout, 0, 1, 3, ' ', 0)
+		w.Write([]byte(strings.Join([]string{"ID", "Name", "HA Mode", "Failover Mode", "FW Enabled"}, "\t")+ "\n"))
 		for _, gw := range *gws {
-			fmt.Printf("%-8s	%8s	%8s	%8s\n", gw.Id, gw.Name, gw.HaMode, gw.FailoverMode)
+			w.Write([]byte(strings.Join([]string{gw.Id, gw.Name, gw.HaMode, gw.FailoverMode, strconv.FormatBool(!gw.Firewall)}, "\t")+ "\n"))
 		}
+		w.Flush()
 	}
-
 }
 
 type Tier1Gateway struct {
@@ -532,6 +549,7 @@ type Tier1Gateway struct {
 	FailoverMode  string `json:"failover_mode"`
 	RealizationId string `json:"realization_id"`
 	Path          string `json:"path"`
+	Firewall      bool   `json:"disable_firewall"`
 }
 
 func (gw *Tier1Gateway) Print() {
@@ -546,10 +564,12 @@ type Tier1Gateways []Tier1Gateway
 func (gws *Tier1Gateways) Print(output string) {
 	if output == "json" {
 	} else {
-		fmt.Printf("%-8s	%-8s	%-8s	%-8s\n", "ID", "Name", "HA Mode", "Failover Mode")
+		w := tabwriter.NewWriter(os.Stdout, 0, 1, 3, ' ', 0)
+		w.Write([]byte(strings.Join([]string{"ID", "Name", "HA Mode", "Failover Mode", "FW Enabled"}, "\t")+ "\n"))
 		for _, gw := range *gws {
-			fmt.Printf("%-8s	%8s	%8s	%8s\n", gw.Id, gw.Name, gw.HaMode, gw.FailoverMode)
+			w.Write([]byte(strings.Join([]string{gw.Id, gw.Name, gw.HaMode, gw.FailoverMode, strconv.FormatBool(!gw.Firewall)}, "\t")+ "\n"))
 		}
+		w.Flush()
 	}
 }
 
