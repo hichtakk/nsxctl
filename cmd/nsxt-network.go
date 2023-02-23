@@ -216,6 +216,32 @@ func NewCmdCreateSegment() *cobra.Command {
 		return tz_names, cobra.ShellCompDirectiveNoFileComp
 	})
 
+	return segmentCmd
+}
 
+func NewCmdDeleteSegment() *cobra.Command {
+	segmentCmd := &cobra.Command{
+		Use: "segment",
+		Short: fmt.Sprintf("delete a segment"),
+		Args: cobra.ExactArgs(1),
+		ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+			if len(args) != 0 {
+				return nil, cobra.ShellCompDirectiveNoFileComp
+			}
+			Login()
+			segment_names := []string{}
+			for _, seg := range nsxtclient.GetSegment() {
+				segment_names = append(segment_names, seg.Name)
+			}
+			return segment_names, cobra.ShellCompDirectiveNoFileComp
+		},
+		Run: func(cmd *cobra.Command, args []string) {
+			segment_name := args[0]
+			err := nsxtclient.DeleteSegment(segment_name)
+			if err != nil {
+				log.Fatal(err)
+			}
+		},
+	}
 	return segmentCmd
 }
