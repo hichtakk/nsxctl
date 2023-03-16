@@ -15,8 +15,8 @@ type NsxAlbClient struct {
 	FullVersion string
 }
 
-func NewNsxAlbClient(basicAuth bool, debug bool) *NsxAlbClient {
-	httpClient := newHttpClient()
+func NewNsxAlbClient(basicAuth bool, debug bool, proxy string) *NsxAlbClient {
+	httpClient := newHttpClient(proxy)
 	nsxAlbClient := &NsxAlbClient{BasicAuth: false, Token: "", httpClient: httpClient, Debug: debug}
 	if basicAuth != true {
 		jar, _ := cookiejar.New(nil)

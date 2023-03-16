@@ -18,7 +18,6 @@ func NewCmdClusterInfo() *cobra.Command {
 		PreRunE: func(c *cobra.Command, args []string) error {
 			file, _ := ioutil.ReadFile(configfile)
 			json.Unmarshal(file, &conf)
-			nsxtclient = client.NewNsxtClient(false, debug)
 			var site config.NsxTSite
 			var err error
 			if useSite != "" {
@@ -29,6 +28,7 @@ func NewCmdClusterInfo() *cobra.Command {
 			if err != nil {
 				log.Fatal(err)
 			}
+			nsxtclient = client.NewNsxtClient(false, debug, site.Proxy)
 			nsxtclient.BaseUrl = site.Endpoint
 			nsxtclient.Login(site.GetCredential())
 			return nil
