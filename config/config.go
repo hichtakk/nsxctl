@@ -63,6 +63,7 @@ type NsxTSite struct {
 	Endpoint string `json:"endpoint"`
 	User     string `json:"user"`
 	Password string `json:"password"`
+	Proxy    string `json:"proxy,omitempty"`
 }
 
 func (t *NsxTSite) getPassword() string {
@@ -90,6 +91,7 @@ type NsxAlbSite struct {
 	User     string `json:"user"`
 	Password string `json:"password"`
 	Version  string `json:"version"`
+	Proxy    string `json:"proxy,omitempty"`
 }
 
 func (a *NsxAlbSite) getPassword() string {

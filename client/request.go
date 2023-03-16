@@ -23,6 +23,7 @@ type NsxtClient struct {
 	Token      string
 	httpClient *http.Client
 	Debug      bool
+	Proxy      string
 }
 
 type Response struct {
@@ -126,8 +127,8 @@ func (c *NsxtClient) Request(method string, path string, query_param map[string]
 	}
 }
 
-func NewNsxtClient(basicAuth bool, debug bool) *NsxtClient {
-	httpClient := newHttpClient()
+func NewNsxtClient(basicAuth bool, debug bool, proxy string) *NsxtClient {
+	httpClient := newHttpClient(proxy)
 	nsxtClient := &NsxtClient{BasicAuth: false, Token: "", httpClient: httpClient, Debug: debug}
 	if basicAuth != true {
 		jar, _ := cookiejar.New(nil)
@@ -137,9 +138,13 @@ func NewNsxtClient(basicAuth bool, debug bool) *NsxtClient {
 	return nsxtClient
 }
 
-func newHttpClient() *http.Client {
+func newHttpClient(proxy string) *http.Client {
 	transportConfig := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+	if proxy != "" {
+		proxyUrl, _ := url.Parse(proxy)
+		transportConfig.Proxy = http.ProxyURL(proxyUrl)
 	}
 	client := &http.Client{
 		Transport: transportConfig,

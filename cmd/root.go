@@ -19,7 +19,7 @@ var (
 	conf       config.Config
 	configfile string
 	useSite    string
-	useAlbSite    string
+	useAlbSite string
 	debug      bool
 )
 
@@ -82,8 +82,6 @@ func GetCmdRoot() *cobra.Command {
 func Login() error {
 	file, _ := ioutil.ReadFile(configfile)
 	json.Unmarshal(file, &conf)
-	nsxtclient = client.NewNsxtClient(false, debug)
-
 	var site config.NsxTSite
 	var err error
 	if useSite != "" {
@@ -94,6 +92,7 @@ func Login() error {
 	if err != nil {
 		return err
 	}
+	nsxtclient = client.NewNsxtClient(false, debug, site.Proxy)
 	nsxtclient.BaseUrl = site.Endpoint
 	err = nsxtclient.Login(site.GetCredential())
 	if err != nil {
@@ -105,8 +104,6 @@ func Login() error {
 func LoginALB() error {
 	file, _ := ioutil.ReadFile(configfile)
 	json.Unmarshal(file, &conf)
-	albclient = ac.NewNsxAlbClient(false, debug)
-
 	var albsite config.NsxAlbSite
 	var err error
 	if useAlbSite != "" {
@@ -117,6 +114,7 @@ func LoginALB() error {
 	if err != nil {
 		return err
 	}
+	albclient = ac.NewNsxAlbClient(false, debug, albsite.Proxy)
 	albclient.BaseUrl = albsite.Endpoint
 	err = albclient.Login(albsite.GetCredential())
 	if err != nil {

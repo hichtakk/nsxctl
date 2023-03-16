@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 	"time"
@@ -15,9 +16,13 @@ import (
 	"github.com/hichtakk/nsxctl/client"
 )
 
-func newHttpClient() *http.Client {
+func newHttpClient(proxy string) *http.Client {
 	transportConfig := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+	if proxy != "" {
+		proxyUrl, _ := url.Parse(proxy)
+		transportConfig.Proxy = http.ProxyURL(proxyUrl)
 	}
 	client := &http.Client{
 		Transport: transportConfig,
