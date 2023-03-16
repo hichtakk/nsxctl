@@ -105,3 +105,27 @@ func (c *NsxtClient) CreateSegment(segment_name string, transportzone string, vl
 
 	return nil
 }
+
+func (c *NsxtClient) DeleteSegment(segment_name string) error {
+	var segment_id string
+	for _, seg := range c.GetSegment() {
+			if seg.Name == segment_name {
+					segment_id = seg.Id
+			}
+	}
+	if segment_id == "" {
+			return errors.New(fmt.Sprintf("segment '%s' not found", segment_name))
+	}
+
+	path := "/policy/api/v1/infra/segments/" + segment_id
+	res := c.Request("DELETE", path, nil, nil)
+	if res.StatusCode != 200 {
+			body, err := res.BodyBytes()
+			if err != nil {
+					return nil
+			}
+			return errors.New(string(body))
+	}
+
+	return nil
+}
