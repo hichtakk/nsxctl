@@ -331,10 +331,14 @@ func (p *Pool) Print() {
 	for _, m := range p.Servers {
 		var network_names []string
 		for _, n := range m.DiscoveredNetworks {
-			network_names = append(network_names, strings.Split(n.NetworkRef, "#")[1])
+			if strings.Contains(n.NetworkRef, "#") {
+				network_names = append(network_names, strings.Split(n.NetworkRef, "#")[1])
+			}
 		}
 		for _, n := range p.PlacementNetworks {
-			network_names = append(network_names, strings.Split(n.NetworkRef, "#")[1])
+			if strings.Contains(n.NetworkRef, "#") {
+				network_names = append(network_names, strings.Split(n.NetworkRef, "#")[1])
+			}
 		}
 		test := make(map[string]bool)
 		network_names_uniq := []string{}
