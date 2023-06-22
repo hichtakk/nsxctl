@@ -36,6 +36,7 @@ func NewCmdShow() *cobra.Command {
 	}
 	showCmd.AddCommand(
 		NewCmdShowVersion(),
+		NewCmdShowCertificate(),
 		NewCmdShowGateway(),
 		NewCmdShowComputeManager(),
 		NewCmdShowTransportZone(),
