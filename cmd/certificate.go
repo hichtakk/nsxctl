@@ -34,7 +34,7 @@ func NewCmdShowCertificate() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			certs := nsxtclient.GetApiCertificate()
 			w := tabwriter.NewWriter(os.Stdout, 0, 1, 3, ' ', 0)
-			w.Write([]byte(strings.Join([]string{"Id", "Not Valid After"}, "\t") + "\n"))
+			w.Write([]byte(strings.Join([]string{"Id", "Common Name", "Not Valid After"}, "\t") + "\n"))
 			for _, c := range certs {
 				block, _ := pem.Decode([]byte(c.Pem))
 				if block == nil {
@@ -45,7 +45,7 @@ func NewCmdShowCertificate() *cobra.Command {
 					panic("failed to parse certificate: " + err.Error())
 				}
 				notAfter := parsed.NotAfter.Format("2006/01/02")
-				w.Write([]byte(strings.Join([]string{c.Id, notAfter}, "\t") + "\n"))
+				w.Write([]byte(strings.Join([]string{c.Id, parsed.Subject.CommonName, notAfter}, "\t") + "\n"))
 			}
 			w.Flush()
 		},
