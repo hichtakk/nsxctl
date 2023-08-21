@@ -4,6 +4,8 @@ go 1.18
 
 require (
 	github.com/gdamore/tcell/v2 v2.4.0
+	github.com/golang/mock v1.5.0
+	github.com/mattn/go-jsonpointer v0.0.1
 	github.com/mattn/go-runewidth v0.0.10
 	github.com/spf13/cobra v1.2.1
 	github.com/spf13/viper v1.8.1

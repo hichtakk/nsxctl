@@ -15,10 +15,10 @@ func NewCmdShowEnforcementPoint() *cobra.Command {
 		Short:   fmt.Sprintf("show infra-enforcementpoint [%s]", strings.Join(aliases, ",")),
 		Args:    cobra.MaximumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			eps := nsxtclient.GetEnforcementPoint("default")
-			for _, ep := range *eps {
-				fmt.Println(ep.Id, ep.Path)
-			}
+			// eps := nsxtclient.GetEnforcementPoint("default")
+			// for _, ep := range *eps {
+			// 	fmt.Println(ep.Id, ep.Path)
+			// }
 		},
 	}
 

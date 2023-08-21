@@ -4,15 +4,12 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"sort"
 	"strconv"
 	"strings"
-	"text/tabwriter"
-	"time"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/gdamore/tcell/v2/encoding"
-	"github.com/hichtakk/nsxctl/structs"
+	"github.com/hichtakk/nsxctl/nsx"
 	"github.com/mattn/go-runewidth"
 	"github.com/spf13/cobra"
 )
@@ -22,36 +19,36 @@ var highlight_row int
 
 func NewCmdShowGateway() *cobra.Command {
 	var tier int16
-	var output string
+	// var output string
 	aliases := []string{"gw"}
 	gatewayCmd := &cobra.Command{
 		Use:     "gateway -t/--tier [0|1] ${GATEWAY_NAME}",
 		Aliases: aliases,
 		Short:   fmt.Sprintf("show logical gateways [%s]", strings.Join(aliases, ",")),
 		Args:    cobra.MaximumNArgs(1),
-		ValidArgsFunction: func (cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-			if len(args) != 0 {
-				return nil, cobra.ShellCompDirectiveNoFileComp
-			}
-			Login()
+		ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+			// if len(args) != 0 {
+			// 	return nil, cobra.ShellCompDirectiveNoFileComp
+			// }
+			// Login()
 			gw_names := []string{}
-			switch tier {
-			case 0:
-				for _, gw := range nsxtclient.GetTier0Gateway("") {
-					gw_names = append(gw_names, gw.Name)
-				}
-			case 1:
-				for _, gw := range nsxtclient.GetTier1Gateway("") {
-					gw_names = append(gw_names, gw.Name)
-				}
-			default:
-				for _, gw := range nsxtclient.GetTier0Gateway("") {
-					gw_names = append(gw_names, gw.Name)
-				}
-				for _, gw := range nsxtclient.GetTier1Gateway("") {
-					gw_names = append(gw_names, gw.Name)
-				}
-			}
+			// switch tier {
+			// case 0:
+			// 	for _, gw := range nsxtclient.GetTier0Gateway("") {
+			// 		gw_names = append(gw_names, gw.Name)
+			// 	}
+			// case 1:
+			// 	for _, gw := range nsxtclient.GetTier1Gateway("") {
+			// 		gw_names = append(gw_names, gw.Name)
+			// 	}
+			// default:
+			// 	for _, gw := range nsxtclient.GetTier0Gateway("") {
+			// 		gw_names = append(gw_names, gw.Name)
+			// 	}
+			// 	for _, gw := range nsxtclient.GetTier1Gateway("") {
+			// 		gw_names = append(gw_names, gw.Name)
+			// 	}
+			// }
 			return gw_names, cobra.ShellCompDirectiveNoFileComp
 		},
 		PreRunE: func(c *cobra.Command, args []string) error {
@@ -61,63 +58,63 @@ func NewCmdShowGateway() *cobra.Command {
 			return nil
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) > 0 {
-				gwName := args[0]
-				switch tier {
-				case 0:
-					gw, err := nsxtclient.GetTier0GatewayFromName(gwName)
-					if err != nil {
-						log.Fatal(err)
-					}
-					locale_service_id := nsxtclient.GetLocaleService(gw.Id)
-					interfaces := nsxtclient.GetInterface(gw.Id, locale_service_id[0])
-					bgp := nsxtclient.GetBgpConfig(gw.Id, locale_service_id[0])
-					gw.Print(interfaces, bgp)
-				case 1:
-					gw, err := nsxtclient.GetTier1GatewayFromName(gwName)
-					if err != nil {
-						log.Fatal(err)
-					}
-					gw.Print()
-				default:
-					gw0, err := nsxtclient.GetTier0GatewayFromName(gwName)
-					if err != nil {
-						gw1, err := nsxtclient.GetTier1GatewayFromName(gwName)
-						if err != nil {
-							log.Fatal(fmt.Sprintf("Error: Tier-0 or Tier-1 gateway '%s' is not found", gwName))
-						}
-						gw1.Print()
-						return
-					}
-					locale_service_id := nsxtclient.GetLocaleService(gw0.Id)
-					interfaces := nsxtclient.GetInterface(gw0.Id, locale_service_id[0])
-					bgp := nsxtclient.GetBgpConfig(gw0.Id, locale_service_id[0])
-					gw0.Print(interfaces, bgp)
-				}
-			} else {
-				switch tier {
-				case 0:
-					gws := nsxtclient.GetTier0Gateway("")
-					gws.Print(output)
-				case 1:
-					gws := nsxtclient.GetTier1Gateway("")
-					gws.Print(output)
-				default:
-					w := tabwriter.NewWriter(os.Stdout, 0, 1, 3, ' ', 0)
-					w.Write([]byte(strings.Join([]string{"Tier", "ID", "Name", "HA Mode", "Failover Mode", "FW Enabled"}, "\t")+ "\n"))
-					gws0 := nsxtclient.GetTier0Gateway("")
-					sort.Slice(gws0, func(i, j int) bool { return gws0[i].Name > gws0[i].Name })
-					for _, gw := range gws0 {
-						w.Write([]byte(strings.Join([]string{"0", gw.Id, gw.Name, gw.HaMode, gw.FailoverMode, strconv.FormatBool(!gw.Firewall)}, "\t")+ "\n"))
-					}
-					gws1 := nsxtclient.GetTier1Gateway("")
-					sort.Slice(gws1, func(i, j int) bool { return gws1[i].Name > gws1[i].Name })
-					for _, gw := range gws1 {
-						w.Write([]byte(strings.Join([]string{"1", gw.Id, gw.Name, gw.HaMode, gw.FailoverMode, strconv.FormatBool(!gw.Firewall)}, "\t")+ "\n"))
-					}
-					w.Flush()
-				}
-			}
+			// if len(args) > 0 {
+			// 	gwName := args[0]
+			// 	switch tier {
+			// 	case 0:
+			// 		gw, err := nsxtclient.GetTier0GatewayFromName(gwName)
+			// 		if err != nil {
+			// 			log.Fatal(err)
+			// 		}
+			// 		locale_service_id := nsxtclient.GetLocaleService(gw.Id)
+			// 		interfaces := nsxtclient.GetInterface(gw.Id, locale_service_id[0])
+			// 		bgp := nsxtclient.GetBgpConfig(gw.Id, locale_service_id[0])
+			// 		gw.Print(interfaces, bgp)
+			// 	case 1:
+			// 		gw, err := nsxtclient.GetTier1GatewayFromName(gwName)
+			// 		if err != nil {
+			// 			log.Fatal(err)
+			// 		}
+			// 		gw.Print()
+			// 	default:
+			// 		gw0, err := nsxtclient.GetTier0GatewayFromName(gwName)
+			// 		if err != nil {
+			// 			gw1, err := nsxtclient.GetTier1GatewayFromName(gwName)
+			// 			if err != nil {
+			// 				log.Fatal(fmt.Sprintf("Error: Tier-0 or Tier-1 gateway '%s' is not found", gwName))
+			// 			}
+			// 			gw1.Print()
+			// 			return
+			// 		}
+			// 		locale_service_id := nsxtclient.GetLocaleService(gw0.Id)
+			// 		interfaces := nsxtclient.GetInterface(gw0.Id, locale_service_id[0])
+			// 		bgp := nsxtclient.GetBgpConfig(gw0.Id, locale_service_id[0])
+			// 		gw0.Print(interfaces, bgp)
+			// 	}
+			// } else {
+			// 	switch tier {
+			// 	case 0:
+			// 		gws := nsxtclient.GetTier0Gateway("")
+			// 		gws.Print(output)
+			// 	case 1:
+			// 		gws := nsxtclient.GetTier1Gateway("")
+			// 		gws.Print(output)
+			// 	default:
+			// 		w := tabwriter.NewWriter(os.Stdout, 0, 1, 3, ' ', 0)
+			// 		w.Write([]byte(strings.Join([]string{"Tier", "ID", "Name", "HA Mode", "Failover Mode", "FW Enabled"}, "\t") + "\n"))
+			// 		gws0 := nsxtclient.GetTier0Gateway("")
+			// 		sort.Slice(gws0, func(i, j int) bool { return gws0[i].Name > gws0[i].Name })
+			// 		for _, gw := range gws0 {
+			// 			w.Write([]byte(strings.Join([]string{"0", gw.Id, gw.Name, gw.HaMode, gw.FailoverMode, strconv.FormatBool(!gw.Firewall)}, "\t") + "\n"))
+			// 		}
+			// 		gws1 := nsxtclient.GetTier1Gateway("")
+			// 		sort.Slice(gws1, func(i, j int) bool { return gws1[i].Name > gws1[i].Name })
+			// 		for _, gw := range gws1 {
+			// 			w.Write([]byte(strings.Join([]string{"1", gw.Id, gw.Name, gw.HaMode, gw.FailoverMode, strconv.FormatBool(!gw.Firewall)}, "\t") + "\n"))
+			// 		}
+			// 		w.Flush()
+			// 	}
+			// }
 		},
 	}
 	gatewayCmd.Flags().Int16VarP(&tier, "tier", "t", -1, "gateway tier type (0 or 1)")
@@ -131,10 +128,10 @@ func GetTier0GatewayNames(cmd *cobra.Command, args []string, toComplete string) 
 	}
 	Login()
 	t0gw_names := []string{}
-	gws := nsxtclient.GetTier0Gateway("")
-	for _, gw := range gws {
-		t0gw_names = append(t0gw_names, gw.Name)
-	}
+	// gws := nsxtclient.GetTier0Gateway("")
+	// for _, gw := range gws {
+	// 	t0gw_names = append(t0gw_names, gw.Name)
+	// }
 	return t0gw_names, cobra.ShellCompDirectiveNoFileComp
 }
 
@@ -148,27 +145,27 @@ func NewCmdShowRoutingTable() *cobra.Command {
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: GetTier0GatewayNames,
 		Run: func(cmd *cobra.Command, args []string) {
-			ecs := nsxtclient.GetEdgeCluster()
-			ecss := structs.EdgeClusters(*ecs)
-			gw, err := nsxtclient.GetTier0GatewayFromName(args[0])
-			if err != nil {
-				log.Fatal(err)
-				return
-			}
-			routes := nsxtclient.GetRoutingTable(gw.Id)
-			for _, er := range routes {
-				ec := ecss.GetClusterById(er.GetEdgeClusterId())
-				idx := er.GetEdgeClusterNodeIdx()
-				node := nsxtclient.GetTransportNodeById(ec.Members[idx].Id)
-				fmt.Printf("/edge-cluster/%v/node/%v\n", ec.Name, node.Name)
-				if ipv6 == true {
-					e := er.GetEntries(6)
-					e.Print()
-				} else {
-					e := er.GetEntries(4)
-					e.Print()
-				}
-			}
+			// ecs := nsxtclient.GetEdgeCluster()
+			// ecss := EdgeClusters(*ecs)
+			// gw, err := nsxtclient.GetTier0GatewayFromName(args[0])
+			// if err != nil {
+			// 	log.Fatal(err)
+			// 	return
+			// }
+			// routes := nsxtclient.GetRoutingTable(gw.Id)
+			// for _, er := range routes {
+			// 	ec := ecss.GetClusterById(er.GetEdgeClusterId())
+			// 	idx := er.GetEdgeClusterNodeIdx()
+			// 	node := nsxtclient.GetTransportNodeById(ec.Members[idx].Id)
+			// 	fmt.Printf("/edge-cluster/%v/node/%v\n", ec.Name, node.Name)
+			// 	if ipv6 == true {
+			// 		e := er.GetEntries(6)
+			// 		e.Print()
+			// 	} else {
+			// 		e := er.GetEntries(4)
+			// 		e.Print()
+			// 	}
+			// }
 		},
 	}
 	gatewayCmd.Flags().BoolVarP(&ipv6, "ipv6", "6", false, "show IPv6 routes")
@@ -185,24 +182,24 @@ func NewCmdShowBgpAdvRoutes() *cobra.Command {
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: GetTier0GatewayNames,
 		Run: func(cmd *cobra.Command, args []string) {
-			locale := "default"
-			gw, err := nsxtclient.GetTier0GatewayFromName(args[0])
-			if err != nil {
-				log.Fatal(err)
-				return
-			}
-			neighbors := nsxtclient.GetBgpNeighbors(gw.Id, locale)
-			for _, nb := range neighbors {
-				fmt.Printf("BGP neighbor: %v, Remote ASN: %v\n", nb.Address, nb.Asn)
-				nb_edges := nsxtclient.GetBgpNeighborsAdvRoutes(nb.Path)
-				for _, e := range nb_edges {
-					node := nsxtclient.GetTransportNodeById(e.EdgeId)
-					fmt.Printf("Edge node: %v, Source IP: %v\n\n", node.Name, e.Source)
-					entries := e.GetEntries()
-					entries.Print()
-					fmt.Println()
-				}
-			}
+			// locale := "default"
+			// gw, err := nsxtclient.GetTier0GatewayFromName(args[0])
+			// if err != nil {
+			// 	log.Fatal(err)
+			// 	return
+			// }
+			// neighbors := nsxtclient.GetBgpNeighbors(gw.Id, locale)
+			// for _, nb := range neighbors {
+			// 	fmt.Printf("BGP neighbor: %v, Remote ASN: %v\n", nb.Address, nb.Asn)
+			// 	nb_edges := nsxtclient.GetBgpNeighborsAdvRoutes(nb.Path)
+			// 	for _, e := range nb_edges {
+			// 		node := nsxtclient.GetTransportNodeById(e.EdgeId)
+			// 		fmt.Printf("Edge node: %v, Source IP: %v\n\n", node.Name, e.Source)
+			// 		entries := e.GetEntries()
+			// 		entries.Print()
+			// 		fmt.Println()
+			// 	}
+			// }
 		},
 	}
 
@@ -232,22 +229,22 @@ func NewCmdTopGateway() *cobra.Command {
 		Args:              cobra.MaximumNArgs(1),
 		ValidArgsFunction: GetGatewayNames,
 		Run: func(cmd *cobra.Command, args []string) {
-			highlight_row = 0
-			if tier == 0 {
-				gw, err := nsxtclient.GetTier0GatewayFromName(args[0])
-				if err != nil {
-					log.Fatal(err)
-					return
-				}
-				if interval < 3 {
-					log.Fatalln("interval must be greater than 3 second")
-				}
-				runTop(gw, interval)
-			} else if tier == 1 {
-				log.Fatalln("top tier-1 gateway is not implemented yet.")
-			} else {
-				os.Exit(-1)
-			}
+			// highlight_row = 0
+			// if tier == 0 {
+			// 	gw, err := nsxtclient.GetTier0GatewayFromName(args[0])
+			// 	if err != nil {
+			// 		log.Fatal(err)
+			// 		return
+			// 	}
+			// 	if interval < 3 {
+			// 		log.Fatalln("interval must be greater than 3 second")
+			// 	}
+			// 	runTop(gw, interval)
+			// } else if tier == 1 {
+			// 	log.Fatalln("top tier-1 gateway is not implemented yet.")
+			// } else {
+			// 	os.Exit(-1)
+			// }
 		},
 	}
 	gatewayCmd.Flags().Int16VarP(&tier, "tier", "t", -1, "gateway tier type (0 or 1)")
@@ -271,7 +268,7 @@ func emitStr(s tcell.Screen, x, y int, style tcell.Style, str string) {
 	}
 }
 
-func displayHeader(s tcell.Screen, gw structs.Tier0Gateway, interval int) {
+func displayHeader(s tcell.Screen, gw nsx.Tier0Gateway, interval int) {
 	w, _ := s.Size()
 	int_msg := fmt.Sprintf("update interval: %ds", interval)
 	emitStr(s, 0, 0, tcell.StyleDefault, "[Press ESC or Ctrl-C to exit]")
@@ -313,7 +310,7 @@ func displayFooter(s tcell.Screen) {
 	s.Show()
 }
 
-func update(s tcell.Screen, stats map[int]structs.RouterStats, last_stats map[int]structs.RouterStats) {
+func update(s tcell.Screen, stats map[int]nsx.RouterStats, last_stats map[int]nsx.RouterStats) {
 	w, _ := s.Size()
 	max_ifname_len := 0
 	for _, stat := range stats {
@@ -384,7 +381,7 @@ func update(s tcell.Screen, stats map[int]structs.RouterStats, last_stats map[in
 	s.Show()
 }
 
-func runTop(gw structs.Tier0Gateway, interval int) {
+func runTop(gw nsx.Tier0Gateway, interval int) {
 	encoding.Register()
 	s, e := tcell.NewScreen()
 	if e != nil {
@@ -405,20 +402,20 @@ func runTop(gw structs.Tier0Gateway, interval int) {
 	s.Show()
 
 	// initial interface list
-	stats := nsxtclient.GetGatewayInterfaceStats(gw)
-	update(s, stats, nil)
+	// stats := nsxtclient.GetGatewayInterfaceStats(gw)
+	// update(s, stats, nil)
 
 	// update stats loop
-	go func(g structs.Tier0Gateway, stats map[int]structs.RouterStats, interval int) {
-		last_stats := stats
-		for range time.Tick(time.Duration(interval) * time.Second) {
-			new_stats := nsxtclient.GetGatewayInterfaceStats(g)
-			s.Clear()
-			displayHeader(s, g, interval)
-			update(s, new_stats, last_stats)
-			last_stats = new_stats
-		}
-	}(gw, stats, interval)
+	// go func(g Tier0Gateway, stats map[int]RouterStats, interval int) {
+	// 	last_stats := stats
+	// 	for range time.Tick(time.Duration(interval) * time.Second) {
+	// 		new_stats := nsxtclient.GetGatewayInterfaceStats(g)
+	// 		s.Clear()
+	// 		displayHeader(s, g, interval)
+	// 		update(s, new_stats, last_stats)
+	// 		last_stats = new_stats
+	// 	}
+	// }(gw, stats, interval)
 
 	// event loop
 	for {

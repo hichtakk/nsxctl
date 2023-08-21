@@ -2,12 +2,10 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"strings"
 	"text/tabwriter"
 
-	"github.com/hichtakk/nsxctl/structs"
 	"github.com/spf13/cobra"
 )
 
@@ -19,11 +17,11 @@ func NewCmdShowComputeManager() *cobra.Command {
 		Short:   fmt.Sprintf("show compute managers [%s]", strings.Join(aliases, ",")),
 		Args:    cobra.MaximumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			cms := nsxtclient.GetComputeManager()
-			for _, cm := range *cms {
-				cm.Status = nsxtclient.GetComputeManagerStatus(cm.Id)
-				cm.Print()
-			}
+			// cms := nsxtclient.GetComputeManager()
+			// for _, cm := range *cms {
+			// 	cm.Status = nsxtclient.GetComputeManagerStatus(cm.Id)
+			// 	cm.Print()
+			// }
 		},
 	}
 
@@ -42,25 +40,25 @@ func NewCmdCreateComputeManager() *cobra.Command {
 		Short:   fmt.Sprintf("create compute managers [%s]", strings.Join(aliases, ",")),
 		Args:    cobra.MaximumNArgs(1),
 		PreRunE: func(c *cobra.Command, args []string) error {
-			site, err := conf.NsxT.GetCurrentSite()
-			if err != nil {
-				log.Fatal(err)
-			}
-			if len(args) == 0 {
-				log.Fatal("compute manager name is required")
-			}
-			nsxtclient.Login(site.GetCredential())
+			// site, err := conf.NsxT.GetCurrentSite()
+			// if err != nil {
+			// 	log.Fatal(err)
+			// }
+			// if len(args) == 0 {
+			// 	log.Fatal("compute manager name is required")
+			// }
+			// nsxtclient.Login(site.GetCredential())
 			return nil
 		},
 		PostRunE: func(c *cobra.Command, args []string) error {
-			nsxtclient.Logout()
+			// nsxtclient.Logout()
 			return nil
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			name := args[0]
-			thumbprint := nsxtclient.GetTlsFingerprint(address, 443)
-			nsxtclient.CreateComputeManager(name, address, thumbprint, user, password, trust)
-			fmt.Println(debug)
+			// name := args[0]
+			// thumbprint := nsxtclient.GetTlsFingerprint(address, 443)
+			// nsxtclient.CreateComputeManager(name, address, thumbprint, user, password, trust)
+			// fmt.Println(debug)
 		},
 	}
 	computeManagerCmd.Flags().StringVarP(&address, "address", "a", "", "IPv4 address of target compute manager")
@@ -82,20 +80,20 @@ func NewCmdDeleteComputeManager() *cobra.Command {
 		Short:   fmt.Sprintf("delete compute managers [%s]", strings.Join(aliases, ",")),
 		Args:    cobra.MaximumNArgs(1),
 		PreRunE: func(c *cobra.Command, args []string) error {
-			site, err := conf.NsxT.GetCurrentSite()
-			if err != nil {
-				log.Fatal(err)
-			}
-			nsxtclient.Login(site.GetCredential())
+			// site, err := conf.NsxT.GetCurrentSite()
+			// if err != nil {
+			// 	log.Fatal(err)
+			// }
+			// nsxtclient.Login(site.GetCredential())
 			return nil
 		},
 		PostRunE: func(c *cobra.Command, args []string) error {
-			nsxtclient.Logout()
+			// nsxtclient.Logout()
 			return nil
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			cmId := args[0]
-			nsxtclient.DeleteComputeManager(cmId)
+			// cmId := args[0]
+			// nsxtclient.DeleteComputeManager(cmId)
 			fmt.Println(debug)
 		},
 	}
@@ -111,12 +109,12 @@ func NewCmdShowTransportZone() *cobra.Command {
 		Short:   fmt.Sprintf("show transport zones [%s]", strings.Join(aliases, ",")),
 		Args:    cobra.MaximumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			sites := nsxtclient.GetSite()
-			eps := nsxtclient.GetEnforcementPoint(sites[0])
-			ep := *eps
-			// use default for site and enforcementpoint
-			zones := nsxtclient.GetPolicyTransportZone(sites[0], ep[0].Id)
-			zones.Print()
+			// sites := nsxtclient.GetSite()
+			// eps := nsxtclient.GetEnforcementPoint(sites[0])
+			// ep := *eps
+			// // use default for site and enforcementpoint
+			// zones := nsxtclient.GetPolicyTransportZone(sites[0], ep[0].Id)
+			// zones.Print()
 		},
 	}
 
@@ -132,20 +130,20 @@ func NewCmdCreateTransportZone() *cobra.Command {
 		Short:   fmt.Sprintf("create transport zone [%s]", strings.Join(aliases, ",")),
 		Args:    cobra.MaximumNArgs(1),
 		PreRunE: func(c *cobra.Command, args []string) error {
-			site, err := conf.NsxT.GetCurrentSite()
-			if err != nil {
-				log.Fatal(err)
-			}
-			nsxtclient.Login(site.GetCredential())
+			// site, err := conf.NsxT.GetCurrentSite()
+			// if err != nil {
+			// 	log.Fatal(err)
+			// }
+			// nsxtclient.Login(site.GetCredential())
 			return nil
 		},
 		PostRunE: func(c *cobra.Command, args []string) error {
-			nsxtclient.Logout()
+			// nsxtclient.Logout()
 			return nil
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			name := args[0]
-			nsxtclient.CreateTransportZone(name, transportType)
+			// name := args[0]
+			// nsxtclient.CreateTransportZone(name, transportType)
 		},
 	}
 	transportZoneCmd.Flags().StringVarP(&transportType, "type", "t", "", "transport zone type [vlan, overlay]")
@@ -162,20 +160,20 @@ func NewCmdDeleteTransportZone() *cobra.Command {
 		Short:   fmt.Sprintf("delete transport zone [%s]", strings.Join(aliases, ",")),
 		Args:    cobra.MaximumNArgs(1),
 		PreRunE: func(c *cobra.Command, args []string) error {
-			site, err := conf.NsxT.GetCurrentSite()
-			if err != nil {
-				log.Fatal(err)
-			}
-			nsxtclient.Login(site.GetCredential())
+			// site, err := conf.NsxT.GetCurrentSite()
+			// if err != nil {
+			// 	log.Fatal(err)
+			// }
+			// nsxtclient.Login(site.GetCredential())
 			return nil
 		},
 		PostRunE: func(c *cobra.Command, args []string) error {
-			nsxtclient.Logout()
+			// nsxtclient.Logout()
 			return nil
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			tzId := args[0]
-			nsxtclient.DeleteTransportZone(tzId)
+			// tzId := args[0]
+			// nsxtclient.DeleteTransportZone(tzId)
 			fmt.Println(debug)
 		},
 	}
@@ -191,18 +189,18 @@ func NewCmdShowTransportNode() *cobra.Command {
 		Short:   fmt.Sprintf("show transport nodes [%s]", strings.Join(aliases, ",")),
 		Args:    cobra.MaximumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			sites := nsxtclient.GetSite()
-			eps := nsxtclient.GetEnforcementPoint(sites[0])
-			ep := *eps
-			// use default for site and enforcementpoint
-			nodesWithTunnels := structs.TransportNodes{}
-			nodes := nsxtclient.GetTransportNode(sites[0], ep[0].Id)
-			for _, n := range nodes {
-				tuns := nsxtclient.GetTransportNodeTunnels(n.Id)
-				n.Tunnels = tuns
-				nodesWithTunnels = append(nodesWithTunnels, n)
-			}
-			nodesWithTunnels.Print()
+			// sites := nsxtclient.GetSite()
+			// eps := nsxtclient.GetEnforcementPoint(sites[0])
+			// ep := *eps
+			// // use default for site and enforcementpoint
+			// nodesWithTunnels := structs.TransportNodes{}
+			// nodes := nsxtclient.GetTransportNode(sites[0], ep[0].Id)
+			// for _, n := range nodes {
+			// 	tuns := nsxtclient.GetTransportNodeTunnels(n.Id)
+			// 	n.Tunnels = tuns
+			// 	nodesWithTunnels = append(nodesWithTunnels, n)
+			// }
+			// nodesWithTunnels.Print()
 		},
 	}
 
@@ -217,8 +215,8 @@ func NewCmdShowTransportNodeProfile() *cobra.Command {
 		Short:   fmt.Sprintf("show transport node profiles [%s]", strings.Join(aliases, ",")),
 		Args:    cobra.MaximumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			profiles := nsxtclient.GetTransportNodeProfile()
-			profiles.Print()
+			// profiles := nsxtclient.GetTransportNodeProfile()
+			// profiles.Print()
 		},
 	}
 
@@ -237,23 +235,23 @@ func NewCmdCreateEdge() *cobra.Command {
 		Short:   fmt.Sprintf("create edges [%s]", strings.Join(aliases, ",")),
 		Args:    cobra.MaximumNArgs(1),
 		PreRunE: func(c *cobra.Command, args []string) error {
-			site, err := conf.NsxT.GetCurrentSite()
-			if err != nil {
-				log.Fatal(err)
-			}
-			if len(args) == 0 {
-				log.Fatal("edge name is required")
-			}
-			nsxtclient.Login(site.GetCredential())
+			// site, err := conf.NsxT.GetCurrentSite()
+			// if err != nil {
+			// 	log.Fatal(err)
+			// }
+			// if len(args) == 0 {
+			// 	log.Fatal("edge name is required")
+			// }
+			// nsxtclient.Login(site.GetCredential())
 			return nil
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			name := args[0]
-			nsxtclient.CreateEdge(name, template, address, root_password, admin_password)
+			// name := args[0]
+			// nsxtclient.CreateEdge(name, template, address, root_password, admin_password)
 			fmt.Println(debug)
 		},
 		PostRunE: func(c *cobra.Command, args []string) error {
-			nsxtclient.Logout()
+			// nsxtclient.Logout()
 			return nil
 		},
 	}
@@ -266,11 +264,11 @@ func NewCmdCreateEdge() *cobra.Command {
 	edgeCmd.MarkFlagRequired("root_password")
 	edgeCmd.MarkFlagRequired("admin_password")
 	edgeCmd.RegisterFlagCompletionFunc("template", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-		Login()
+		// Login()
 		edge_names := []string{}
-		for _, e := range nsxtclient.GetEdge() {
-			edge_names = append(edge_names, e.Name)
-		}
+		// for _, e := range nsxtclient.GetEdge() {
+		// 	edge_names = append(edge_names, e.Name)
+		// }
 		return edge_names, cobra.ShellCompDirectiveNoFileComp
 	})
 	return edgeCmd
@@ -291,61 +289,61 @@ func NewCmdShowEdge() *cobra.Command {
 				w.Write([]byte(strings.Join([]string{"Id", "Name", "IP", "Size", "EdgeCluster", "Status"}, "\t") + "\n"))
 			}
 
-			edges := nsxtclient.GetEdge()
-			ecs := nsxtclient.GetEdgeCluster()
+			// edges := nsxtclient.GetEdge()
+			// ecs := nsxtclient.GetEdgeCluster()
 
-			edge_gw_map := make(map[string][]string) // edge_id : [gwid, gwid, ...]
-			if verbose {
-				t0s := nsxtclient.GetTier0Gateway("")
-				t1s := nsxtclient.GetTier1Gateway("")
-				for _, gw := range t0s {
-					per_node_status := nsxtclient.GetGatewayAggregateInfo(gw.RealizationId)
-					for _, st := range per_node_status {
-						eid := st["transport_node_id"]
-						ha := st["high_availability_status"][:1]
-						val, ok := edge_gw_map[eid]
-						if !ok {
-							val = []string{}
-						}
-						val = append(val, gw.Name+"("+ha+")")
-						edge_gw_map[eid] = val
-					}
-				}
-				for _, gw := range t1s {
-					per_node_status := nsxtclient.GetGatewayAggregateInfo(gw.RealizationId)
-					for _, st := range per_node_status {
-						eid := st["transport_node_id"]
-						ha := st["high_availability_status"][:1]
-						val, ok := edge_gw_map[eid]
-						if !ok {
-							val = []string{}
-						}
-						val = append(val, gw.Name+"("+ha+")")
-						edge_gw_map[eid] = val
-					}
-				}
-			}
+			// edge_gw_map := make(map[string][]string) // edge_id : [gwid, gwid, ...]
+			// if verbose {
+			// t0s := nsxtclient.GetTier0Gateway("")
+			// t1s := nsxtclient.GetTier1Gateway("")
+			// for _, gw := range t0s {
+			// 	per_node_status := nsxtclient.GetGatewayAggregateInfo(gw.RealizationId)
+			// 	for _, st := range per_node_status {
+			// 		eid := st["transport_node_id"]
+			// 		ha := st["high_availability_status"][:1]
+			// 		val, ok := edge_gw_map[eid]
+			// 		if !ok {
+			// 			val = []string{}
+			// 		}
+			// 		val = append(val, gw.Name+"("+ha+")")
+			// 		edge_gw_map[eid] = val
+			// 	}
+			// }
+			// for _, gw := range t1s {
+			// 	per_node_status := nsxtclient.GetGatewayAggregateInfo(gw.RealizationId)
+			// 	for _, st := range per_node_status {
+			// 		eid := st["transport_node_id"]
+			// 		ha := st["high_availability_status"][:1]
+			// 		val, ok := edge_gw_map[eid]
+			// 		if !ok {
+			// 			val = []string{}
+			// 		}
+			// 		val = append(val, gw.Name+"("+ha+")")
+			// 		edge_gw_map[eid] = val
+			// 	}
+			// }
+			// }
 
-			for _, e := range edges {
-				var edgeCluster structs.EdgeCluster
-				for _, ec := range *ecs {
-					for _, ecm := range ec.Members {
-						if ecm.Id == e.Id {
-							edgeCluster = ec
-						}
-					}
-				}
-				ip := strings.Join(e.EdgeNodeDeploymentInfo.IPAddress, ",")
-				status := nsxtclient.GetTransportNodeStatus(e.Id)
-				size := e.EdgeNodeDeploymentInfo.EdgeDeploymentConfig.Size
-				if verbose {
-					gws := strings.Join(edge_gw_map[e.Id], ",")
-					w.Write([]byte(strings.Join([]string{e.Id, e.Name, ip, size, edgeCluster.Name, status, gws}, "\t") + "\n"))
-				} else {
-					w.Write([]byte(strings.Join([]string{e.Id, e.Name, ip, size, edgeCluster.Name, status}, "\t") + "\n"))
-				}
-			}
-			w.Flush()
+			// for _, e := range edges {
+			// 	var edgeCluster structs.EdgeCluster
+			// 	for _, ec := range *ecs {
+			// 		for _, ecm := range ec.Members {
+			// 			if ecm.Id == e.Id {
+			// 				edgeCluster = ec
+			// 			}
+			// 		}
+			// 	}
+			// 	ip := strings.Join(e.EdgeNodeDeploymentInfo.IPAddress, ",")
+			// 	status := nsxtclient.GetTransportNodeStatus(e.Id)
+			// 	size := e.EdgeNodeDeploymentInfo.EdgeDeploymentConfig.Size
+			// 	if verbose {
+			// 		gws := strings.Join(edge_gw_map[e.Id], ",")
+			// 		w.Write([]byte(strings.Join([]string{e.Id, e.Name, ip, size, edgeCluster.Name, status, gws}, "\t") + "\n"))
+			// 	} else {
+			// 		w.Write([]byte(strings.Join([]string{e.Id, e.Name, ip, size, edgeCluster.Name, status}, "\t") + "\n"))
+			// 	}
+			// }
+			// w.Flush()
 		},
 	}
 	edgeCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "display gateway placement")
@@ -361,16 +359,16 @@ func NewCmdShowEdgeCluster() *cobra.Command {
 		Short:   fmt.Sprintf("show edge clusters [%s]", strings.Join(aliases, ",")),
 		Args:    cobra.MaximumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			ec := nsxtclient.GetEdgeCluster()
-			ecs := structs.EdgeClusters(*ec)
-			edgeName := map[string]string{}
-			for _, ec := range ecs {
-				for _, m := range ec.Members {
-					node := nsxtclient.GetTransportNodeById(m.Id)
-					edgeName[node.Id] = node.Name
-				}
-			}
-			ecs.Print(edgeName)
+			// ec := nsxtclient.GetEdgeCluster()
+			// ecs := structs.EdgeClusters(*ec)
+			// edgeName := map[string]string{}
+			// for _, ec := range ecs {
+			// 	for _, m := range ec.Members {
+			// 		node := nsxtclient.GetTransportNodeById(m.Id)
+			// 		edgeName[node.Id] = node.Name
+			// 	}
+			// }
+			// ecs.Print(edgeName)
 		},
 	}
 

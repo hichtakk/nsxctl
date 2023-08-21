@@ -27,11 +27,11 @@ func NewCmdDelete() *cobra.Command {
 			return nil
 		},
 		PersistentPostRun: func(c *cobra.Command, args []string) {
-			if alb != true {
-				nsxtclient.Logout()
-				return
-			}
-			albclient.Logout()
+			// if alb != true {
+			// 	nsxtclient.Logout()
+			// 	return
+			// }
+			// albclient.Logout()
 		},
 	}
 	deleteCmd.AddCommand(

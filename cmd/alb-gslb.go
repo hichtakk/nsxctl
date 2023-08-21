@@ -18,12 +18,12 @@ func NewCmdShowAlbGslb() *cobra.Command {
 			return LoginALB()
 		},
 		PostRunE: func(c *cobra.Command, args []string) error {
-			albclient.Logout()
+			//albAgent.Logout()
 			return nil
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			gslb := albclient.GetGslbSites()
-			gslb.Print()
+			// gslb := albclient.GetGslbSites()
+			// gslb.Print()
 		},
 	}
 
@@ -41,13 +41,13 @@ func NewCmdShowAlbGslbService() *cobra.Command {
 			return LoginALB()
 		},
 		PostRunE: func(c *cobra.Command, args []string) error {
-			albclient.Logout()
+			// albclient.Logout()
 			return nil
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			hm := albclient.GetHealthMonitors()
-			gSvc := albclient.GetGslbServices()
-			gSvc.Print(hm)
+			// hm := albclient.GetHealthMonitors()
+			// gSvc := albclient.GetGslbServices()
+			// gSvc.Print(hm)
 		},
 	}
 

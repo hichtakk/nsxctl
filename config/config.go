@@ -8,31 +8,31 @@ import (
 )
 
 type Config struct {
-	NsxT   NsxTConfig   `json:"nsx-t" mapstructure:"nsx-t"`
+	Nsx    NsxConfig    `json:"nsx" mapstructure:"nsx"`
 	NsxAlb NsxAlbConfig `json:"nsx-alb,omitempty" mapstructure:"nsx-alb"`
 }
 
-type NsxTConfig struct {
-	CurrentSite string     `json:"current-site" mapstructure:"current-site"`
-	Sites       []NsxTSite `json:"sites"`
+type NsxConfig struct {
+	CurrentSite string    `json:"current-site" mapstructure:"current-site"`
+	Sites       []NsxSite `json:"sites"`
 }
 
-func (t *NsxTConfig) GetCurrentSite() (NsxTSite, error) {
+func (t *NsxConfig) GetCurrentSite() (NsxSite, error) {
 	for _, s := range t.Sites {
 		if s.Name == t.CurrentSite {
 			return s, nil
 		}
 	}
-	return NsxTSite{}, fmt.Errorf("site '%s' not found", t.CurrentSite)
+	return NsxSite{}, fmt.Errorf("site '%s' not found on NSX configurations", t.CurrentSite)
 }
 
-func (t *NsxTConfig) GetSite(name string) (NsxTSite, error) {
+func (t *NsxConfig) GetSite(name string) (NsxSite, error) {
 	for _, s := range t.Sites {
 		if s.Name == name {
 			return s, nil
 		}
 	}
-	return NsxTSite{}, fmt.Errorf("site '%s' not found", name)
+	return NsxSite{}, fmt.Errorf("site '%s' not found", name)
 }
 
 type NsxAlbConfig struct {
@@ -58,7 +58,7 @@ func (a *NsxAlbConfig) GetSite(name string) (NsxAlbSite, error) {
 	return NsxAlbSite{}, fmt.Errorf("site '%s' not found", name)
 }
 
-type NsxTSite struct {
+type NsxSite struct {
 	Name     string `json:"name"`
 	Endpoint string `json:"endpoint"`
 	User     string `json:"user"`
@@ -66,7 +66,7 @@ type NsxTSite struct {
 	Proxy    string `json:"proxy,omitempty"`
 }
 
-func (t *NsxTSite) getPassword() string {
+func (t *NsxSite) getPassword() string {
 	pswd, err := base64.StdEncoding.DecodeString(t.Password)
 	if err != nil {
 		log.Fatal(err)
@@ -74,11 +74,11 @@ func (t *NsxTSite) getPassword() string {
 	return string(pswd)
 }
 
-func (t *NsxTSite) SetPassword(password string) {
+func (t *NsxSite) SetPassword(password string) {
 	t.Password = base64.StdEncoding.EncodeToString([]byte(password))
 }
 
-func (t *NsxTSite) GetCredential() url.Values {
+func (t *NsxSite) GetCredential() url.Values {
 	return url.Values{
 		"j_username": {t.User},
 		"j_password": {t.getPassword()},
@@ -106,9 +106,9 @@ func (a *NsxAlbSite) SetPassword(password string) {
 	a.Password = base64.StdEncoding.EncodeToString([]byte(password))
 }
 
-func (a *NsxAlbSite) GetCredential() map[string]string {
-	return map[string]string{
-		"username": a.User,
-		"password": a.getPassword(),
+func (a *NsxAlbSite) GetCredential() url.Values {
+	return url.Values{
+		"username": {a.User},
+		"password": {a.getPassword()},
 	}
 }

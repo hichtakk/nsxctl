@@ -1,4 +1,4 @@
-package structs
+package nsx
 
 import (
 	"encoding/csv"
@@ -11,6 +11,11 @@ import (
 	"strings"
 	"text/tabwriter"
 )
+
+type Version struct {
+	ProductVersion string `json:"product_version"`
+	NodeVersion    string `json:"node_version"`
+}
 
 type EnforcementPoint struct {
 	Id   string
@@ -534,9 +539,9 @@ func (gws *Tier0Gateways) Print(output string) {
 	if output == "json" {
 	} else {
 		w := tabwriter.NewWriter(os.Stdout, 0, 1, 3, ' ', 0)
-		w.Write([]byte(strings.Join([]string{"ID", "Name", "HA Mode", "Failover Mode", "FW Enabled"}, "\t")+ "\n"))
+		w.Write([]byte(strings.Join([]string{"ID", "Name", "HA Mode", "Failover Mode", "FW Enabled"}, "\t") + "\n"))
 		for _, gw := range *gws {
-			w.Write([]byte(strings.Join([]string{gw.Id, gw.Name, gw.HaMode, gw.FailoverMode, strconv.FormatBool(!gw.Firewall)}, "\t")+ "\n"))
+			w.Write([]byte(strings.Join([]string{gw.Id, gw.Name, gw.HaMode, gw.FailoverMode, strconv.FormatBool(!gw.Firewall)}, "\t") + "\n"))
 		}
 		w.Flush()
 	}
@@ -565,9 +570,9 @@ func (gws *Tier1Gateways) Print(output string) {
 	if output == "json" {
 	} else {
 		w := tabwriter.NewWriter(os.Stdout, 0, 1, 3, ' ', 0)
-		w.Write([]byte(strings.Join([]string{"ID", "Name", "HA Mode", "Failover Mode", "FW Enabled"}, "\t")+ "\n"))
+		w.Write([]byte(strings.Join([]string{"ID", "Name", "HA Mode", "Failover Mode", "FW Enabled"}, "\t") + "\n"))
 		for _, gw := range *gws {
-			w.Write([]byte(strings.Join([]string{gw.Id, gw.Name, gw.HaMode, gw.FailoverMode, strconv.FormatBool(!gw.Firewall)}, "\t")+ "\n"))
+			w.Write([]byte(strings.Join([]string{gw.Id, gw.Name, gw.HaMode, gw.FailoverMode, strconv.FormatBool(!gw.Firewall)}, "\t") + "\n"))
 		}
 		w.Flush()
 	}
@@ -618,15 +623,15 @@ func (segs *Segments) Print() {
 }
 
 type Segment struct {
-	Name              string                 `json:"display_name"`
-	Id                string                 `json:"id"`
-	AdminState        string                 `json:"admin_state,omitempty"`
-	AdvancedConifg    SegmentAdvancedConfig  `json:"advanced_config,omitempty"`
-	Connectivity      string                 `json:"connectivity_path,omitempty"`
-	ReplicationMode   string                 `json:"replication_mode,omitempty"`
-	Subnets           []SegmentSubnet        `json:"subnets,omitempty"`
-	TransportZonePath string                 `json:"transport_zone_path,omitempty"`
-	Vlans             []string               `json:"vlan_ids"`
+	Name              string                `json:"display_name"`
+	Id                string                `json:"id"`
+	AdminState        string                `json:"admin_state,omitempty"`
+	AdvancedConifg    SegmentAdvancedConfig `json:"advanced_config,omitempty"`
+	Connectivity      string                `json:"connectivity_path,omitempty"`
+	ReplicationMode   string                `json:"replication_mode,omitempty"`
+	Subnets           []SegmentSubnet       `json:"subnets,omitempty"`
+	TransportZonePath string                `json:"transport_zone_path,omitempty"`
+	Vlans             []string              `json:"vlan_ids"`
 }
 
 type SegmentSubnet struct {
@@ -635,10 +640,10 @@ type SegmentSubnet struct {
 }
 
 type SegmentAdvancedConfig struct {
-	Multicast         bool                   `json:"multicast,omitempty"`
-	UrpfMode          string                 `json:"urpf_mode,omitempty"`
-	Connectivity      string                 `json:"connectivity,omitempty"`
-	TeamingPolicy     string                 `json:"uplink_teaming_policy_name,omitempty"`
+	Multicast     bool   `json:"multicast,omitempty"`
+	UrpfMode      string `json:"urpf_mode,omitempty"`
+	Connectivity  string `json:"connectivity,omitempty"`
+	TeamingPolicy string `json:"uplink_teaming_policy_name,omitempty"`
 }
 
 type IpBlocks []IpBlock
@@ -683,38 +688,38 @@ type DfwPolicies struct {
 }
 
 type DfwPolicy struct {
-	Path       string    `json:"path"`
-	Name       string    `json:"display_name"`
-	Id         string    `json:"id"`
-	Seq        int64     `json:"sequence_number"`
-	Scope      []string  `json:"scope"`
-	Stateful   bool      `json:"stateful"`
-	TcpStrict  bool      `json:"tcp_strict"`
-	RuleCount  int       `json:"rule_count"`
-	Category   string    `json:"category"`
-	Rules      []DfwRule `json:"rules"`
+	Path      string    `json:"path"`
+	Name      string    `json:"display_name"`
+	Id        string    `json:"id"`
+	Seq       int64     `json:"sequence_number"`
+	Scope     []string  `json:"scope"`
+	Stateful  bool      `json:"stateful"`
+	TcpStrict bool      `json:"tcp_strict"`
+	RuleCount int       `json:"rule_count"`
+	Category  string    `json:"category"`
+	Rules     []DfwRule `json:"rules"`
 }
 
 type DfwRules struct {
-	Rules    []DfwRule   `json:"results"`
-	Count    int         `json:"result_count"`
+	Rules []DfwRule `json:"results"`
+	Count int       `json:"result_count"`
 }
 
 type DfwRule struct {
-	Name                   string    `json:"display_name"`
-	Id                     string    `json:"id"`
-	RuleId                 int       `json:"rule_id"`
-	Sources                []string  `json:"source_groups"`
-	SourcesExcluded        bool      `json:"sources_excluded"`
-	Destinations           []string  `json:"destination_groups"`
-	DestinationsExcluded   bool      `json:"destinations_excluded"`
-	Services               []string  `json:"services"`
-	Profiles               []string  `json:"profiles"`
-	Scope                  []string  `json:"scope"`
-	Action                 string    `json:"action"`
-	Direction              string    `json:"direction"`
-	IpProtocol             string    `json:"ip_protocol"`
-	Logged                 bool      `json:"logged"`
+	Name                 string   `json:"display_name"`
+	Id                   string   `json:"id"`
+	RuleId               int      `json:"rule_id"`
+	Sources              []string `json:"source_groups"`
+	SourcesExcluded      bool     `json:"sources_excluded"`
+	Destinations         []string `json:"destination_groups"`
+	DestinationsExcluded bool     `json:"destinations_excluded"`
+	Services             []string `json:"services"`
+	Profiles             []string `json:"profiles"`
+	Scope                []string `json:"scope"`
+	Action               string   `json:"action"`
+	Direction            string   `json:"direction"`
+	IpProtocol           string   `json:"ip_protocol"`
+	Logged               bool     `json:"logged"`
 }
 
 func (r *DfwRule) Print(w *tabwriter.Writer, policy DfwPolicy) {
@@ -752,9 +757,9 @@ func (r *DfwRule) Print(w *tabwriter.Writer, policy DfwPolicy) {
 			scope = filepath.Base(r.Scope[i])
 		}
 		if i == 0 {
-			w.Write([]byte(strings.Join([]string{policy.Name, r.Name, strconv.Itoa(r.RuleId), src, dest, srv, prof, scope, r.Action, r.Direction, r.IpProtocol, strconv.FormatBool(r.Logged)}, "\t")+ "\n"))
+			w.Write([]byte(strings.Join([]string{policy.Name, r.Name, strconv.Itoa(r.RuleId), src, dest, srv, prof, scope, r.Action, r.Direction, r.IpProtocol, strconv.FormatBool(r.Logged)}, "\t") + "\n"))
 		} else {
-			w.Write([]byte(strings.Join([]string{"", "", "", src, dest, srv, prof, scope, "", "", "", ""}, "\t")+ "\n"))
+			w.Write([]byte(strings.Join([]string{"", "", "", src, dest, srv, prof, scope, "", "", "", ""}, "\t") + "\n"))
 		}
 		i = i + 1
 	}

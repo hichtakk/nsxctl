@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strings"
 
@@ -20,16 +19,33 @@ func NewCmdExec() *cobra.Command {
 	var query []string
 	var execCmd = &cobra.Command{
 		Use:   "exec",
-		Short: "call API directly\nYou can find NSX-T REST API reference on https://developer.vmware.com/apis/1163/nsx-t",
+		Short: "call API directly\nYou can find NSX REST API reference on https://developer.vmware.com/apis/1163/nsx-t",
 		PersistentPreRunE: func(c *cobra.Command, args []string) error {
-			if alb != true {
+			if !alb {
+				// NSX
 				if err := Login(); err != nil {
 					fmt.Println(err)
 					os.Exit(1)
 				}
-				return nil
+			} else {
+				// NSX ALB
+				if err := LoginALB(); err != nil {
+					fmt.Println(err)
+					os.Exit(1)
+				}
 			}
-			if err := LoginALB(); err != nil {
+			return nil
+		},
+		PersistentPostRunE: func(c *cobra.Command, args []string) error {
+			var err error
+			if !alb {
+				// NSX
+				err = nsxAgent.Logout()
+			} else {
+				// NSX ALB
+				err = albAgent.Logout()
+			}
+			if err != nil {
 				fmt.Println(err)
 				os.Exit(1)
 			}
@@ -41,7 +57,7 @@ func NewCmdExec() *cobra.Command {
 		NewCmdHttpPost(),
 		NewCmdHttpPut(),
 		NewCmdHttpPatch(),
-		NewCmdHttpDelete(&query, &alb),
+		NewCmdHttpDelete(),
 	)
 	execCmd.PersistentFlags().StringSliceVarP(&query, "query", "q", []string{}, "")
 	execCmd.PersistentFlags().BoolVarP(&noPretty, "no-pretty", "", false, "pretty output json")
@@ -66,10 +82,17 @@ func NewCmdHttpGet(query *[]string) *cobra.Command {
 				params[qSlice[0]] = qSlice[1]
 			}
 			var resp *client.Response
-			if alb == false {
-				resp = nsxtclient.Request("GET", args[0], params, []byte{})
+			var err error
+			if !alb {
+				// NSX
+				resp, err = nsxAgent.ExecGet(args[0], params)
 			} else {
-				resp = albclient.Request("GET", args[0], params, []byte{})
+				// NSX ALB
+				resp, err = albAgent.ExecGet(args[0], params)
+			}
+			if err != nil {
+				fmt.Println(err.Error())
+				os.Exit(-1)
 			}
 			resp.Print(noPretty)
 		},
@@ -105,10 +128,15 @@ func NewCmdHttpPost() *cobra.Command {
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			var resp *client.Response
-			if alb == false {
-				resp = nsxtclient.Request("POST", args[0], nil, data)
+			var err error
+			if !alb {
+				resp, err = nsxAgent.ExecPost(args[0], data)
 			} else {
-				resp = albclient.Request("POST", args[0], nil, data)
+				resp, err = albAgent.ExecPost(args[0], data)
+			}
+			if err != nil {
+				fmt.Println(err.Error())
+				os.Exit(-1)
 			}
 			resp.Print(noPretty)
 		},
@@ -145,10 +173,15 @@ func NewCmdHttpPut() *cobra.Command {
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			var resp *client.Response
-			if alb == false {
-				resp = nsxtclient.Request("PUT", args[0], nil, data)
+			var err error
+			if !alb {
+				resp, err = nsxAgent.ExecPut(args[0], data)
 			} else {
-				resp = albclient.Request("PUT", args[0], nil, data)
+				resp, err = albAgent.ExecPut(args[0], data)
+			}
+			if err != nil {
+				fmt.Println(err.Error())
+				os.Exit(-1)
 			}
 			resp.Print(noPretty)
 		},
@@ -186,10 +219,15 @@ func NewCmdHttpPatch() *cobra.Command {
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			var resp *client.Response
-			if alb == false {
-				resp = nsxtclient.Request("PATCH", args[0], nil, data)
+			var err error
+			if !alb {
+				resp, err = nsxAgent.ExecPatch(args[0], data)
 			} else {
-				resp = albclient.Request("PATCH", args[0], nil, data)
+				resp, err = albAgent.ExecPatch(args[0], data)
+			}
+			if err != nil {
+				fmt.Println(err.Error())
+				os.Exit(-1)
 			}
 			resp.Print(noPretty)
 		},
@@ -199,7 +237,7 @@ func NewCmdHttpPatch() *cobra.Command {
 	return httpPatchCmd
 }
 
-func NewCmdHttpDelete(query *[]string, alb *bool) *cobra.Command {
+func NewCmdHttpDelete() *cobra.Command {
 	httpDeleteCmd := &cobra.Command{
 		Use:   "delete",
 		Short: "call api with HTTP DELETE method",
@@ -207,10 +245,17 @@ func NewCmdHttpDelete(query *[]string, alb *bool) *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			var resp *client.Response
-			if *alb == false {
-				resp = nsxtclient.Request("DELETE", args[0], nil, []byte{})
+			var err error
+			if !alb {
+				// NSX
+				resp, err = nsxAgent.ExecDelete(args[0], nil)
 			} else {
-				resp = albclient.Request("DELETE", args[0], nil, []byte{})
+				// NSX ALB
+				resp, err = albAgent.ExecDelete(args[0], nil)
+			}
+			if err != nil {
+				fmt.Println(err.Error())
+				os.Exit(-1)
 			}
 			resp.Print(noPretty)
 		},
@@ -222,7 +267,7 @@ func readRequestBody(fileName string) ([]byte, error) {
 	if fileName == "-" {
 		return readFromStdIn()
 	} else {
-		return ioutil.ReadFile(fileName)
+		return os.ReadFile(fileName)
 	}
 }
 

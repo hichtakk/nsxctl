@@ -17,8 +17,8 @@ func NewCmdShowIpPool() *cobra.Command {
 		Short:   fmt.Sprintf("show ip address pools [%s]", strings.Join(aliases, ",")),
 		Args:    cobra.MaximumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			pools := nsxtclient.GetIpPool()
-			pools.Print()
+			// pools := nsxtclient.GetIpPool()
+			// pools.Print()
 		},
 	}
 
@@ -33,8 +33,8 @@ func NewCmdShowIpBlock() *cobra.Command {
 		Short:   fmt.Sprintf("show ip address blocks [%s]", strings.Join(aliases, ",")),
 		Args:    cobra.MaximumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			blocks := nsxtclient.GetIpBlock()
-			blocks.Print()
+			// blocks := nsxtclient.GetIpBlock()
+			// blocks.Print()
 		},
 	}
 
@@ -50,20 +50,20 @@ func NewCmdCreateIpPool() *cobra.Command {
 		Short:   fmt.Sprintf("create a new ip pool [%s]", strings.Join(aliases, ",")),
 		Args:    cobra.MaximumNArgs(1),
 		PreRunE: func(c *cobra.Command, args []string) error {
-			site, err := conf.NsxT.GetCurrentSite()
-			if err != nil {
-				log.Fatal(err)
-			}
-			nsxtclient.Login(site.GetCredential())
+			// site, err := conf.NsxT.GetCurrentSite()
+			// if err != nil {
+			// 	log.Fatal(err)
+			// }
+			// nsxtclient.Login(site.GetCredential())
 			return nil
 		},
 		PostRunE: func(c *cobra.Command, args []string) error {
-			nsxtclient.Logout()
+			// nsxtclient.Logout()
 			return nil
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			name := args[0]
-			nsxtclient.CreateIpPool(name)
+			// name := args[0]
+			// nsxtclient.CreateIpPool(name)
 		},
 	}
 	//ipPoolCmd.Flags().StringVarP(&transportType, "type", "t", "", "transport zone type [vlan, overlay]")
@@ -81,20 +81,20 @@ func NewCmdCreateIpBlock() *cobra.Command {
 		Short:   fmt.Sprintf("create a new ip block [%s]", strings.Join(aliases, ",")),
 		Args:    cobra.MaximumNArgs(1),
 		PreRunE: func(c *cobra.Command, args []string) error {
-			site, err := conf.NsxT.GetCurrentSite()
-			if err != nil {
-				log.Fatal(err)
-			}
-			nsxtclient.Login(site.GetCredential())
+			// site, err := conf.NsxT.GetCurrentSite()
+			// if err != nil {
+			// 	log.Fatal(err)
+			// }
+			// nsxtclient.Login(site.GetCredential())
 			return nil
 		},
 		PostRunE: func(c *cobra.Command, args []string) error {
-			nsxtclient.Logout()
+			// nsxtclient.Logout()
 			return nil
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			name := args[0]
-			nsxtclient.CreateIpBlock(name, cidr)
+			// name := args[0]
+			// nsxtclient.CreateIpBlock(name, cidr)
 		},
 	}
 	ipBlockCmd.Flags().StringVarP(&cidr, "cidr", "", "", "CIDR block (10.0.0.0/16)")
@@ -111,20 +111,20 @@ func NewCmdDeleteIpPool() *cobra.Command {
 		Short:   fmt.Sprintf("delete ip pool [%s]", strings.Join(aliases, ",")),
 		Args:    cobra.MaximumNArgs(1),
 		PreRunE: func(c *cobra.Command, args []string) error {
-			site, err := conf.NsxT.GetCurrentSite()
-			if err != nil {
-				log.Fatal(err)
-			}
-			nsxtclient.Login(site.GetCredential())
+			// site, err := conf.NsxT.GetCurrentSite()
+			// if err != nil {
+			// 	log.Fatal(err)
+			// }
+			// nsxtclient.Login(site.GetCredential())
 			return nil
 		},
 		PostRunE: func(c *cobra.Command, args []string) error {
-			nsxtclient.Logout()
+			// nsxtclient.Logout()
 			return nil
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			name := args[0]
-			nsxtclient.DeleteIpPool(name)
+			// name := args[0]
+			// nsxtclient.DeleteIpPool(name)
 		},
 	}
 
@@ -139,20 +139,20 @@ func NewCmdDeleteIpBlock() *cobra.Command {
 		Short:   fmt.Sprintf("delete ip block [%s]", strings.Join(aliases, ",")),
 		Args:    cobra.MaximumNArgs(1),
 		PreRunE: func(c *cobra.Command, args []string) error {
-			site, err := conf.NsxT.GetCurrentSite()
-			if err != nil {
-				log.Fatal(err)
-			}
-			nsxtclient.Login(site.GetCredential())
+			// site, err := conf.NsxT.GetCurrentSite()
+			// if err != nil {
+			// 	log.Fatal(err)
+			// }
+			// nsxtclient.Login(site.GetCredential())
 			return nil
 		},
 		PostRunE: func(c *cobra.Command, args []string) error {
-			nsxtclient.Logout()
+			// nsxtclient.Logout()
 			return nil
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			name := args[0]
-			nsxtclient.DeleteIpBlock(name)
+			// name := args[0]
+			// nsxtclient.DeleteIpBlock(name)
 		},
 	}
 
@@ -161,13 +161,13 @@ func NewCmdDeleteIpBlock() *cobra.Command {
 
 func NewCmdCreateSegment() *cobra.Command {
 	var transportzone string
-	var vlan_ids string              // CSV format
+	var vlan_ids string // CSV format
 	var gateway string
-	var interface_address string     // CIDR format
+	var interface_address string // CIDR format
 	segmentCmd := &cobra.Command{
-		Use: "segment",
+		Use:   "segment",
 		Short: fmt.Sprintf("create a new segment"),
-		Args: cobra.ExactArgs(1),
+		Args:  cobra.ExactArgs(1),
 		PreRunE: func(c *cobra.Command, args []string) error {
 			if err := Login(); err != nil {
 				log.Fatal(err)
@@ -176,15 +176,15 @@ func NewCmdCreateSegment() *cobra.Command {
 			return nil
 		},
 		PostRunE: func(c *cobra.Command, args []string) error {
-			nsxtclient.Logout()
+			// nsxtclient.Logout()
 			return nil
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			segment_name := args[0]
-			err := nsxtclient.CreateSegment(segment_name, transportzone, vlan_ids, gateway, interface_address)
-			if err != nil {
-				log.Fatal(err)
-			}
+			// segment_name := args[0]
+			// err := nsxtclient.CreateSegment(segment_name, transportzone, vlan_ids, gateway, interface_address)
+			// if err != nil {
+			// 	log.Fatal(err)
+			// }
 		},
 	}
 	segmentCmd.Flags().StringVarP(&interface_address, "interface-address", "", "", "interface address (CIDR format) to connect specified gateway")
@@ -192,27 +192,27 @@ func NewCmdCreateSegment() *cobra.Command {
 	segmentCmd.Flags().StringVarP(&transportzone, "transportzone", "", "", "transportzone name")
 	segmentCmd.Flags().StringVarP(&vlan_ids, "vlan-ids", "", "", "vlan ids (CSV format)")
 	segmentCmd.RegisterFlagCompletionFunc("gateway", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-		Login()
+		// Login()
 		gw_names := []string{}
-		gws0 := nsxtclient.GetTier0Gateway("")
-		gws1 := nsxtclient.GetTier1Gateway("")
-		for _, gw := range gws0 {
-			gw_names = append(gw_names, gw.Name)
-		}
-		for _, gw := range gws1 {
-			gw_names = append(gw_names, gw.Name)
-		}
+		// gws0 := nsxtclient.GetTier0Gateway("")
+		// gws1 := nsxtclient.GetTier1Gateway("")
+		// for _, gw := range gws0 {
+		// 	gw_names = append(gw_names, gw.Name)
+		// }
+		// for _, gw := range gws1 {
+		// 	gw_names = append(gw_names, gw.Name)
+		// }
 		return gw_names, cobra.ShellCompDirectiveNoFileComp
 	})
 	segmentCmd.RegisterFlagCompletionFunc("transportzone", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-		Login()
-		sites := nsxtclient.GetSite()
-		endpoints := nsxtclient.GetEnforcementPoint(sites[0])
-		transport_zones := nsxtclient.GetPolicyTransportZone(sites[0], (*endpoints)[0].Id)
+		// Login()
+		// sites := nsxtclient.GetSite()
+		// endpoints := nsxtclient.GetEnforcementPoint(sites[0])
+		// transport_zones := nsxtclient.GetPolicyTransportZone(sites[0], (*endpoints)[0].Id)
 		var tz_names []string
-		for _, tz := range *transport_zones {
-			tz_names = append(tz_names, tz.Name)
-		}
+		// for _, tz := range *transport_zones {
+		// 	tz_names = append(tz_names, tz.Name)
+		// }
 		return tz_names, cobra.ShellCompDirectiveNoFileComp
 	})
 
@@ -221,26 +221,26 @@ func NewCmdCreateSegment() *cobra.Command {
 
 func NewCmdDeleteSegment() *cobra.Command {
 	segmentCmd := &cobra.Command{
-		Use: "segment",
+		Use:   "segment",
 		Short: fmt.Sprintf("delete a segment"),
-		Args: cobra.ExactArgs(1),
+		Args:  cobra.ExactArgs(1),
 		ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-			if len(args) != 0 {
-				return nil, cobra.ShellCompDirectiveNoFileComp
-			}
-			Login()
+			// if len(args) != 0 {
+			// 	return nil, cobra.ShellCompDirectiveNoFileComp
+			// }
+			// Login()
 			segment_names := []string{}
-			for _, seg := range nsxtclient.GetSegment() {
-				segment_names = append(segment_names, seg.Name)
-			}
+			// for _, seg := range nsxtclient.GetSegment() {
+			// 	segment_names = append(segment_names, seg.Name)
+			// }
 			return segment_names, cobra.ShellCompDirectiveNoFileComp
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			segment_name := args[0]
-			err := nsxtclient.DeleteSegment(segment_name)
-			if err != nil {
-				log.Fatal(err)
-			}
+			// segment_name := args[0]
+			// err := nsxtclient.DeleteSegment(segment_name)
+			// if err != nil {
+			// 	log.Fatal(err)
+			// }
 		},
 	}
 	return segmentCmd

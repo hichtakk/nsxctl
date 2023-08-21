@@ -2,12 +2,8 @@ package cmd
 
 import (
 	"fmt"
-	"log"
-	"os"
 	"strings"
-	"text/tabwriter"
 
-	"github.com/hichtakk/nsxctl/structs"
 	"github.com/spf13/cobra"
 )
 
@@ -22,11 +18,11 @@ func NewCmdShowAlbCloud() *cobra.Command {
 			return LoginALB()
 		},
 		PostRunE: func(c *cobra.Command, args []string) error {
-			albclient.Logout()
+			// albclient.Logout()
 			return nil
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			albclient.ShowCloud()
+			// albclient.ShowCloud()
 			//albclient.DownloadSeImage()
 		},
 	}
@@ -46,22 +42,22 @@ func NewCmdShowAlbVirtualService() *cobra.Command {
 			return LoginALB()
 		},
 		PostRunE: func(c *cobra.Command, args []string) error {
-			albclient.Logout()
+			// albclient.Logout()
 			return nil
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			vss := albclient.ShowVirtualService()
+			// vss := albclient.ShowVirtualService()
 
-			w := tabwriter.NewWriter(os.Stdout, 0, 1, 3, ' ', 0)
-			if verbose {
-				w.Write([]byte(strings.Join([]string{"ID", "Name", "VIP", "Port", "Network", "Cloud", "SEGroup", "VRF", "Status", "ServiceEngines"}, "\t") + "\n"))
-			} else {
-				w.Write([]byte(strings.Join([]string{"ID", "Name", "VIP", "Port", "Network", "Cloud", "SEGroup", "VRF", "Status"}, "\t") + "\n"))
-			}
-			for _, vs := range vss {
-				vs.Print(w, verbose)
-			}
-			w.Flush()
+			// w := tabwriter.NewWriter(os.Stdout, 0, 1, 3, ' ', 0)
+			// if verbose {
+			// 	w.Write([]byte(strings.Join([]string{"ID", "Name", "VIP", "Port", "Network", "Cloud", "SEGroup", "VRF", "Status", "ServiceEngines"}, "\t") + "\n"))
+			// } else {
+			// 	w.Write([]byte(strings.Join([]string{"ID", "Name", "VIP", "Port", "Network", "Cloud", "SEGroup", "VRF", "Status"}, "\t") + "\n"))
+			// }
+			// for _, vs := range vss {
+			// 	vs.Print(w, verbose)
+			// }
+			// w.Flush()
 		},
 	}
 	cloudCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "display serviceengine placement")
@@ -80,18 +76,18 @@ func NewCmdShowAlbServiceEngine() *cobra.Command {
 			return LoginALB()
 		},
 		PostRunE: func(c *cobra.Command, args []string) error {
-			albclient.Logout()
+			// albclient.Logout()
 			return nil
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			ses := albclient.GetServiceEngine()
+			// ses := albclient.GetServiceEngine()
 
-			w := tabwriter.NewWriter(os.Stdout, 0, 1, 3, ' ', 0)
-			w.Write([]byte(strings.Join([]string{"ID", "Name", "IP", "Cloud", "SEGroup", "Status"}, "\t") + "\n"))
-			for _, se := range ses {
-				se.Print(w)
-			}
-			w.Flush()
+			// w := tabwriter.NewWriter(os.Stdout, 0, 1, 3, ' ', 0)
+			// w.Write([]byte(strings.Join([]string{"ID", "Name", "IP", "Cloud", "SEGroup", "Status"}, "\t") + "\n"))
+			// for _, se := range ses {
+			// 	se.Print(w)
+			// }
+			// w.Flush()
 		},
 	}
 
@@ -101,42 +97,42 @@ func NewCmdShowAlbServiceEngine() *cobra.Command {
 func NewCmdShowAlbPool() *cobra.Command {
 	aliases := []string{"pool"}
 	cloudCmd := &cobra.Command{
-		Use:     "alb-pool",
-		Aliases: aliases,
-		Short:   fmt.Sprintf("show ALB Pool [%s]", strings.Join(aliases, ",")),
-		Args:    cobra.MaximumNArgs(1),
+		Use:               "alb-pool",
+		Aliases:           aliases,
+		Short:             fmt.Sprintf("show ALB Pool [%s]", strings.Join(aliases, ",")),
+		Args:              cobra.MaximumNArgs(1),
 		ValidArgsFunction: GetPoolNames,
 		PreRunE: func(c *cobra.Command, args []string) error {
 			return LoginALB()
 		},
 		PostRunE: func(c *cobra.Command, args []string) error {
-			albclient.Logout()
+			// albclient.Logout()
 			return nil
 		},
 		Run: func(cmd *cobra.Command, args []string) {
-			pools := albclient.GetPools()
+			// pools := albclient.GetPools()
 
-			if len(args) > 0 {
-				var pool structs.Pool
-				for _, p := range pools {
-					if p.Config.Name == args[0] {
-						pool = albclient.GetPool(p.Config.UUID)
-					}
-				}
-				if pool.Name == "" {
-					log.Fatal("pool not found.")
-					return
-				}
-				pool.Print()
-				return
-			}
+			// if len(args) > 0 {
+			// 	var pool structs.Pool
+			// 	for _, p := range pools {
+			// 		if p.Config.Name == args[0] {
+			// 			pool = albclient.GetPool(p.Config.UUID)
+			// 		}
+			// 	}
+			// 	if pool.Name == "" {
+			// 		log.Fatal("pool not found.")
+			// 		return
+			// 	}
+			// 	pool.Print()
+			// 	return
+			// }
 
-			w := tabwriter.NewWriter(os.Stdout, 0, 1, 3, ' ', 0)
-			w.Write([]byte(strings.Join([]string{"ID", "Name", "VirtualService", "Ready", "Status", "Cloud"}, "\t") + "\n"))
-			for _, p := range pools {
-				p.Print(w)
-			}
-			w.Flush()
+			// w := tabwriter.NewWriter(os.Stdout, 0, 1, 3, ' ', 0)
+			// w.Write([]byte(strings.Join([]string{"ID", "Name", "VirtualService", "Ready", "Status", "Cloud"}, "\t") + "\n"))
+			// for _, p := range pools {
+			// 	p.Print(w)
+			// }
+			// w.Flush()
 		},
 	}
 
@@ -144,14 +140,14 @@ func NewCmdShowAlbPool() *cobra.Command {
 }
 
 func GetPoolNames(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-	if len(args) != 0 {
-		return nil, cobra.ShellCompDirectiveNoFileComp
-	}
-	LoginALB()
+	// if len(args) != 0 {
+	// 	return nil, cobra.ShellCompDirectiveNoFileComp
+	// }
+	// LoginALB()
 	pool_names := []string{}
-	pools := albclient.GetPools()
-	for _, p := range pools {
-		pool_names = append(pool_names, p.Config.Name)
-	}
+	// pools := albclient.GetPools()
+	// for _, p := range pools {
+	// 	pool_names = append(pool_names, p.Config.Name)
+	// }
 	return pool_names, cobra.ShellCompDirectiveNoFileComp
 }

@@ -1,4 +1,4 @@
-package structs
+package nsxalb
 
 import (
 	"fmt"
@@ -207,11 +207,11 @@ func (v *VirtualService) GetSegId() string {
 }
 
 type Vip struct {
-	Id      string            `json:"vip_id"`
-	Address map[string]string `json:"ip_address"`
-	PlacementNetworks  []Network `json:"placement_networks"`
-	DiscoveredNetworks []Network `json:"discovered_networks"`
-	IpamNetworks       []Network `json:"ipam_network_subnet"`
+	Id                 string            `json:"vip_id"`
+	Address            map[string]string `json:"ip_address"`
+	PlacementNetworks  []Network         `json:"placement_networks"`
+	DiscoveredNetworks []Network         `json:"discovered_networks"`
+	IpamNetworks       []Network         `json:"ipam_network_subnet"`
 }
 
 type VipRuntime struct {
@@ -268,9 +268,9 @@ type PoolResult struct {
 }
 
 type PoolInventory struct {
-	Config          Pool         `json:"config"`
-	Runtime         PoolRuntime  `json:"runtime"`
-	VirtualService  []string     `json:"virtualservices"`
+	Config         Pool        `json:"config"`
+	Runtime        PoolRuntime `json:"runtime"`
+	VirtualService []string    `json:"virtualservices"`
 }
 
 func (pi *PoolInventory) Print(w *tabwriter.Writer) {
@@ -285,35 +285,35 @@ func (pi *PoolInventory) Print(w *tabwriter.Writer) {
 }
 
 type Pool struct {
-	CloudRef     string       `json:"cloud_ref"`
-	DefaultPort  int          `json:"default_server_port"`
-	Enabled      bool         `json:"enabled"`
-	Name         string       `json:"name"`
-	TenantRef    string       `json:"tenant_ref"`
-	UUID         string       `json:"uuid"`
-	VrfRef       string       `json:"vrf_ref"`
-	Servers      []PoolMember `json:"servers"`  // It does not exist if the Pool is a child element of a PoolInventory
-	PlacementNetworks  []Network `json:"placement_networks"`
+	CloudRef          string       `json:"cloud_ref"`
+	DefaultPort       int          `json:"default_server_port"`
+	Enabled           bool         `json:"enabled"`
+	Name              string       `json:"name"`
+	TenantRef         string       `json:"tenant_ref"`
+	UUID              string       `json:"uuid"`
+	VrfRef            string       `json:"vrf_ref"`
+	Servers           []PoolMember `json:"servers"` // It does not exist if the Pool is a child element of a PoolInventory
+	PlacementNetworks []Network    `json:"placement_networks"`
 }
 
 type PoolRuntime struct {
-	NumServers         int               `json:"num_servers"`
-	NumServersEnabled  int               `json:"num_servers_enabled"`
-	NumServersUp       int               `json:"num_servers_up"`
-	Status             map[string]string `json:"oper_status"`
+	NumServers        int               `json:"num_servers"`
+	NumServersEnabled int               `json:"num_servers_enabled"`
+	NumServersUp      int               `json:"num_servers_up"`
+	Status            map[string]string `json:"oper_status"`
 }
 
 type PoolMember struct {
-	Enabled      bool                `json:"enabled"`
-	HostName     string              `json:"hostname"`
-	Port         int                 `json:"port"`
-	Ip           map[string]string   `json:"ip"`
-	Ratio        int                 `json:"ratio"`
-	DiscoveredNetworks []Network     `json:"discovered_networks"`
+	Enabled            bool              `json:"enabled"`
+	HostName           string            `json:"hostname"`
+	Port               int               `json:"port"`
+	Ip                 map[string]string `json:"ip"`
+	Ratio              int               `json:"ratio"`
+	DiscoveredNetworks []Network         `json:"discovered_networks"`
 }
 
 type Network struct {
-	NetworkRef    string    `json:"network_ref"`
+	NetworkRef string `json:"network_ref"`
 }
 
 func (p *Pool) Print() {

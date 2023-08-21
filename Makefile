@@ -1,5 +1,5 @@
 NAME := nsxctl
-RELEASE_DIR := build
+RELEASE_DIR := bin
 BUILD_TARGETS := build-linux-amd64 build-linux-arm64 build-darwin-amd64 build-darwin-arm64 build-windows-amd64 build-windows-arm64
 GOVERSION = $(shell go version)
 THIS_GOOS = $(word 1,$(subst /, ,$(lastword $(GOVERSION))))
@@ -9,17 +9,19 @@ GOARCH = $(THIS_GOARCH)
 VERSION = $(patsubst "%",%,$(lastword $(shell grep 'const version' main.go)))
 REVISION = $(shell git rev-parse HEAD)
 
-.PHONY: fmt build clean
-
+.PHONY: fmt
 fmt: ## format
 	go fmt
 
+.PHONY: lint
 lint: ## Examine source code and lint
 	go vet ./...
 	golint -set_exit_status ./...
 
+.PHONY: all
 all: $(BUILD_TARGETS) ## build for all platform
 
+.PHONY: build
 build: $(RELEASE_DIR)/nsxctl_$(GOOS)_$(GOARCH) ## build nsxctl
 
 build-linux-amd64: ## build AMD64 linux binary
@@ -47,12 +49,23 @@ $(RELEASE_DIR)/nsxctl_$(GOOS)_$(GOARCH): ## Build nsx command-line client
 	@GO111MODULE=on go build -tags netgo -ldflags "-X github.com/hichtakk/nsxctl/cmd.revision=${REVISION}" -a -v -o $(RELEASE_DIR)/nsxctl_$(GOOS)_$(GOARCH) ./main.go
 	@printf "\e[m"
 
+.PHONY: clean
 clean: ## Clean up built files
 	@printf "\e[32m"
 	@echo '==> Remove built files ./build/...'
 	@printf "\e[90m"
-	@ls -1 ./build
-	@rm -rf build/*
+	@ls -1 ./${RELEASE_DIR}
+	@rm -rf ${RELEASE_DIR}/*
 	@printf "\e[m"
 
+.PHONY: mock
+mock: client/request.go
+	@mockgen -source client/request.go -destination client/mock/request.go -package mock
+	@mockgen -source client/interface.go -destination client/mock/interface.go -package mock
+	@mockgen -source client/nsx.go -destination client/mock/nsx.go -package mock
+
+test: ## run test
+	@go test -v -cover -test.v -count 1 ./client/...
+
+.PHONY: rebuild
 rebuild: clean build
