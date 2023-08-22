@@ -2,18 +2,27 @@ package nsx
 
 import (
 	"bytes"
+	"encoding/json"
+
+	"github.com/hichtakk/nsxctl/client"
 )
 
 func (a *Agent) GetApiCertificate() Certificates {
-	// path := "/api/v1/trust-management/certificates"
-	// res := a.Request("GET", path, map[string]string{"type": "api_certificate"}, nil)
 	certs := Certificates{}
-	// for _, c := range res.Body.(map[string]interface{})["results"].([]interface{}) {
-	// 	str, _ := json.Marshal(c)
-	// 	var cert Certificate
-	// 	json.Unmarshal(str, &cert)
-	// 	certs = append(certs, cert)
-	// }
+	path := "/api/v1/trust-management/certificates"
+	req, err := a.client.NewRequest("GET", path, nil)
+	if err != nil {
+		return nil
+	}
+	client.AddQuery(req, map[string]string{"type": "api_certificate"})
+	res := a.client.Call(req)
+	ret, _ := res.JsonGet("/results")
+	for _, c := range ret.([]interface{}) {
+		str, _ := json.Marshal(c)
+		var cert Certificate
+		json.Unmarshal(str, &cert)
+		certs = append(certs, cert)
+	}
 
 	return certs
 }

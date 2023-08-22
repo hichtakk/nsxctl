@@ -34,13 +34,8 @@ func (a *Agent) ExecGet(path string, params map[string]string) (*client.Response
 	if err != nil {
 		return nil, err
 	}
+	client.AddQuery(req, params)
 	res := a.client.Call(req)
-	// switch res.StatusCode {
-	// case 200:
-	// case 404:
-	// 	fmt.Println("404 not found")
-	// 	fmt.Println(res.Content)
-	// }
 	return res, nil
 }
 
