@@ -102,6 +102,9 @@ func (c *NsxtClient) Request(method string, path string, query_param map[string]
 		}
 		req.URL.RawQuery = params.Encode()
 	}
+	if c.Debug {
+		_dumpRequest(req)
+	}
 	res, err := c.httpClient.Do(req)
 	if err != nil {
 		fmt.Println(err)

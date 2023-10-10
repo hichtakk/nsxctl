@@ -194,12 +194,7 @@ func NewCmdCreateSegment() *cobra.Command {
 	segmentCmd.RegisterFlagCompletionFunc("gateway", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		Login()
 		gw_names := []string{}
-		gws0 := nsxtclient.GetTier0Gateway("")
-		gws1 := nsxtclient.GetTier1Gateway("")
-		for _, gw := range gws0 {
-			gw_names = append(gw_names, gw.Name)
-		}
-		for _, gw := range gws1 {
+		for _, gw := range nsxtclient.GetGateways(-1) {
 			gw_names = append(gw_names, gw.Name)
 		}
 		return gw_names, cobra.ShellCompDirectiveNoFileComp

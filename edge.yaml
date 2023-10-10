@@ -1,0 +1,48 @@
+# nsxctl create edge -f edge.yaml
+
+display_name: edge-06
+deployment_info:
+  form_factor: SMALL
+  compute_manager: vc-01
+  cluster: CL-01
+  datastore: NFS
+  management_network:
+    type: DVPortGroup
+    name: dvportgroup-14043
+    ip_address: 192.168.1.64/24
+    gateway: 192.168.1.254
+  data_networks:
+    - name: dvportgroup-24815
+      type: DVPortGroup
+    - name: dvportgroup-25134
+      type: DVPortGroup
+  reservation:
+    memory_percentage: 0
+node_settings:
+  hostname: edge-06
+  dns_servers:
+  - 192.168.1.101
+  ntp_servers:
+  - 192.168.1.101
+  search_domains:
+  - my.com
+  admin_user:
+    username: admin
+    password: VMware1!VMware1!
+  root_user:
+    password: VMware1!VMware1!
+  ssh:
+    enable: true
+    allow_root_login: true
+host_switch_spec:
+- name: nsxHostSwitch
+  uplink_profile: hoge
+  transport_zones:
+  - name: hoge
+  - name: fuga
+  ip_assignment:
+    type: ippool
+    ippool: tep-pool
+  pnics:
+  - device_name: fp-eth0
+    uplink_name: uplink-1
