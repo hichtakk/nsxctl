@@ -15,7 +15,10 @@ func (c *NsxtClient) GetSegment() structs.Segments {
 	path := "/policy/api/v1/infra/segments"
 	res := c.Request("GET", path, nil, nil)
 	segments := []structs.Segment{}
-	body, _ := res.BodyBytes()
+	body, err := res.BodyBytes()
+	if err != nil {
+		log.Fatal(err)
+	}
 	json.Unmarshal(body, &segments)
 
 	for _, seg := range res.Body.(map[string]interface{})["results"].([]interface{}) {
@@ -118,6 +121,26 @@ func (c *NsxtClient) DeleteSegment(segment_name string) error {
 					return nil
 			}
 			return errors.New(string(body))
+	}
+
+	return nil
+}
+
+func (c *NsxtClient) UpdateSegment(segment structs.Segment) error {
+	payload, err := json.Marshal(segment)
+	if err != nil {
+		log.Fatal(err)
+		os.Exit(1)
+	}
+
+	path := "/policy/api/v1/infra/segments/" + segment.Id
+	res := c.Request("PATCH", path, nil, payload)
+	if res.StatusCode != 200 {
+		body, err := res.BodyBytes()
+		if err != nil {
+			return nil
+		}
+		return errors.New(string(body))
 	}
 
 	return nil
