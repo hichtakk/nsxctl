@@ -584,9 +584,15 @@ type BgpNeighbor struct {
 
 type Segments []Segment
 
-func (segs *Segments) Print() {
+func (segs *Segments) Print(bridgeInfo map[string]string) {
 	w := tabwriter.NewWriter(os.Stdout, 0, 1, 3, ' ', 0)
-	w.Write([]byte(strings.Join([]string{"ID", "Name", "Gateway", "Subnet", "Vlans", "Teaming", "AdminState", "Connected"}, "\t") + "\n"))
+
+	header := []string{"ID", "Name", "Gateway", "Subnet", "Vlans", "Teaming", "AdminState", "Connected"}
+	if bridgeInfo != nil {
+		header = append(header, "Bridge")
+	}
+	w.Write([]byte(strings.Join(header, "\t") + "\n"))
+
 	for _, seg := range *segs {
 		gw := seg.Connectivity
 		if gw == "" {
@@ -612,7 +618,12 @@ func (segs *Segments) Print() {
 		if teaming == "" {
 			teaming = "-"
 		}
-		w.Write([]byte(strings.Join([]string{seg.Id, seg.Name, gw, subnetStr, vlans, teaming, seg.AdminState, seg.AdvancedConifg.Connectivity}, "\t") + "\n"))
+
+		raw := []string{seg.Id, seg.Name, gw, subnetStr, vlans, teaming, seg.AdminState, seg.AdvancedConifg.Connectivity}
+		if bridgeInfo != nil {
+			raw = append(raw, bridgeInfo[seg.Id])
+		}
+		w.Write([]byte(strings.Join(raw, "\t") + "\n"))
 	}
 	w.Flush()
 }
@@ -627,6 +638,7 @@ type Segment struct {
 	Subnets           []SegmentSubnet        `json:"subnets,omitempty"`
 	TransportZonePath string                 `json:"transport_zone_path,omitempty"`
 	Vlans             []string               `json:"vlan_ids"`
+	BridgeProfiles    []BridgeProfileInfo    `json:"bridge_profiles"`
 }
 
 type SegmentSubnet struct {
@@ -639,6 +651,20 @@ type SegmentAdvancedConfig struct {
 	UrpfMode          string                 `json:"urpf_mode,omitempty"`
 	Connectivity      string                 `json:"connectivity,omitempty"`
 	TeamingPolicy     string                 `json:"uplink_teaming_policy_name,omitempty"`
+}
+
+type BridgeProfileInfo struct {
+	Path       string   `json:"bridge_profile_path"`
+	Vlans      []string `json:"vlan_ids"`
+	VlanTzPath string   `json:"vlan_transport_zone_path"`
+}
+
+type BridgeProfile struct {
+	Id           string  `json:"id"`
+	Name         string  `json:"display_name"`
+	FailoverMode string  `json:"failover_mode"`
+	EdgePaths   []string `json:"edge_paths"`
+	Path         string  `json:"path"`
 }
 
 type IpBlocks []IpBlock
