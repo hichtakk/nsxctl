@@ -499,11 +499,8 @@ type RouterStats struct {
 	PerNodeStatistics []PerNodeStatistics `json:"per_node_statistics"`
 }
 
-type Gateway interface {
-	Print()
-}
-
-type Tier0Gateway struct {
+type Gateway struct {
+	Tier          int
 	Id            string `json:"id"`
 	HaMode        string `json:"ha_mode"`
 	Name          string `json:"display_name"`
@@ -511,66 +508,96 @@ type Tier0Gateway struct {
 	RealizationId string `json:"realization_id"`
 	Path          string `json:"path"`
 	Firewall      bool   `json:"disable_firewall"`
+	//Print()
+	AggregateInfo GatewayAggregateInfo
 }
 
-func (gw *Tier0Gateway) Print(interfaces []map[string]string, bgp BgpConfig) {
+type Gateways []Gateway
+
+func (gw *Gateway) Print(interfaces []GatewayInterface, bgp BgpConfig) {
 	fmt.Printf("ID:   %v\n", gw.Id)
 	fmt.Printf("Name: %v\n", gw.Name)
 	fmt.Printf("HA Mode: %v\n", gw.HaMode)
 	fmt.Printf("Failover Mode: %v\n", gw.FailoverMode)
 	fmt.Println()
-	fmt.Println("# Interface")
-	for _, intf := range interfaces {
-		fmt.Printf("Name: %v\n", intf["name"])
-		fmt.Printf("Segment: %v\n", intf["segment_path"])
-	}
-	fmt.Println()
-	bgp.Print()
-}
-
-type Tier0Gateways []Tier0Gateway
-
-func (gws *Tier0Gateways) Print(output string) {
-	if output == "json" {
-	} else {
-		w := tabwriter.NewWriter(os.Stdout, 0, 1, 3, ' ', 0)
-		w.Write([]byte(strings.Join([]string{"ID", "Name", "HA Mode", "Failover Mode", "FW Enabled"}, "\t")+ "\n"))
-		for _, gw := range *gws {
-			w.Write([]byte(strings.Join([]string{gw.Id, gw.Name, gw.HaMode, gw.FailoverMode, strconv.FormatBool(!gw.Firewall)}, "\t")+ "\n"))
+	if len(interfaces) > 0 {
+		fmt.Println("# Interface")
+		for _, intf := range interfaces {
+			fmt.Printf("Name: %v\n", intf.Name)
+			fmt.Printf("Segment: %v\n", intf.SegmentPath)
 		}
-		w.Flush()
+		fmt.Println()	
+	}
+	if gw.Tier == 0 {
+		bgp.Print()
 	}
 }
 
-type Tier1Gateway struct {
-	Id            string `json:"id"`
-	HaMode        string `json:"ha_mode"`
-	Name          string `json:"display_name"`
-	FailoverMode  string `json:"failover_mode"`
-	RealizationId string `json:"realization_id"`
-	Path          string `json:"path"`
-	Firewall      bool   `json:"disable_firewall"`
-}
+func (gws *Gateways) Print(verbose bool) {
+	w := tabwriter.NewWriter(os.Stdout, 0, 1, 3, ' ', 0)
 
-func (gw *Tier1Gateway) Print() {
-	fmt.Printf("ID:   %v\n", gw.Id)
-	fmt.Printf("Name: %v\n", gw.Name)
-	fmt.Printf("HA Mode: %v\n", gw.HaMode)
-	fmt.Printf("Failover Mode: %v\n", gw.FailoverMode)
-}
+	header := []string{"Tier", "ID", "Name", "HA Mode", "Failover Mode", "FW Enabled"}
+	if verbose {
+		header = append(header, "Edge")
+	}
+	w.Write([]byte(strings.Join(header, "\t") + "\n"))
 
-type Tier1Gateways []Tier1Gateway
-
-func (gws *Tier1Gateways) Print(output string) {
-	if output == "json" {
-	} else {
-		w := tabwriter.NewWriter(os.Stdout, 0, 1, 3, ' ', 0)
-		w.Write([]byte(strings.Join([]string{"ID", "Name", "HA Mode", "Failover Mode", "FW Enabled"}, "\t")+ "\n"))
-		for _, gw := range *gws {
-			w.Write([]byte(strings.Join([]string{gw.Id, gw.Name, gw.HaMode, gw.FailoverMode, strconv.FormatBool(!gw.Firewall)}, "\t")+ "\n"))
+	for _, gw := range *gws {
+		raw := []string{strconv.Itoa(gw.Tier), gw.Id, gw.Name, gw.HaMode, gw.FailoverMode, strconv.FormatBool(!gw.Firewall)}
+		if verbose {
+			edgeInfo := []string{}
+			gwAggregateInfo := gw.AggregateInfo
+			for _, ps := range gwAggregateInfo.Status.PerNodeStatus {
+				edgeName := ""
+				for _, tn := range gwAggregateInfo.TransportNodes {
+					if tn.Id == ps.TransportNodeId {
+						edgeName = tn.Name
+					}
+				}
+				edgeInfo = append(edgeInfo, fmt.Sprintf("%s(%s)", edgeName, ps.HighAvailabilityStatus[:1]))
+			}
+			raw = append(raw, strings.Join(edgeInfo, ", "))
 		}
-		w.Flush()
+		w.Write([]byte(strings.Join(raw, "\t") + "\n"))
 	}
+	w.Flush()
+}
+
+type GatewayAggregateInfo struct {
+	Status         GatewayStatus                       `json:"status"`
+	TransportNodes []GatewayAggregateInfoTransportNode `json:"transport_nodes"`
+}
+
+type GatewayStatus struct {
+	LogicalRouterId string                 `json:"logical_router_id"`
+	PerNodeStatus   []GatewayPerNodeStatus `json:"per_node_status"`
+}
+
+type GatewayPerNodeStatus struct {
+	HighAvailabilityStatus string `json:"high_availability_status"`
+	ServiceRouterId        string `json:"service_router_id"`
+	TransportNodeId        string `json:"transport_node_id"`
+}
+
+type GatewayAggregateInfoTransportNode struct {
+	Id   string `json:"id"`
+	Name string `json:"name"`
+	Type string `json:"type"`
+}
+
+type LocaleService struct {
+	Id              string `json:"id"`
+	Name            string `json:"display_name"`
+	RealizationId   string `json:"realization_id"`
+	EdgeClusterPath string `json:"edge_cluster_path"`
+}
+
+type GatewayInterface struct {
+	Id          string `json:"id"`
+	Name        string `json:"display_name,omitempty"`
+	EdgePath    string `json:"edge_path"`
+	SegmentPath string `json:"segment_path"`
+	Uid         string `json:"unique_id"`
 }
 
 type BgpNeighbor struct {

@@ -296,32 +296,15 @@ func NewCmdShowEdge() *cobra.Command {
 
 			edge_gw_map := make(map[string][]string) // edge_id : [gwid, gwid, ...]
 			if verbose {
-				t0s := nsxtclient.GetTier0Gateway("")
-				t1s := nsxtclient.GetTier1Gateway("")
-				for _, gw := range t0s {
-					per_node_status := nsxtclient.GetGatewayAggregateInfo(gw.RealizationId)
-					for _, st := range per_node_status {
-						eid := st["transport_node_id"]
-						ha := st["high_availability_status"][:1]
-						val, ok := edge_gw_map[eid]
+				for _, gw := range nsxtclient.GetGateways(-1) {
+					gwAggregateInfo := nsxtclient.GetGatewayAggregateInfo(gw.RealizationId)
+					for _, ps := range gwAggregateInfo.Status.PerNodeStatus {
+						val, ok := edge_gw_map[ps.TransportNodeId]
 						if !ok {
 							val = []string{}
 						}
-						val = append(val, gw.Name+"("+ha+")")
-						edge_gw_map[eid] = val
-					}
-				}
-				for _, gw := range t1s {
-					per_node_status := nsxtclient.GetGatewayAggregateInfo(gw.RealizationId)
-					for _, st := range per_node_status {
-						eid := st["transport_node_id"]
-						ha := st["high_availability_status"][:1]
-						val, ok := edge_gw_map[eid]
-						if !ok {
-							val = []string{}
-						}
-						val = append(val, gw.Name+"("+ha+")")
-						edge_gw_map[eid] = val
+						val = append(val, gw.Name+"("+ps.HighAvailabilityStatus[:1]+")")
+						edge_gw_map[ps.TransportNodeId] = val
 					}
 				}
 			}

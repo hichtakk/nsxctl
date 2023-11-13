@@ -66,21 +66,14 @@ func (c *NsxtClient) CreateSegment(segment_name string, transportzone string, vl
 		if interface_address == "" {
 			return errors.New("Interface address must be set if gateway name is specified")
 		}
-		var gw0 structs.Tier0Gateway
-		var gw1 structs.Tier1Gateway
+		var gw structs.Gateway
 		var err error
-		gw0, err = c.GetTier0GatewayFromName(gateway_name)
+		gw, err = c.GetGatewayFromName(gateway_name, -1)
 		if err != nil {
-			gw1, err = c.GetTier1GatewayFromName(gateway_name)
-			if err != nil {
-				return errors.New(fmt.Sprintf("gateway '%s' is not found", gateway_name))
-			}
+			return errors.New(fmt.Sprintf("gateway '%s' is not found", gateway_name))
 		}
-		if gw0.Id != "" {
-			segment.Connectivity = gw0.Path
-		}
-		if gw1.Id != "" {
-			segment.Connectivity = gw1.Path
+		if gw.Id != "" {
+			segment.Connectivity = gw.Path
 		}
 		segment.Subnets = []structs.SegmentSubnet{{
 			Gateway: interface_address,
