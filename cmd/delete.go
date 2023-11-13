@@ -40,6 +40,7 @@ func NewCmdDelete() *cobra.Command {
 		NewCmdDeleteIpPool(),
 		NewCmdDeleteIpBlock(),
 		NewCmdDeleteSegment(),
+		NewCmdDeleteBridge(),
 	)
 
 	return deleteCmd

@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/hichtakk/nsxctl/structs"
 	"github.com/spf13/cobra"
 )
 
@@ -238,5 +239,78 @@ func NewCmdDeleteSegment() *cobra.Command {
 			}
 		},
 	}
+	return segmentCmd
+}
+
+func NewCmdDeleteBridge() *cobra.Command {
+	var vlan_ids string              // CSV format
+	segmentCmd := &cobra.Command{
+		Use: "bridge",
+		Short: fmt.Sprintf("delete edge bridge from segment"),
+		Args: cobra.ExactArgs(1),
+		PreRunE: func(c *cobra.Command, args []string) error {
+			if err := Login(); err != nil {
+				log.Fatal(err)
+				os.Exit(1)
+			}
+			return nil
+		},
+		PostRunE: func(c *cobra.Command, args []string) error {
+			nsxtclient.Logout()
+			return nil
+		},
+		ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+			if len(args) != 0 {
+				return nil, cobra.ShellCompDirectiveNoFileComp
+			}
+			Login()
+			segment_names := []string{}
+			for _, seg := range nsxtclient.GetSegment() {
+				if seg.BridgeProfiles != nil {
+					segment_names = append(segment_names, seg.Name)
+				}
+			}
+			return segment_names, cobra.ShellCompDirectiveNoFileComp
+		},
+		Run: func(cmd *cobra.Command, args []string) {
+			segment_name := args[0]
+			var segment structs.Segment
+			for _, seg := range nsxtclient.GetSegment() {
+				if seg.Name == segment_name {
+					segment = seg
+					break
+				}
+			}
+
+			new_bps := []structs.BridgeProfileInfo{}
+			if vlan_ids != "" {
+				for _, bp := range segment.BridgeProfiles {
+					new_vlans := []string{}
+					for _, vlan := range bp.Vlans {
+						found := false
+						for _, vlan_to_delete := range strings.Split(vlan_ids, ",") {
+							if vlan == vlan_to_delete {
+								found = true
+							}
+						}
+						if !found {
+							new_vlans = append(new_vlans, vlan)
+						}
+					}
+					if len(new_vlans) > 0 {
+						bp.Vlans = new_vlans
+						new_bps = append(new_bps, bp)
+					}
+				}
+			}
+			segment.BridgeProfiles = new_bps
+			err := nsxtclient.UpdateSegment(segment)
+			if err != nil {
+				log.Fatal(err)
+			}
+		},
+	}
+	segmentCmd.Flags().StringVarP(&vlan_ids, "vlan-ids", "", "", "vlan ids (CSV format)")
+
 	return segmentCmd
 }
