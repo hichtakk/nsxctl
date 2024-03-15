@@ -59,7 +59,7 @@ func NewCmdShowAlbVirtualService() *cobra.Command {
 				w.Write([]byte(strings.Join([]string{"ID", "Name", "VIP", "Port", "Network", "Cloud", "SEGroup", "VRF", "Status"}, "\t") + "\n"))
 			}
 			for _, vs := range vss {
-				vs.Print(w, verbose)
+				vs.Print(w, verbose, albclient.GetEvhHostname)
 			}
 			w.Flush()
 		},

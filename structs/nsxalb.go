@@ -95,6 +95,7 @@ type VirtualServiceInventory struct {
 	Health  map[string]int `json:"heal"`
 	Runtime VSRuntime      `json:"runtime"`
 	Pools   []string       `json:"pools"`
+	Parent  []ParentVsVip  `json:"parent_vs_vip"`
 }
 
 type VSRuntime struct {
@@ -118,6 +119,7 @@ type VirtualService struct {
 	CloudRef   string   `json:"cloud_ref"`
 	SeGroupRef string   `json:"se_group_ref"`
 	Vips       []Vip    `json:"vip"`
+	VHName     []string `json:"vh_domain_name"`
 	PoolRef    string   `json:"pool_ref"`
 	VrfRef     string   `json:"vrf_context_ref"`
 }
@@ -127,7 +129,7 @@ type VirtualServiceStatus struct {
 	Reason []string `json:"reason"`
 }
 
-func (v *VirtualServiceInventory) Print(w *tabwriter.Writer, verbose bool) {
+func (v *VirtualServiceInventory) Print(w *tabwriter.Writer, verbose bool, callback func(vsId string) string) {
 	ports := ""
 	for i, p := range v.Config.Ports {
 		summary := p.GetSummary()
@@ -168,6 +170,16 @@ func (v *VirtualServiceInventory) Print(w *tabwriter.Writer, verbose bool) {
 			}
 		}
 		network_names = network_names_uniq
+	}
+	if vips == "" {
+		vips = strings.Join(v.Config.VHName, ",")
+		if vips == "" {
+			//for Child VS of EVH
+			vips = callback(v.Config.UUID)
+		}
+		if len(v.Parent) > 0 {
+			vips += "(" + (v.Parent[0].IpAddress)["addr"] +")"
+		}
 	}
 	networks := strings.Join(network_names, ",")
 	cloud := strings.Split(v.Config.CloudRef, "#")
@@ -236,6 +248,10 @@ func (p *VSPort) GetSummary() string {
 	}
 
 	return summary
+}
+
+type ParentVsVip struct {
+	IpAddress map[string]string `json:"ip_address"`
 }
 
 type LicensingLedger struct {
