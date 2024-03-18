@@ -2,6 +2,8 @@ package nsxalb
 
 import (
 	"encoding/json"
+	"log"
+	"strings"
 
 	"github.com/hichtakk/nsxctl/structs"
 )
@@ -17,6 +19,32 @@ func (c *NsxAlbClient) ShowVirtualService() []structs.VirtualServiceInventory {
 	}
 
 	return vss
+}
+
+func (c *NsxAlbClient) GetEvhHostname(vsId string) string {
+	resp := c.Request("GET", "/api/virtualservice/" + vsId, nil, nil)
+	resByte, _ := resp.BodyBytes()
+	obj := &struct{
+		Markers []map[string]any `json:"markers"`
+	}{}
+	err := json.Unmarshal(resByte, obj)
+	if err != nil {
+		log.Fatal(err)
+	}
+	for _, m := range obj.Markers {
+		if v, ok := m["key"]; ok {
+			if v.(string) == "Host" {
+				if v, ok = m["values"]; ok {
+					hosts := []string{}
+					for _, s := range v.([]interface{}) {
+						hosts = append(hosts, s.(string))
+					}
+					return strings.Join(hosts, ",")
+				}
+			}
+		}
+	}
+	return ""
 }
 
 func (c *NsxAlbClient) GetPools() []structs.PoolInventory {
