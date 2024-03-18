@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/http/httputil"
 	"net/url"
 	"os"
 	"strings"
@@ -78,6 +79,9 @@ func (c *NsxAlbClient) Request(method string, path string, query_param map[strin
 		}
 		req.URL.RawQuery = params.Encode()
 	}
+	if c.Debug {
+		_dumpRequest(req)
+	}
 	res, err := c.httpClient.Do(req)
 	if err != nil {
 		fmt.Println(err)
@@ -101,4 +105,9 @@ func (c *NsxAlbClient) Request(method string, path string, query_param map[strin
 	} else {
 		return &client.Response{res, nil, nil}
 	}
+}
+
+func _dumpRequest(req *http.Request) {
+	dump, _ := httputil.DumpRequestOut(req, true)
+	fmt.Printf("%s\n\n", dump)
 }
