@@ -41,8 +41,14 @@ func (sei *ServiceEngineInventory) Print(w *tabwriter.Writer) {
 	// health := sei.Health["health_score"]
 	status := strings.Split(sei.Runtime.Status.State, "_")[1]
 	// reason := strings.Join(sei.Runtime.Status.Reason, "\n")
-	cloud := (strings.Split(sei.Config.CloudRef, "#"))[1]
-	segroup := (strings.Split(sei.Config.SEGroupRef, "#"))[1]
+	cloud := ""
+	if sei.Config.CloudRef != "" {
+		cloud = (strings.Split(sei.Config.CloudRef, "#"))[1]
+	}
+	segroup := ""
+	if sei.Config.SEGroupRef != "" {
+		segroup = (strings.Split(sei.Config.SEGroupRef, "#"))[1]
+	}
 
 	w.Write([]byte(strings.Join([]string{id, name, ip, cloud, segroup, status}, "\t") + "\n"))
 }
